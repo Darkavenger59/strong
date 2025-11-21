@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>B-Strong App</title>
+    <title>B-Strong Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
-        /* --- CHARTE GRAPHIQUE "STRONG" --- */
+        /* --- CHARTE GRAPHIQUE DARK MODE --- */
         :root {
             --bg-app: #000000;
             --bg-card: #1C1C1E;
             --text-primary: #FFFFFF;
             --text-secondary: #8E8E93;
-            --accent-blue: #0A84FF; /* Le bleu Strong */
+            --accent-blue: #0A84FF;
             --accent-red: #FF453A;
             --accent-green: #30D158;
             --separator: #38383A;
@@ -24,152 +26,96 @@
             background-color: var(--bg-app);
             color: var(--text-primary);
             font-family: var(--font-stack);
-            margin: 0;
-            padding: 0;
-            padding-bottom: 80px; /* Espace pour le bouton flottant */
+            margin: 0; padding: 0; padding-bottom: 80px;
         }
 
-        /* --- HEADER --- */
         header {
-            padding: 20px;
-            background-color: var(--bg-card);
+            padding: 20px; background-color: var(--bg-card);
             border-bottom: 1px solid var(--separator);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            position: sticky; top: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
-        .profile-icon { width: 32px; height: 32px; background: var(--separator); border-radius: 50%; }
+        h1 { margin: 0; font-size: 20px; font-weight: 700; }
 
-        /* --- VUES (Système d'onglets simple) --- */
         .view { display: none; padding: 15px; }
         .view.active { display: block; }
 
-        /* --- HISTORIQUE (STYLE STRONG) --- */
+        /* --- HISTORIQUE --- */
         .history-card {
             background-color: var(--bg-card);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
+            border-radius: 10px; padding: 15px; margin-bottom: 15px;
         }
         .history-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            border-bottom: 1px solid var(--separator);
-            padding-bottom: 10px;
+            display: flex; justify-content: space-between;
+            border-bottom: 1px solid var(--separator); padding-bottom: 10px; margin-bottom: 10px;
         }
-        .history-title { font-weight: 600; font-size: 16px; }
         .history-date { color: var(--text-secondary); font-size: 14px; }
         
-        .set-preview {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            margin-top: 5px;
-            color: var(--text-secondary);
+        /* Liens cliquables pour les graphiques */
+        .exo-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--text-secondary);
+            cursor: pointer;
+            transition: color 0.2s;
         }
-        .set-preview strong { color: var(--text-primary); }
+        .exo-link:hover { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
 
         /* --- SÉANCE EN COURS --- */
         .input-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            background: var(--bg-card);
-            padding: 15px;
-            border-radius: 10px;
+            display: flex; gap: 10px; margin-bottom: 15px;
+            background: var(--bg-card); padding: 15px; border-radius: 10px;
         }
         .input-group { flex: 1; }
         .input-group label { display: block; color: var(--text-secondary); font-size: 12px; margin-bottom: 5px; text-transform: uppercase; }
         
-        input {
-            width: 100%;
-            background: transparent;
-            border: none;
+        input, select {
+            width: 100%; background: transparent; border: none;
             border-bottom: 1px solid var(--separator);
-            color: white;
-            font-size: 18px;
-            padding: 5px 0;
-            border-radius: 0;
+            color: white; font-size: 18px; padding: 5px 0; border-radius: 0;
         }
         input:focus { outline: none; border-bottom-color: var(--accent-blue); }
 
-        /* Bouton Ajouter Set */
         .btn-add-set {
-            width: 100%;
-            background-color: var(--bg-card);
-            color: var(--accent-blue);
-            border: 1px solid var(--accent-blue);
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            cursor: pointer;
-        }
-        .btn-add-set:active { opacity: 0.7; }
-
-        /* Liste des exos en cours */
-        .current-exercise-list { list-style: none; padding: 0; }
-        .current-exercise-item {
-            background-color: var(--bg-card);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 4px solid var(--accent-blue);
-        }
-        .exo-info { font-size: 16px; font-weight: 600; }
-        .exo-details { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
-
-        /* --- BOUTONS FLOTTANTS / ACTIONS --- */
-        .fab-container {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .btn-primary {
-            background-color: var(--accent-blue);
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 700;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
-            cursor: pointer;
-            width: 100%;
+            width: 100%; background-color: var(--bg-card); color: var(--accent-blue);
+            border: 1px solid var(--accent-blue); padding: 12px; border-radius: 8px;
+            font-weight: 600; margin-bottom: 20px; cursor: pointer;
         }
         
-        .btn-danger {
-            background-color: var(--accent-red); /* Rouge pour finir */
+        .current-exercise-item {
+            background-color: var(--bg-card); padding: 15px; border-radius: 8px;
+            margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
+            border-left: 4px solid var(--accent-blue);
         }
 
+        /* --- BOUTONS FLOTTANTS --- */
+        .fab-container {
+            position: fixed; bottom: 20px; left: 20px; right: 20px;
+            display: flex; flex-direction: column; gap: 10px; z-index: 90;
+        }
+        .btn-primary {
+            background-color: var(--accent-blue); color: white; border: none;
+            padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700;
+            width: 100%; box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3); cursor: pointer;
+        }
+        .btn-danger { background-color: var(--accent-red); }
         .btn-cancel {
-            background-color: transparent;
-            color: var(--text-secondary);
-            border: none;
-            padding: 10px;
-            width: 100%;
-            cursor: pointer;
+            background-color: transparent; color: var(--text-secondary);
+            border: none; padding: 10px; width: 100%; cursor: pointer;
         }
 
-        /* --- HELPER TEXT --- */
-        .empty-state {
-            text-align: center;
-            color: var(--text-secondary);
-            margin-top: 50px;
+        /* --- MODAL GRAPHIQUE --- */
+        #chartModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 200;
+            justify-content: center; align-items: center; flex-direction: column;
+        }
+        .chart-container {
+            background: var(--bg-card); width: 90%; max-width: 500px;
+            padding: 20px; border-radius: 15px; position: relative;
+        }
+        .close-modal {
+            position: absolute; top: 10px; right: 15px; font-size: 24px; color: var(--text-secondary); cursor: pointer;
         }
     </style>
 </head>
@@ -177,30 +123,32 @@
 
     <header>
         <h1>B-STRONG</h1>
-        <div class="profile-icon"></div>
+        <div style="width: 32px; height: 32px; background: #333; border-radius: 50%;"></div>
     </header>
 
     <div id="viewHistory" class="view active">
-        <h2 style="font-size: 14px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 10px;">Historique récent</h2>
-        <div id="historyList">
-            <div class="empty-state">Chargement...</div>
+        <div style="padding-bottom: 10px; color: var(--text-secondary); font-size: 0.9em;">
+            💡 Astuce: Clique sur un nom d'exercice pour voir ta progression !
         </div>
+        <div id="historyList">Chargement...</div>
 
         <div class="fab-container">
-            <button class="btn-primary" onclick="switchView('workout')">Démarrer une séance vide</button>
+            <button class="btn-primary" onclick="switchView('workout')">Démarrer une séance</button>
         </div>
     </div>
 
     <div id="viewWorkout" class="view">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2 style="margin:0;">Séance en cours</h2>
-            <span id="timer" style="font-variant-numeric: tabular-nums; color:var(--text-secondary);">00:00</span>
+            <span id="timer" style="color:var(--text-secondary);">00:00</span>
         </div>
 
         <div class="input-row">
             <div class="input-group" style="flex:2;">
                 <label>Exercice</label>
-                <input type="text" id="exoName" placeholder="ex: Bench Press">
+                <input type="text" id="exoName" list="knownExercises" placeholder="Ex: Curl Biceps" autocomplete="off">
+                <datalist id="knownExercises">
+                    </datalist>
             </div>
             <div class="input-group">
                 <label>kg</label>
@@ -214,8 +162,7 @@
 
         <button class="btn-add-set" onclick="ajouterExercice()">+ AJOUTER LE SET</button>
 
-        <ul id="currentSessionList" class="current-exercise-list">
-            </ul>
+        <ul id="currentSessionList" class="current-exercise-list"></ul>
 
         <div style="margin-top: 40px;">
             <button id="btnSave" class="btn-primary btn-danger">TERMINER LA SÉANCE</button>
@@ -223,12 +170,19 @@
         </div>
     </div>
 
+    <div id="chartModal">
+        <div class="chart-container">
+            <span class="close-modal" onclick="fermerGraphique()">&times;</span>
+            <h3 id="chartTitle" style="margin-top:0; color:var(--accent-blue);">Progression</h3>
+            <canvas id="progressChart"></canvas>
+        </div>
+    </div>
+
     <script type="module">
-        // 1. IMPORTS
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, orderBy, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 2. CONFIG (NE PAS TOUCHER)
+        // --- CONFIG FIREBASE ---
         const firebaseConfig = {
           apiKey: "AIzaSyBuzNrrB-rK_xcjSeGtFc3I9yUKHhRUcIY",
           authDomain: "b-strong-4c3d1.firebaseapp.com",
@@ -241,18 +195,21 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- VARIABLES GLOBALES ---
+        // --- VARIABLES ---
         let sessionEnCours = [];
+        let globalHistory = []; // Stocke tout l'historique pour générer les stats
         let timerInterval;
         let seconds = 0;
+        let uniqueExercises = new Set(); // Pour la liste de suggestion
 
         // --- NAVIGATION ---
         window.switchView = function(viewName) {
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             if (viewName === 'workout') {
                 document.getElementById('viewWorkout').classList.add('active');
-                document.querySelector('header').style.display = 'none'; // Masquer header pendant workout
+                document.querySelector('header').style.display = 'none';
                 startTimer();
+                updateDatalist(); // Mettre à jour les suggestions
             } else {
                 document.getElementById('viewHistory').classList.add('active');
                 document.querySelector('header').style.display = 'flex';
@@ -260,7 +217,7 @@
         }
 
         window.cancelWorkout = function() {
-            if(confirm("Annuler la séance en cours ?")) {
+            if(confirm("Annuler la séance ?")) {
                 sessionEnCours = [];
                 document.getElementById('currentSessionList').innerHTML = '';
                 stopTimer();
@@ -270,8 +227,7 @@
 
         // --- TIMER ---
         function startTimer() {
-            seconds = 0;
-            document.getElementById('timer').innerText = "00:00";
+            seconds = 0; document.getElementById('timer').innerText = "00:00";
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 seconds++;
@@ -282,41 +238,51 @@
         }
         function stopTimer() { clearInterval(timerInterval); }
 
-        // --- LOGIQUE D'AJOUT ---
+        // --- GESTION DATALIST (SUGGESTIONS) ---
+        function updateDatalist() {
+            const datalist = document.getElementById('knownExercises');
+            datalist.innerHTML = '';
+            uniqueExercises.forEach(exo => {
+                const option = document.createElement('option');
+                option.value = exo;
+                datalist.appendChild(option);
+            });
+        }
+
+        // --- AJOUT EXERCICE ---
         window.ajouterExercice = function() {
-            const nom = document.getElementById('exoName').value;
+            const nom = document.getElementById('exoName').value.trim(); // Trim enlève les espaces inutiles
             const reps = document.getElementById('exoReps').value;
             const poids = document.getElementById('exoWeight').value;
 
             if(nom && reps) {
-                // Data
-                sessionEnCours.push({ nom, reps, poids });
+                // Formatage type "Titre" (ex: biceps curl -> Biceps Curl)
+                const nomFormat = nom.charAt(0).toUpperCase() + nom.slice(1);
+                
+                sessionEnCours.push({ nom: nomFormat, reps, poids });
 
-                // UI (Style Strong)
+                // Ajout visuel
                 const li = document.createElement('li');
                 li.className = 'current-exercise-item';
                 li.innerHTML = `
                     <div>
-                        <div class="exo-info">${nom}</div>
+                        <div class="exo-info">${nomFormat}</div>
                         <div class="exo-details">${poids} kg x ${reps} reps</div>
                     </div>
                     <div style="color:var(--accent-green);">✔</div>
                 `;
                 document.getElementById('currentSessionList').appendChild(li);
 
-                // Reset champs (Garder le nom pour enchainer les séries comme sur Strong)
-                // document.getElementById('exoName').value = ''; 
+                // On garde le nom pour enchainer les séries, on vide juste les reps
                 document.getElementById('exoReps').value = '';
-                // On garde le poids aussi souvent
             } else {
                 alert("Nom et Reps obligatoires");
             }
         }
 
-        // --- SAUVEGARDE FIREBASE ---
+        // --- SAUVEGARDE ---
         document.getElementById('btnSave').addEventListener('click', async () => {
             if (sessionEnCours.length === 0) return;
-
             const btn = document.getElementById('btnSave');
             btn.innerText = "Enregistrement...";
             
@@ -324,85 +290,163 @@
                 await addDoc(collection(db, "workouts"), {
                     date: serverTimestamp(),
                     exercises: sessionEnCours,
-                    duration: seconds // On sauvegarde la durée
+                    duration: seconds
                 });
 
-                // Succès
                 stopTimer();
                 sessionEnCours = [];
                 document.getElementById('currentSessionList').innerHTML = '';
+                document.getElementById('exoName').value = ''; // Reset du nom cette fois
                 btn.innerText = "TERMINER LA SÉANCE";
                 
-                chargerHistorique(); // Mise à jour liste
-                switchView('history'); // Retour accueil
+                chargerHistorique(); // Recharge tout
+                switchView('history');
 
             } catch (e) {
                 console.error(e);
-                alert("Erreur sauvegarde");
+                alert("Erreur sauvegarde. Vérifie ta connexion.");
                 btn.innerText = "TERMINER LA SÉANCE";
             }
         });
 
-        // --- LECTURE HISTORIQUE (CARD DESIGN) ---
+        // --- CHARGEMENT HISTORIQUE ---
         async function chargerHistorique() {
             const container = document.getElementById('historyList');
+            container.innerHTML = "Chargement...";
             const q = query(collection(db, "workouts"), orderBy("date", "desc"));
             const snapshot = await getDocs(q);
 
             container.innerHTML = "";
-            
+            globalHistory = []; // Reset pour les stats
+            uniqueExercises.clear();
+
             if(snapshot.empty) {
-                container.innerHTML = '<div class="empty-state">Aucune séance récente</div>';
+                container.innerHTML = '<div style="text-align:center; color:#666;">Aucune séance. Commence maintenant !</div>';
                 return;
             }
 
             snapshot.forEach(doc => {
                 const data = doc.data();
                 const dateObj = data.date ? data.date.toDate() : new Date();
-                const dateStr = dateObj.toLocaleDateString("fr-FR", { weekday:'long', day:'numeric', month:'long' });
                 
-                // Calcul du volume total (Poids x Reps) pour faire "Pro"
-                let totalVolume = 0;
-                let setsCount = 0;
-                let exercisesSummary = "";
+                // On stocke en mémoire pour les graphiques
+                globalHistory.push({ id: doc.id, date: dateObj, exercises: data.exercises || [] });
 
+                // On collecte les noms d'exos uniques
                 if(data.exercises) {
-                    data.exercises.forEach(ex => {
-                        totalVolume += (parseFloat(ex.poids) || 0) * (parseFloat(ex.reps) || 0);
-                        setsCount++;
+                    data.exercises.forEach(e => {
+                        if(e.nom) uniqueExercises.add(e.nom);
                     });
-                    // On prend juste les 3 premiers exos pour le résumé
-                    exercisesSummary = data.exercises.slice(0, 3).map(e => e.nom).join(", ");
-                    if(data.exercises.length > 3) exercisesSummary += "...";
                 }
 
-                // Création de la carte HTML
+                // Affichage HTML
+                const dateStr = dateObj.toLocaleDateString("fr-FR", { weekday:'long', day:'numeric', month:'long' });
+                
                 const card = document.createElement('div');
                 card.className = 'history-card';
+                
+                let exosHtml = "";
+                if(data.exercises) {
+                    data.exercises.forEach(ex => {
+                        // Création d'un lien cliquable pour chaque exercice
+                        exosHtml += `<div style="margin-top:5px; display:flex; justify-content:space-between;">
+                            <span class="exo-link" onclick="window.ouvrirGraphique('${ex.nom}')">${ex.nom}</span>
+                            <span style="color:var(--text-secondary);">${ex.poids}kg x ${ex.reps}</span>
+                        </div>`;
+                    });
+                }
+
                 card.innerHTML = `
                     <div class="history-header">
-                        <div>
-                            <div class="history-title">Workout</div>
-                            <div class="history-date">${dateStr}</div>
-                        </div>
-                        <div style="text-align:right; font-size:12px; color:var(--text-secondary);">
-                            <div>${Math.round(totalVolume)} kg</div>
-                            <div>${setsCount} sets</div>
-                        </div>
+                        <div class="history-date">${dateStr}</div>
+                        <div style="font-size:12px; color:#666;">${Math.floor((data.duration || 0)/60)} min</div>
                     </div>
-                    <div class="set-preview">
-                        <span>${exercisesSummary}</span>
-                        <span style="color:var(--accent-blue);">Voir ></span>
-                    </div>
+                    <div>${exosHtml}</div>
                 `;
                 container.appendChild(card);
             });
         }
 
-        // Lancement
+        // --- GRAPHIQUES (Chart.js) ---
+        let myChart = null; // Variable pour stocker l'instance du graphique
+
+        window.ouvrirGraphique = function(nomExo) {
+            document.getElementById('chartModal').style.display = 'flex';
+            document.getElementById('chartTitle').innerText = nomExo;
+
+            // 1. Préparer les données
+            // On parcourt tout l'historique, du plus vieux au plus récent (reverse)
+            const dataPoints = [];
+            const labels = [];
+
+            [...globalHistory].reverse().forEach(session => {
+                let volumeTotalSession = 0;
+                let found = false;
+
+                session.exercises.forEach(ex => {
+                    if(ex.nom === nomExo) {
+                        // Calcul Volume = Poids * Reps
+                        // Si pas de poids (poids du corps), on compte juste les reps ou on met 0
+                        const p = parseFloat(ex.poids) || 0;
+                        const r = parseFloat(ex.reps) || 0;
+                        volumeTotalSession += (p * r);
+                        found = true;
+                    }
+                });
+
+                if(found) {
+                    labels.push(session.date.toLocaleDateString("fr-FR", { day: 'numeric', month: 'short' }));
+                    dataPoints.push(volumeTotalSession);
+                }
+            });
+
+            // 2. Dessiner le graphique
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            if(myChart) myChart.destroy(); // Détruire l'ancien graphique si existant
+
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Volume Total (kg)',
+                        data: dataPoints,
+                        borderColor: '#0A84FF',
+                        backgroundColor: 'rgba(10, 132, 255, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#FFFFFF',
+                        fill: true,
+                        tension: 0.3 // Courbe lisse
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false } // Pas besoin de légende
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#38383A' },
+                            ticks: { color: '#8E8E93' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#8E8E93' }
+                        }
+                    }
+                }
+            });
+        }
+
+        window.fermerGraphique = function() {
+            document.getElementById('chartModal').style.display = 'none';
+        }
+
+        // Initialisation
         chargerHistorique();
 
     </script>
 </body>
 </html>
-
