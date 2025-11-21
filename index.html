@@ -36,11 +36,15 @@
         .history-date { font-weight: 600; font-size: 15px; }
 
         .exercise-group { margin-bottom: 12px; }
-        .exercise-name { color: var(--accent-blue); font-weight: 600; font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; }
-        .exercise-name:hover { text-decoration: underline; }
-        .chart-icon { font-size: 12px; margin-left: 5px; opacity: 0.7; }
+        /* Zone cliquable plus large pour le graphique */
+        .exercise-header { display: flex; align-items: center; cursor: pointer; margin-bottom: 4px; }
+        .exercise-name { color: var(--accent-blue); font-weight: 600; font-size: 16px; }
+        .chart-badge { 
+            background: rgba(10, 132, 255, 0.2); color: var(--accent-blue); 
+            font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: 8px;
+        }
         
-        .set-list { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+        .set-list { font-size: 14px; color: var(--text-secondary); margin-top: 2px; margin-left: 0; }
         .set-tag { background: #333; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-right: 5px; }
 
         /* WORKOUT */
@@ -67,12 +71,13 @@
 
     <header id="appHeader">
         <h1>B-STRONG</h1>
-        <button onclick="generateDemoData()" style="background:#333; color:white; border:none; padding:5px 10px; border-radius:5px; font-size:10px;">+ DATA DEMO</button>
+        <button onclick="generateDemoData()" style="background:#333; color:#888; border:none; padding:5px 10px; border-radius:5px; font-size:10px;">+ DEMO DATA</button>
     </header>
 
     <div id="viewHistory" class="view active">
         <div id="historyContainer">Chargement...</div>
-        <div style="height: 80px;"></div> <div class="fab-container">
+        <div style="height: 80px;"></div>
+        <div class="fab-container">
             <button class="btn-main" onclick="switchView('workout')">Démarrer une séance</button>
         </div>
     </div>
@@ -114,7 +119,7 @@
             <h3 id="chartTitle" style="color:var(--accent-blue); margin-top:0;">Progression</h3>
             <canvas id="myChart"></canvas>
             <p style="color:#666; font-size:12px; text-align:center; margin-top:15px;">
-                Évolution de votre charge MAX sur cet exercice à travers toutes les séances.
+                Graphique du poids <strong>MAX</strong> soulevé par séance.
             </p>
         </div>
     </div>
@@ -135,20 +140,33 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // State
+        // --- VARIABLES D'ÉTAT ---
         let currentSession = [];
-        let globalHistory = []; // Contient TOUTES les séances passées
+        
+        // Cette variable stockera les stats pré-calculées : { "squat": [{date, max}, {date, max}], "bench": ... }
+        let exerciseStats = {}; 
+        
         let knownExercises = new Set();
         let timerInt, seconds = 0;
         let chartInstance = null;
 
-        // --- OUTILS ---
-        // Fonction pour normaliser le texte (éviter les doublons "Squat" vs "squat ")
+        // --- UTILITAIRES ---
         function normalizeText(txt) {
-            return txt.trim().toLowerCase();
+            // Enlève les espaces autour et met en minuscule
+            return txt ? txt.trim().toLowerCase() : "";
         }
         function formatTitle(txt) {
+            if(!txt) return "";
             return txt.charAt(0).toUpperCase() + txt.slice(1);
+        }
+        // Fonction pour échapper les caractères spéciaux dans le HTML
+        window.escapeHtml = function(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
 
         // --- NAVIGATION ---
@@ -174,7 +192,7 @@
             }
         };
 
-        // --- WORKOUT ---
+        // --- TIMER & WORKOUT ---
         function startTimer() {
             seconds = 0; document.getElementById('timer').innerText = "00:00";
             clearInterval(timerInt);
@@ -203,8 +221,6 @@
             const r = document.getElementById('exoReps').value;
 
             if(!nom || !r) return alert("Nom et Reps requis");
-            
-            // On formate proprement le nom pour l'affichage
             nom = formatTitle(nom.trim());
 
             currentSession.push({ nom: nom, poids: w, reps: r });
@@ -241,7 +257,7 @@
             }
         });
 
-        // --- HISTORIQUE (CHARGEMENT) ---
+        // --- CHARGEMENT HISTORIQUE & CALCUL DES STATS ---
         async function loadHistory() {
             const container = document.getElementById('historyContainer');
             container.innerHTML = "Chargement...";
@@ -249,89 +265,102 @@
             const q = query(collection(db, "workouts"), orderBy("date", "desc"));
             const snap = await getDocs(q);
             
-            globalHistory = [];
+            // 1. RESET DES STATS
+            exerciseStats = {};
             knownExercises.clear();
             container.innerHTML = "";
 
             if(snap.empty) {
-                container.innerHTML = "<p style='text-align:center; color:#666; margin-top:50px;'>Aucune séance. <br>Cliquez sur 'DATA DEMO' en haut pour tester !</p>";
+                container.innerHTML = "<p style='text-align:center; color:#666; margin-top:50px;'>Aucune séance.<br>Cliquez sur DEMO DATA pour tester.</p>";
                 return;
             }
 
+            // 2. PARCOURS DE TOUS LES DOCUMENTS (Pour affichage ET stats)
             snap.forEach(doc => {
                 const data = doc.data();
                 const date = data.date ? data.date.toDate() : new Date();
                 
-                // On ajoute à la mémoire globale pour les graphiques
-                globalHistory.push({ date: date, exercises: data.exercises || [] });
-
-                // UI Carte
+                // Création UI Carte
                 const card = document.createElement('div');
                 card.className = 'history-card';
-                
                 const dateStr = date.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'short'});
                 let html = `<div class="history-header"><div class="history-date">${dateStr}</div></div>`;
 
-                // Regroupement des exercices
+                // Regroupement par séance
                 const grouped = {};
                 if(data.exercises) {
                     data.exercises.forEach(ex => {
-                        // On utilise le nom normalisé pour le regroupement mais on garde le vrai nom pour l'affichage
-                        const key = normalizeText(ex.nom);
-                        if(!grouped[key]) grouped[key] = { name: ex.nom, sets: [] };
-                        grouped[key].sets.push(ex);
+                        const safeName = normalizeText(ex.nom);
+                        if(!grouped[safeName]) grouped[safeName] = { name: ex.nom, sets: [] };
+                        grouped[safeName].sets.push(ex);
                         
-                        // Ajout aux suggestions (Format Joli)
+                        // --- CONSTRUCTION DES STATS GLOBALES ---
+                        if(!exerciseStats[safeName]) exerciseStats[safeName] = [];
+                        
+                        // On ajoute aux suggestions
                         knownExercises.add(formatTitle(ex.nom));
                     });
                 }
 
-                for(const key in grouped) {
-                    const group = grouped[key];
+                // 3. TRAITEMENT DES STATS POUR CETTE SÉANCE
+                for(const safeName in grouped) {
+                    const group = grouped[safeName];
+                    
+                    // Calcul du MAX de la séance pour cet exo
+                    let maxSessionWeight = 0;
+                    group.sets.forEach(s => {
+                        const p = parseFloat(s.poids) || 0;
+                        if(p > maxSessionWeight) maxSessionWeight = p;
+                    });
+
+                    // On ajoute ce point de donnée dans la mémoire globale
+                    // On pousse {date, weight} dans le tableau de l'exercice
+                    exerciseStats[safeName].push({
+                        date: date,
+                        weight: maxSessionWeight
+                    });
+
+                    // --- RENDU HTML DE LA LIGNE D'EXERCICE ---
                     const setSummary = group.sets.map(s => `${s.poids}kg×${s.reps}`).join(', ');
                     
-                    // Notez l'appel à showChart avec le NOM NORMALISÉ pour être sûr de tout trouver
+                    // Note: on passe le safeName (normalisé) à la fonction showChart
                     html += `
                         <div class="exercise-group">
-                            <div class="exercise-name" onclick="window.showChart('${group.name}')">
-                                ${group.name} <span class="chart-icon">📈</span>
+                            <div class="exercise-header" onclick="window.showChart('${safeName}', '${window.escapeHtml(group.name)}')">
+                                <div class="exercise-name">${group.name}</div>
+                                <div class="chart-badge">📈 Voir stats</div>
                             </div>
-                            <div class="set-list"><span class="set-tag">${group.sets.length} sets</span> ${setSummary}</div>
+                            <div class="set-list">
+                                <span class="set-tag">${group.sets.length} sets</span> ${setSummary}
+                            </div>
                         </div>
                     `;
                 }
                 card.innerHTML = html;
                 container.appendChild(card);
             });
+
+            // 4. TRI DES STATS PAR DATE (CRUCIAL)
+            // Les données arrivent du plus récent au plus vieux (orderBy desc)
+            // Pour le graphique, on veut du plus vieux au plus récent.
+            for(const key in exerciseStats) {
+                exerciseStats[key].sort((a, b) => a.date - b.date);
+            }
         }
 
-        // --- FONCTION GRAPHIQUE MULTI-SÉANCES ---
-        window.showChart = (rawName) => {
+        // --- FONCTION GRAPHIQUE DIRECTE ---
+        // Elle ne calcule plus rien, elle lit juste exerciseStats
+        window.showChart = (safeName, displayName) => {
             const modal = document.getElementById('chartModal');
             modal.style.display = 'flex';
-            document.getElementById('chartTitle').innerText = rawName;
+            document.getElementById('chartTitle').innerText = displayName;
 
-            const targetName = normalizeText(rawName); // On cherche "squat" même si on clique sur "Squat"
-            const labels = [];
-            const dataPoints = [];
+            // Récupération des données pré-calculées
+            const historyData = exerciseStats[safeName] || [];
 
-            // 1. On parcourt TOUT l'historique du plus vieux au plus récent
-            // C'est ici qu'on s'assure de voir toutes les séances
-            [...globalHistory].reverse().forEach(session => {
-                
-                // On cherche tous les sets de cet exercice dans cette séance spécifique
-                const matchingSets = session.exercises.filter(ex => normalizeText(ex.nom) === targetName);
+            const labels = historyData.map(d => d.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'}));
+            const dataPoints = historyData.map(d => d.weight);
 
-                if(matchingSets.length > 0) {
-                    // On trouve le poids MAX de cette séance
-                    const maxWeight = Math.max(...matchingSets.map(s => parseFloat(s.poids) || 0));
-                    
-                    labels.push(session.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'}));
-                    dataPoints.push(maxWeight);
-                }
-            });
-
-            // 2. Création du graphique
             const ctx = document.getElementById('myChart').getContext('2d');
             if(chartInstance) chartInstance.destroy();
 
@@ -340,7 +369,7 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Charge Max (kg)',
+                        label: 'Max Weight (kg)',
                         data: dataPoints,
                         borderColor: '#0A84FF',
                         backgroundColor: 'rgba(10, 132, 255, 0.2)',
@@ -348,7 +377,7 @@
                         pointBackgroundColor: '#fff',
                         pointRadius: 5,
                         fill: true,
-                        tension: 0.3
+                        tension: 0.2
                     }]
                 },
                 options: {
@@ -356,39 +385,32 @@
                     maintainAspectRatio: false,
                     plugins: { legend: {display: false} },
                     scales: {
-                        y: { grid: {color:'#333'}, ticks: {color:'#aaa'} },
+                        y: { beginAtZero: true, grid: {color:'#333'}, ticks: {color:'#aaa'} },
                         x: { grid: {display:false}, ticks: {color:'#aaa'} }
                     }
                 }
             });
         };
 
-        // --- FONCTION DE DÉMO (POUR TESTER LE GRAPHIQUE) ---
+        // --- GENERATEUR DE DONNEES ---
         window.generateDemoData = async () => {
-            if(!confirm("Créer 5 fausses séances pour tester les graphiques ?")) return;
-            
-            const exos = ["Squat", "Bench Press", "Deadlift"];
-            
-            // Créer 5 séances dans le passé
+            if(!confirm("Générer 5 séances passées ?")) return;
+            const exos = ["Squat", "Bench Press"];
             for(let i=5; i>=1; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - (i*2)); // Il y a i*2 jours
-                
-                const sessionExos = [];
-                exos.forEach(name => {
-                    // Poids aléatoire progressif pour voir la courbe monter
-                    const p = 50 + (Math.random() * 10) + ((5-i)*5); 
-                    sessionExos.push({ nom: name, poids: Math.floor(p), reps: 10 });
-                    sessionExos.push({ nom: name, poids: Math.floor(p), reps: 10 });
+                const d = new Date();
+                d.setDate(d.getDate() - (i*3)); // tous les 3 jours
+                const sExos = [];
+                exos.forEach(n => {
+                    // Poids qui augmente : 50, 55, 60...
+                    const p = 50 + ((6-i)*5); 
+                    sExos.push({ nom: n, poids: p, reps: 10 });
+                    sExos.push({ nom: n, poids: p, reps: 10 });
                 });
-
                 await addDoc(collection(db, "workouts"), {
-                    date: Timestamp.fromDate(date),
-                    exercises: sessionExos,
-                    duration: 3600
+                    date: Timestamp.fromDate(d),
+                    exercises: sExos, duration: 3600
                 });
             }
-            alert("Données créées ! L'historique va se recharger.");
             loadHistory();
         };
 
