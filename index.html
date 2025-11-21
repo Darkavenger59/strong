@@ -3,177 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>B-STRONG</title>
+    <title>B-STRONG DEBUG</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <style>
-        /* --- DESIGN --- */
-        :root {
-            --bg: #000000; --card: #1C1C1E; --text: #FFFFFF; --sub: #8E8E93;
-            --blue: #0A84FF; --red: #FF453A; --green: #30D158;
-            --line: #2C2C2E;
+        /* BOITE D'ERREUR (Pour comprendre le problème) */
+        #debug-log {
+            background: #ff0000; color: white; padding: 15px;
+            font-size: 14px; font-family: monospace;
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 10000;
+            display: none; border-bottom: 2px solid white;
         }
-        body {
-            background-color: var(--bg); color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            margin: 0; padding: 0; padding-bottom: 80px;
-            user-select: none; -webkit-tap-highlight-color: transparent;
-        }
-        * { box-sizing: border-box; }
 
-        /* HEADER */
-        header {
-            background: var(--card); border-bottom: 1px solid var(--line);
-            padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100;
-            height: 50px; display: flex; align-items: center; justify-content: center;
-        }
-        h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+        /* DESIGN */
+        :root { --bg: #000000; --card: #1C1C1E; --text: #FFFFFF; --blue: #0A84FF; --red: #FF453A; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 80px; user-select: none; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+        h1 { text-align: center; margin: 20px 0; font-size: 20px; }
+        
         /* VUES */
-        .view { display: none; padding: 20px; min-height: 80vh; }
+        .view { display: none; padding: 20px; }
         .view.active { display: block; }
 
-        /* ACCUEIL */
-        .home-container {
-            height: 70vh; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center;
-        }
+        /* BOUTONS */
         .btn-big {
+            display: block; margin: 0 auto;
             width: 180px; height: 180px; border-radius: 50%;
             background: var(--blue); color: white; border: none;
-            font-size: 24px; font-weight: 700; text-transform: uppercase;
-            box-shadow: 0 0 30px rgba(10, 132, 255, 0.4); cursor: pointer;
+            font-size: 24px; font-weight: bold; cursor: pointer;
         }
-        .btn-big:active { transform: scale(0.95); }
+        .btn-big:active { opacity: 0.8; transform: scale(0.95); }
 
-        /* LISTES */
-        .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-        .row-sb { display: flex; justify-content: space-between; align-items: center; }
-        .date { font-weight: 700; font-size: 15px; }
-        .sub { color: var(--sub); font-size: 13px; }
-        
-        .list-item {
-            padding: 15px; border-bottom: 1px solid var(--line);
-            display: flex; justify-content: space-between; align-items: center;
-            background: var(--card); cursor: pointer;
-        }
+        .btn-action { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 10px; border: none; font-weight: bold; font-size: 16px; }
+        .blue { background: #333; color: var(--blue); border: 1px solid var(--blue); }
+        .red { background: var(--red); color: white; }
         
         /* INPUTS */
-        .input-row { display: flex; gap: 10px; background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-        .field { flex: 1; }
-        label { display: block; font-size: 10px; color: var(--sub); text-transform: uppercase; margin-bottom: 5px; }
-        input { width: 100%; background: transparent; border: none; border-bottom: 1px solid #444; color: white; font-size: 18px; padding: 5px 0; border-radius: 0; }
-
-        .btn-action { width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; border: none; font-size: 16px; margin-bottom: 10px; cursor: pointer; }
-        .blue { background: #222; color: var(--blue); border: 1px solid var(--blue); }
-        .red { background: var(--red); color: white; }
-        .text { background: transparent; color: var(--sub); }
-
-        .current-ul { list-style: none; padding: 0; }
-        .current-ul li { background: var(--card); padding: 10px; margin-bottom: 5px; border-radius: 8px; display: flex; justify-content: space-between; border-left: 3px solid var(--blue); }
-
-        /* NAV BAR */
-        .nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
-            background: var(--card); border-top: 1px solid var(--line);
-            display: flex; justify-content: space-around; align-items: center; z-index: 9999;
-        }
-        .nav-item {
-            flex: 1; height: 100%; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; color: var(--sub); font-size: 10px;
-            cursor: pointer; /* Important pour le clic */
-        }
-        .nav-item.active { color: var(--blue); }
-        .icon { font-size: 20px; margin-bottom: 4px; }
-
-        /* MODAL CHART */
-        #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000; justify-content:center; align-items:center; }
-        .modal-box { background: var(--card); width: 95%; max-width: 500px; padding: 20px; border-radius: 15px; position: relative; }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 30px; cursor: pointer; z-index: 2001; }
-        .chart-area { position: relative; height: 300px; width: 100%; }
+        input { background: #222; border: none; color: white; padding: 10px; width: 100%; margin-bottom: 10px; border-radius: 5px; }
         
-        #error-log { display: none; position: fixed; top: 0; left: 0; width: 100%; background: red; color: white; font-size: 12px; padding: 10px; z-index: 10000; }
+        /* LISTE */
+        .card { background: var(--card); padding: 15px; margin-bottom: 10px; border-radius: 10px; }
+        .nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: #111; display: flex; border-top: 1px solid #333; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #666; font-size: 10px; }
+        .nav-item.active { color: var(--blue); }
+        .nav-icon { font-size: 20px; margin-bottom: 3px; }
+
+        /* MODAL */
+        #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:5000; justify-content:center; align-items:center; }
+        .box { background: #222; width:95%; padding:20px; border-radius:15px; position: relative; }
+        .close { position: absolute; top:10px; right:15px; font-size:30px; }
     </style>
 </head>
 <body>
 
-    <div id="error-log"></div>
+    <div id="debug-log"></div>
 
-    <header>
-        <h1 id="title">B-STRONG</h1>
-    </header>
+    <h1>B-STRONG</h1>
 
     <div id="v-home" class="view active">
-        <div class="home-container">
-            <button class="btn-big" onclick="window.startWorkout()">Démarrer</button>
-            <button onclick="window.addDemoData()" style="margin-top:40px; background:none; border:none; color:#444;">+ Demo Data</button>
+        <div style="height:60vh; display:flex; align-items:center; justify-content:center;">
+            <button class="btn-big" onclick="startWorkout()">GO</button>
+        </div>
+        <div style="text-align:center;">
+            <button onclick="addDemoData()" style="background:none; border:none; color:#666;">+ Ajouter démo</button>
         </div>
     </div>
 
     <div id="v-history" class="view">
-        <div id="history-list">Chargement...</div>
+        <div id="hist-list">Chargement...</div>
     </div>
 
     <div id="v-charts" class="view">
-        <p style="color:var(--sub); font-size:12px; margin-bottom:10px;">Sélectionnez un exercice :</p>
-        <div id="charts-list"></div>
+        <p>Cliquez pour voir la progression :</p>
+        <div id="chart-list"></div>
     </div>
 
     <div id="v-workout" class="view">
-        <div class="row-sb" style="margin-bottom:20px;">
-            <h2>En cours...</h2>
-            <span id="timer" style="color:var(--sub)">00:00</span>
+        <h2>En cours... <span id="timer" style="color:#888; font-size:16px;">00:00</span></h2>
+        <input type="text" id="w-name" placeholder="Nom (ex: Squat)" list="dl">
+        <datalist id="dl"></datalist>
+        <div style="display:flex; gap:10px;">
+            <input type="number" id="w-kg" placeholder="Kg">
+            <input type="number" id="w-reps" placeholder="Reps">
         </div>
-        <div class="input-row">
-            <div class="field" style="flex:2">
-                <label>Nom</label>
-                <input type="text" id="w-name" list="dl-exos" placeholder="Squat">
-                <datalist id="dl-exos"></datalist>
-            </div>
-            <div class="field"><label>Kg</label><input type="number" id="w-kg"></div>
-            <div class="field"><label>Reps</label><input type="number" id="w-reps"></div>
-        </div>
-        <button class="btn-action blue" onclick="window.addSet()">+ AJOUTER</button>
-        
-        <ul id="w-list" class="current-ul"></ul>
-
-        <div style="margin-top:40px;">
-            <button class="btn-action red" onclick="window.saveWorkout()">TERMINER</button>
-            <button class="btn-action text" onclick="window.cancelWorkout()">Annuler</button>
+        <button class="btn-action blue" onclick="addSet()">+ Ajouter Série</button>
+        <ul id="w-list" style="list-style:none; padding:0; color:#ccc;"></ul>
+        <div style="margin-top:30px;">
+            <button class="btn-action red" onclick="saveWorkout()">Terminer</button>
+            <button class="btn-action" onclick="cancelWorkout()" style="background:none; color:#888;">Annuler</button>
         </div>
     </div>
 
-    <div class="nav" id="navbar">
-        <div class="nav-item active" id="n-home" onclick="window.switchTab('home')">
-            <span class="icon">🏠</span>Accueil
+    <div class="nav">
+        <div class="nav-item active" onclick="showTab('home', this)">
+            <span class="nav-icon">🏠</span>Accueil
         </div>
-        <div class="nav-item" id="n-hist" onclick="window.switchTab('history')">
-            <span class="icon">📅</span>Historique
+        <div class="nav-item" onclick="showTab('history', this)">
+            <span class="nav-icon">📅</span>Historique
         </div>
-        <div class="nav-item" id="n-chart" onclick="window.switchTab('charts')">
-            <span class="icon">📈</span>Graphiques
+        <div class="nav-item" onclick="showTab('charts', this)">
+            <span class="nav-icon">📈</span>Graphiques
         </div>
     </div>
 
     <div id="modal">
-        <div class="modal-box">
-            <span class="close-btn" onclick="window.closeModal()">&times;</span>
+        <div class="box">
+            <span class="close" onclick="document.getElementById('modal').style.display='none'">&times;</span>
             <h3 id="m-title" style="color:var(--blue); margin-top:0;">Titre</h3>
-            <p id="m-sub" style="font-size:12px; color:var(--sub);">Infos</p>
-            <div class="chart-area"><canvas id="myChart"></canvas></div>
+            <p id="m-sub" style="color:#888; font-size:12px;">...</p>
+            <div style="height:300px;"><canvas id="myChart"></canvas></div>
         </div>
     </div>
 
     <script>
-        // --- LOGGING ---
-        function log(msg) {
-            console.log(msg);
+        // --- 1. SYSTEME DE LOG D'ERREUR ---
+        function logError(msg) {
+            var box = document.getElementById('debug-log');
+            box.style.display = 'block';
+            box.innerText += "⚠️ " + msg + "\n";
+            console.error(msg);
         }
+        window.onerror = function(message) { logError(message); };
 
-        // --- CONFIG FIREBASE ---
+        // --- 2. VARIABLES ---
+        var currentSession = [];
+        var allData = [];
+        var stats = {};
+        var known = new Set();
+        var db = null;
+        var timerInt = null;
+        var seconds = 0;
+        var myChart = null;
+
+        // --- 3. INIT FIREBASE ---
         const firebaseConfig = {
           apiKey: "AIzaSyBuzNrrB-rK_xcjSeGtFc3I9yUKHhRUcIY",
           authDomain: "b-strong-4c3d1.firebaseapp.com",
@@ -183,289 +149,236 @@
           appId: "1:746501272062:web:b2181766fd23ce8a3f10af"
         };
 
-        // --- INIT ---
-        let db;
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
-            log("Firebase OK");
-        } catch(e) { 
-            log("Erreur: " + e.message); 
+            // Test de connexion
+            // alert("App Prête ! Firebase OK."); 
+            loadData();
+        } catch(e) {
+            logError("Erreur Init Firebase: " + e.message);
         }
 
-        // --- VARIABLES ---
-        let currentSession = [];
-        let allData = [];
-        let stats = {};
-        let knownExos = new Set();
-        let timerInt, seconds = 0;
-        let chartInstance = null;
-
-        // --- FONCTIONS GLOBALES (WINDOW) ---
+        // --- 4. FONCTIONS ---
         
-        window.switchTab = function(tab) {
-            // Masquer toutes les vues
-            const views = document.querySelectorAll('.view');
-            for(let i=0; i<views.length; i++) { views[i].classList.remove('active'); }
+        // Navigation simple
+        window.showTab = function(name, el) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('v-'+name).classList.add('active');
             
-            // Masquer nav active
-            const navs = document.querySelectorAll('.nav-item');
-            for(let i=0; i<navs.length; i++) { navs[i].classList.remove('active'); }
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if(el) el.classList.add('active');
 
-            // Afficher Nav bar et Header
-            document.getElementById('navbar').style.display = 'flex';
-            document.querySelector('header').style.display = 'flex';
-
-            if(tab === 'home') {
-                document.getElementById('v-home').classList.add('active');
-                document.getElementById('n-home').classList.add('active');
-                document.getElementById('title').innerText = "B-STRONG";
-            }
-            else if(tab === 'history') {
-                document.getElementById('v-history').classList.add('active');
-                document.getElementById('n-hist').classList.add('active');
-                document.getElementById('title').innerText = "Historique";
-                renderHistory();
-            }
-            else if(tab === 'charts') {
-                document.getElementById('v-charts').classList.add('active');
-                document.getElementById('n-chart').classList.add('active');
-                document.getElementById('title').innerText = "Mes Exercices";
-                renderChartsList();
-            }
+            if(name === 'history') renderHistory();
+            if(name === 'charts') renderCharts();
         };
 
+        // Workout
         window.startWorkout = function() {
-            const views = document.querySelectorAll('.view');
-            for(let i=0; i<views.length; i++) { views[i].classList.remove('active'); }
-            
-            document.getElementById('v-workout').classList.add('active');
-            document.getElementById('navbar').style.display = 'none';
-            document.querySelector('header').style.display = 'none';
-            
-            seconds = 0; 
-            document.getElementById('timer').innerText = "00:00";
-            if(timerInt) clearInterval(timerInt);
-            
-            timerInt = setInterval(() => {
+            showTab('workout');
+            seconds = 0; document.getElementById('timer').innerText = "00:00";
+            clearInterval(timerInt);
+            timerInt = setInterval(function(){
                 seconds++;
-                const m = Math.floor(seconds/60).toString().padStart(2,'0');
-                const s = (seconds%60).toString().padStart(2,'0');
-                document.getElementById('timer').innerText = `${m}:${s}`;
+                var m = Math.floor(seconds/60).toString().padStart(2,'0');
+                var s = (seconds%60).toString().padStart(2,'0');
+                document.getElementById('timer').innerText = m+":"+s;
             }, 1000);
-            renderDatalist();
+            updateDatalist();
         };
 
         window.cancelWorkout = function() {
             if(confirm("Annuler ?")) {
-                currentSession = [];
-                document.getElementById('w-list').innerHTML = '';
-                if(timerInt) clearInterval(timerInt);
-                window.switchTab('home');
+                currentSession=[];
+                document.getElementById('w-list').innerHTML='';
+                clearInterval(timerInt);
+                showTab('home');
             }
         };
 
         window.addSet = function() {
-            let nom = document.getElementById('w-name').value.trim();
-            const w = document.getElementById('w-kg').value;
-            const r = document.getElementById('w-reps').value;
-
-            if(!nom || !r) return alert("Nom et Reps requis");
+            var n = document.getElementById('w-name').value.trim();
+            var k = document.getElementById('w-kg').value;
+            var r = document.getElementById('w-reps').value;
+            if(!n || !r) return alert("Manque infos");
             
-            nom = nom.charAt(0).toUpperCase() + nom.slice(1);
-            currentSession.push({ nom, poids: w, reps: r });
-
-            const li = document.createElement('li');
-            li.innerHTML = `<span><b>${nom}</b></span><span>${w}kg x ${r}</span>`;
+            n = n.charAt(0).toUpperCase() + n.slice(1);
+            currentSession.push({nom:n, poids:k, reps:r});
+            
+            var li = document.createElement('li');
+            li.innerHTML = "<b>"+n+"</b> : "+k+"kg x "+r;
             document.getElementById('w-list').appendChild(li);
-            
             document.getElementById('w-reps').value = '';
         };
 
-        window.saveWorkout = async function() {
-            if(currentSession.length === 0) return;
-            const btn = document.querySelector('.red'); // Sélectionne le bouton terminer
+        window.saveWorkout = function() {
+            if(currentSession.length===0) return;
+            var btn = document.querySelector('.red');
             btn.innerText = "Envoi...";
-            
-            try {
-                await db.collection("workouts").add({
-                    date: firebase.firestore.FieldValue.serverTimestamp(),
-                    exercises: currentSession,
-                    duration: seconds
-                });
-                
-                currentSession = [];
-                document.getElementById('w-list').innerHTML = '';
-                document.getElementById('w-name').value = '';
-                if(timerInt) clearInterval(timerInt);
-                btn.innerText = "TERMINER";
-                
-                await loadData();
-                window.switchTab('history');
 
-            } catch(e) {
-                alert("Erreur: " + e.message);
-                btn.innerText = "TERMINER";
-            }
+            db.collection("workouts").add({
+                date: firebase.firestore.FieldValue.serverTimestamp(),
+                exercises: currentSession,
+                duration: seconds
+            }).then(function() {
+                btn.innerText = "Terminer";
+                currentSession=[];
+                document.getElementById('w-list').innerHTML='';
+                document.getElementById('w-name').value='';
+                clearInterval(timerInt);
+                loadData(); // Recharge
+                showTab('history');
+            }).catch(function(error) {
+                logError(error.message);
+                btn.innerText = "Erreur";
+            });
         };
 
-        window.closeModal = function() {
-            document.getElementById('modal').style.display = 'none';
+        window.addDemoData = function() {
+            if(!confirm("Ajouter démo ?")) return;
+            var d = new Date(); d.setDate(d.getDate()-7); // Semaine dernière
+            db.collection("workouts").add({
+                date: firebase.firestore.Timestamp.fromDate(d),
+                duration: 3000,
+                exercises: [{nom:"Squat", poids:80, reps:10}, {nom:"Squat", poids:80, reps:10}]
+            }).then(function(){
+                alert("Fait"); loadData();
+            });
         };
 
-        window.addDemoData = async function() {
-            if(!confirm("Ajouter data demo ?")) return;
-            const dates = [2, 3, 9, 10, 16]; // Plusieurs semaines
-            try {
-                for(let dOffset of dates) {
-                    const d = new Date(); d.setDate(d.getDate() - dOffset);
-                    await db.collection("workouts").add({
-                        date: firebase.firestore.Timestamp.fromDate(d),
-                        duration: 3000,
-                        exercises: [{nom:"Squat", poids:60, reps:10}, {nom:"Bench", poids:50, reps:10}]
-                    });
-                }
-                alert("Fait !");
-                await loadData();
-                window.switchTab('history');
-            } catch(e) { log(e.message); }
-        };
-
-        // --- CHARGEMENT DONNEES ---
-        async function loadData() {
-            try {
-                const snap = await db.collection("workouts").orderBy("date", "desc").get();
+        // --- 5. DATA ---
+        function loadData() {
+            db.collection("workouts").orderBy("date", "desc").get().then(function(snap) {
                 allData = [];
                 stats = {};
-                knownExos.clear();
+                known.clear();
 
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    const date = d.date ? d.date.toDate() : new Date();
-                    allData.push({ ...d, date });
+                snap.forEach(function(doc) {
+                    var d = doc.data();
+                    var dateObj = d.date ? d.date.toDate() : new Date();
+                    allData.push({data:d, date:dateObj});
 
                     if(d.exercises) {
-                        let sessionVol = {};
-                        d.exercises.forEach(ex => {
-                            const key = ex.nom.trim().toLowerCase();
-                            const display = ex.nom.charAt(0).toUpperCase() + ex.nom.slice(1);
-                            knownExos.add(JSON.stringify({key, display}));
+                        // Calcul pour stats
+                        var sessionVol = {};
+                        d.exercises.forEach(function(ex) {
+                            var key = ex.nom.trim().toLowerCase();
+                            var display = ex.nom.charAt(0).toUpperCase() + ex.nom.slice(1);
+                            known.add(display);
 
-                            const vol = (parseFloat(ex.poids)||0)*(parseFloat(ex.reps)||0);
+                            var vol = (parseFloat(ex.poids)||0)*(parseFloat(ex.reps)||0);
                             if(!sessionVol[key]) sessionVol[key]=0;
                             sessionVol[key]+=vol;
                         });
 
-                        for(const k in sessionVol) {
-                            if(!stats[k]) stats[k] = [];
-                            stats[k].push({ date, vol: sessionVol[k] });
+                        for(var k in sessionVol) {
+                            if(!stats[k]) stats[k]=[];
+                            stats[k].push({date: dateObj, vol: sessionVol[k]});
                         }
                     }
                 });
-                for(const k in stats) stats[k].sort((a,b) => a.date - b.date);
-
-            } catch(e) {
-                log("Erreur chargement: " + e.message);
-            }
+            }).catch(function(err){
+                logError(err.message);
+            });
         }
 
-        // --- RENDUS ---
-        function renderHistory() {
-            const div = document.getElementById('history-list');
-            div.innerHTML = "";
-            if(allData.length === 0) { div.innerHTML = "<p style='text-align:center; padding:20px;'>Vide</p>"; return; }
+        function updateDatalist() {
+            var dl = document.getElementById('dl');
+            dl.innerHTML="";
+            known.forEach(function(k){
+                var opt = document.createElement('option');
+                opt.value=k; dl.appendChild(opt);
+            });
+        }
 
-            allData.forEach(s => {
-                const dateStr = s.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
-                let txt = "";
-                const grp = {};
-                if(s.exercises) {
-                    s.exercises.forEach(e => {
-                        if(!grp[e.nom]) grp[e.nom] = [];
-                        grp[e.nom].push(`${e.poids}x${e.reps}`);
+        // --- 6. RENDU ---
+        function renderHistory() {
+            var div = document.getElementById('hist-list');
+            div.innerHTML = "";
+            allData.forEach(function(item) {
+                var dStr = item.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
+                var card = document.createElement('div');
+                card.className = 'card';
+                
+                var html = "<b>"+dStr+"</b> ("+Math.floor((item.data.duration||0)/60)+" min)<br>";
+                if(item.data.exercises) {
+                    item.data.exercises.forEach(function(e){
+                        html += e.nom + ": " + e.poids + "x" + e.reps + " | ";
                     });
                 }
-                for(const n in grp) {
-                    txt += `<div style="margin-top:5px;"><strong>${n}</strong> <span style="color:#888">${grp[n].join(', ')}</span></div>`;
-                }
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `<div class="row-sb"><span class="date">${dateStr}</span><span class="sub">${Math.floor((s.duration||0)/60)} min</span></div>${txt}`;
+                card.innerHTML = html;
                 div.appendChild(card);
             });
         }
 
-        function renderChartsList() {
-            const div = document.getElementById('charts-list');
+        function renderCharts() {
+            var div = document.getElementById('chart-list');
             div.innerHTML = "";
-            
-            let arr = [];
-            knownExos.forEach(j => arr.push(JSON.parse(j)));
-            const map = new Map();
-            arr.forEach(o => map.set(o.key, o.display));
-            const sorted = Array.from(map.entries()).sort((a,b) => a[1].localeCompare(b[1]));
-
-            if(sorted.length === 0) { div.innerHTML = "<p style='text-align:center'>Rien</p>"; return; }
-
-            sorted.forEach(([key, display]) => {
-                const el = document.createElement('div');
-                el.className = 'list-item';
-                el.innerHTML = `<span>${display}</span><span style="color:#666">›</span>`;
-                // ONCLICK DIRECT EN JS
-                el.onclick = function() { openChart(key, display); };
-                div.appendChild(el);
-            });
+            for(var k in stats) {
+                var btn = document.createElement('div');
+                btn.className = 'card';
+                btn.innerText = k.toUpperCase();
+                (function(key){
+                    btn.onclick = function() { openChart(key); };
+                })(k);
+                div.appendChild(btn);
+            }
         }
 
-        function renderDatalist() {
-            const dl = document.getElementById('dl-exos');
-            dl.innerHTML = "";
-            knownExos.forEach(j => {
-                const o = JSON.parse(j);
-                const opt = document.createElement('option');
-                opt.value = o.display;
-                dl.appendChild(opt);
-            });
-        }
-
-        // --- GRAPHIQUE SEMAINE (LOGIQUE DEMANDÉE) ---
+        // --- 7. GRAPHIQUE SEMAINE ---
         function getMonday(d) {
             d = new Date(d);
             var day = d.getDay(),
-                diff = d.getDate() - day + (day == 0 ? -6 : 1); 
+                diff = d.getDate() - day + (day == 0 ? -6 : 1);
             return new Date(d.setDate(diff));
         }
 
-        window.openChart = function(key, title) {
-            const modal = document.getElementById('modal');
-            modal.style.display = "flex";
-            document.getElementById('m-title').innerText = title;
-            
-            const rawData = stats[key] || [];
-            
-            // AGREGATION HEBDOMADAIRE
-            const weeklyMap = new Map();
+        window.openChart = function(key) {
+            document.getElementById('modal').style.display='flex';
+            document.getElementById('m-title').innerText = key.toUpperCase();
 
-            rawData.forEach(item => {
-                const monday = getMonday(item.date);
-                const mondayStr = monday.toISOString().split('T')[0]; 
-                const label = "Sem " + monday.toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
+            var raw = stats[key] || [];
+            // Tri chronologique
+            raw.sort(function(a,b){ return a.date - b.date; });
 
-                if(!weeklyMap.has(mondayStr)) {
-                    weeklyMap.set(mondayStr, { label: label, vol: 0, dateObj: monday });
-                }
-                weeklyMap.get(mondayStr).vol += item.vol;
+            // Agregation Semaine
+            var weeks = {};
+            raw.forEach(function(r){
+                var mon = getMonday(r.date);
+                var kWeek = mon.toISOString().split('T')[0]; // YYYY-MM-DD
+                var label = mon.toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
+                
+                if(!weeks[kWeek]) weeks[kWeek] = {label:label, vol:0, date:mon};
+                weeks[kWeek].vol += r.vol;
             });
 
-            const weeklyData = Array.from(weeklyMap.values()).sort((a,b) => a.dateObj - b.dateObj);
+            // Convertir en array trié
+            var finalData = [];
+            for(var w in weeks) finalData.push(weeks[w]);
+            finalData.sort(function(a,b){ return a.date - b.date; });
 
-            const totalVol = rawData.reduce((acc,cur) => acc+cur.vol, 0);
-            document.getElementById('m-sub').innerText = `Total à vie: ${(totalVol/1000).toFixed(1)} Tonnes`;
+            // Total vie
+            var total = 0; raw.forEach(function(x){ total+=x.vol; });
+            document.getElementById('m-sub').innerText = "Total Vie: " + (total/1000).toFixed(1) + " T";
 
-            const ctx = document.getElementById('myChart').getContext('2d');
-            if(chartInstance) chartInstance.destroy();
-
-            chartInstance = new Chart(ctx, {
+            // Chart
+            var ctx = document.getElementById('myChart').getContext('2d');
+            if(myChart) myChart.destroy();
+            
+            myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels
+                    labels: finalData.map(function(x){return x.label}),
+                    datasets: [{
+                        label: 'Volume (kg)',
+                        data: finalData.map(function(x){return x.vol}),
+                        borderColor: '#0A84FF', borderWidth: 3, fill: false, tension: 0.1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        };
+
+    </script>
+</body>
+</html>
