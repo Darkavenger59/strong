@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>B-Strong Pro</title>
+    <title>B-Strong Analytics</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -36,14 +36,22 @@
         .history-date { font-weight: 600; font-size: 15px; }
 
         .exercise-group { margin-bottom: 12px; }
-        .exercise-header { display: flex; align-items: center; cursor: pointer; margin-bottom: 4px; padding: 5px 0; }
+        
+        /* Zone cliquable améliorée */
+        .exercise-clickable { 
+            display: flex; align-items: center; cursor: pointer; padding: 4px 0;
+            transition: opacity 0.2s;
+        }
+        .exercise-clickable:active { opacity: 0.7; }
+        
         .exercise-name { color: var(--accent-blue); font-weight: 600; font-size: 16px; }
         .chart-badge { 
             background: rgba(10, 132, 255, 0.2); color: var(--accent-blue); 
-            font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: 8px;
+            font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 8px;
+            font-weight: 600;
         }
         
-        .set-list { font-size: 14px; color: var(--text-secondary); margin-left: 0; }
+        .set-list { font-size: 14px; color: var(--text-secondary); margin-top: 2px; }
         .set-tag { background: #333; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-right: 5px; }
 
         /* WORKOUT */
@@ -60,7 +68,7 @@
         .btn-main { background: var(--accent-blue); color: white; border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; }
         .btn-danger { background-color: var(--accent-red); }
 
-        /* MODAL CORRIGÉ (Le changement est ici) */
+        /* MODAL */
         #chartModal { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.95); z-index: 200; 
@@ -71,15 +79,9 @@
             padding: 20px; border-radius: 16px; position: relative; 
             display: flex; flex-direction: column;
         }
-        /* C'est cette classe qui empêche le bug de zoom infini */
-        .chart-wrapper-fix {
-            position: relative;
-            height: 300px; /* Hauteur fixe obligatoire pour Chart.js responsive */
-            width: 100%;
-        }
-        .close-chart { 
-            position: absolute; top: 10px; right: 15px; font-size: 30px; color: #fff; cursor: pointer; z-index: 10;
-        }
+        /* Fix Zoom Infini */
+        .chart-wrapper-fix { position: relative; height: 300px; width: 100%; }
+        .close-chart { position: absolute; top: 10px; right: 15px; font-size: 30px; color: #fff; cursor: pointer; z-index: 10; }
     </style>
 </head>
 <body>
@@ -131,15 +133,12 @@
     <div id="chartModal">
         <div class="chart-box">
             <span class="close-chart" onclick="document.getElementById('chartModal').style.display='none'">&times;</span>
-            <h3 id="chartTitle" style="color:var(--accent-blue); margin-top:0; margin-bottom:20px;">Progression</h3>
+            <h3 id="chartTitle" style="color:var(--accent-blue); margin-top:0; margin-bottom:5px;">Progression</h3>
+            <p id="chartSubtitle" style="color:#666; font-size:12px; margin:0 0 20px 0;">Chargement...</p>
             
             <div class="chart-wrapper-fix">
                 <canvas id="myChart"></canvas>
             </div>
-
-            <p style="color:#666; font-size:12px; text-align:center; margin-top:15px;">
-                Poids <strong>MAX</strong> par séance.
-            </p>
         </div>
     </div>
 
@@ -159,21 +158,28 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // VARIABLES
+        // VARIABLES GLOBALES
         let currentSession = [];
-        let exerciseStats = {}; 
+        let exerciseStats = {}; // C'est ici que tout l'historique est stocké
         let knownExercises = new Set();
         let timerInt, seconds = 0;
         let chartInstance = null;
 
-        // UTILS
-        function normalizeText(txt) { return txt ? txt.trim().toLowerCase() : ""; }
-        function formatTitle(txt) { return txt ? txt.charAt(0).toUpperCase() + txt.slice(1) : ""; }
-        window.escapeHtml = function(text) {
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        // --- OUTILS DE NORMALISATION (IMPORTANT) ---
+        // Cette fonction s'assure que "Squat", "squat " et "SQUAT" sont la même chose
+        // Elle enlève aussi les accents (ex: Élevage -> elevage)
+        function normalizeText(txt) { 
+            if(!txt) return "";
+            return txt.trim().toLowerCase()
+                      .normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
+        }
+        
+        function formatTitle(txt) { 
+            if(!txt) return "";
+            return txt.charAt(0).toUpperCase() + txt.slice(1); 
         }
 
-        // NAVIGATION
+        // --- NAVIGATION ---
         window.switchView = (v) => {
             document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
             if(v === 'workout') {
@@ -196,7 +202,7 @@
             }
         };
 
-        // WORKOUT
+        // --- WORKOUT ---
         function startTimer() {
             seconds = 0; document.getElementById('timer').innerText = "00:00";
             clearInterval(timerInt);
@@ -223,10 +229,9 @@
             let nom = document.getElementById('exoName').value;
             const w = document.getElementById('exoWeight').value;
             const r = document.getElementById('exoReps').value;
-
             if(!nom || !r) return alert("Nom et Reps requis");
+            
             nom = formatTitle(nom.trim());
-
             currentSession.push({ nom: nom, poids: w, reps: r });
 
             const ul = document.getElementById('currentList');
@@ -234,7 +239,6 @@
             li.className = 'current-item';
             li.innerHTML = `<div><strong>${nom}</strong> <span style="color:#888">${w}kg x ${r}</span></div><div style="color:var(--accent-green)">✔</div>`;
             ul.appendChild(li);
-
             document.getElementById('exoReps').value = '';
         };
 
@@ -261,7 +265,7 @@
             }
         });
 
-        // HISTORIQUE ET STATS
+        // --- CHARGEMENT ET ANALYSE DE L'HISTORIQUE ---
         async function loadHistory() {
             const container = document.getElementById('historyContainer');
             container.innerHTML = "Chargement...";
@@ -269,12 +273,13 @@
             const q = query(collection(db, "workouts"), orderBy("date", "desc"));
             const snap = await getDocs(q);
             
+            // RAZ des données
             exerciseStats = {};
             knownExercises.clear();
             container.innerHTML = "";
 
             if(snap.empty) {
-                container.innerHTML = "<p style='text-align:center; color:#666; margin-top:50px;'>Aucune séance.<br>Cliquez sur DEMO DATA.</p>";
+                container.innerHTML = "<p style='text-align:center; color:#666; margin-top:50px;'>Aucune séance.</p>";
                 return;
             }
 
@@ -282,39 +287,55 @@
                 const data = doc.data();
                 const date = data.date ? data.date.toDate() : new Date();
                 
+                // Création carte HTML
                 const card = document.createElement('div');
                 card.className = 'history-card';
                 const dateStr = date.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'short'});
                 let html = `<div class="history-header"><div class="history-date">${dateStr}</div></div>`;
 
+                // On groupe les exercices de CETTE séance
                 const grouped = {};
                 if(data.exercises) {
                     data.exercises.forEach(ex => {
-                        const safeName = normalizeText(ex.nom);
-                        if(!grouped[safeName]) grouped[safeName] = { name: ex.nom, sets: [] };
-                        grouped[safeName].sets.push(ex);
-                        if(!exerciseStats[safeName]) exerciseStats[safeName] = [];
+                        // CLÉ UNIQUE : on normalise pour éviter les doublons
+                        const safeKey = normalizeText(ex.nom);
+                        
+                        if(!grouped[safeKey]) grouped[safeKey] = { name: ex.nom, sets: [] };
+                        grouped[safeKey].sets.push(ex);
                         knownExercises.add(formatTitle(ex.nom));
+
+                        // --- CONSTRUCTION DES STATS GLOBALES ---
+                        // On prépare le tableau pour le graphique
+                        if(!exerciseStats[safeKey]) exerciseStats[safeKey] = [];
                     });
                 }
 
-                for(const safeName in grouped) {
-                    const group = grouped[safeName];
+                // On traite chaque groupe d'exercices
+                for(const safeKey in grouped) {
+                    const group = grouped[safeKey];
                     
-                    // Max de la session
-                    let maxSessionWeight = 0;
+                    // 1. Trouver le poids max de cette séance
+                    let maxWeight = 0;
                     group.sets.forEach(s => {
                         const p = parseFloat(s.poids) || 0;
-                        if(p > maxSessionWeight) maxSessionWeight = p;
+                        if(p > maxWeight) maxWeight = p;
                     });
-                    exerciseStats[safeName].push({ date: date, weight: maxSessionWeight });
 
+                    // 2. Ajouter ce point aux stats globales
+                    exerciseStats[safeKey].push({
+                        date: date,
+                        weight: maxWeight
+                    });
+
+                    // 3. Affichage HTML
                     const setSummary = group.sets.map(s => `${s.poids}kg×${s.reps}`).join(', ');
+                    
+                    // On utilise un attribut data-key pour éviter les problèmes de guillemets dans le HTML
                     html += `
                         <div class="exercise-group">
-                            <div class="exercise-header" onclick="window.showChart('${safeName}', '${window.escapeHtml(group.name)}')">
+                            <div class="exercise-clickable" data-key="${safeKey}" data-name="${group.name}">
                                 <div class="exercise-name">${group.name}</div>
-                                <div class="chart-badge">📈 Voir stats</div>
+                                <div class="chart-badge">📈 Stats</div>
                             </div>
                             <div class="set-list">
                                 <span class="set-tag">${group.sets.length} sets</span> ${setSummary}
@@ -326,21 +347,39 @@
                 container.appendChild(card);
             });
 
-            // Tri chronologique
+            // Gestion du clic sur les exercices (Délégation d'événement)
+            // C'est plus robuste que onclick="..."
+            document.querySelectorAll('.exercise-clickable').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    // On remonte au parent si on clique sur l'icône
+                    const target = e.currentTarget; 
+                    const key = target.getAttribute('data-key');
+                    const name = target.getAttribute('data-name');
+                    openChart(key, name);
+                });
+            });
+
+            // Tri chronologique des stats (du plus vieux au plus récent)
             for(const key in exerciseStats) {
                 exerciseStats[key].sort((a, b) => a.date - b.date);
             }
         }
 
-        // GRAPHIQUE (Correction Zoom)
-        window.showChart = (safeName, displayName) => {
+        // --- GRAPHIQUE ---
+        function openChart(key, displayName) {
             const modal = document.getElementById('chartModal');
+            const subtitle = document.getElementById('chartSubtitle');
             modal.style.display = 'flex';
             document.getElementById('chartTitle').innerText = displayName;
 
-            const historyData = exerciseStats[safeName] || [];
-            const labels = historyData.map(d => d.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'}));
-            const dataPoints = historyData.map(d => d.weight);
+            // Récupération des données
+            const data = exerciseStats[key] || [];
+            
+            // DEBUG : Afficher combien de séances ont été trouvées
+            subtitle.innerText = `${data.length} séance(s) trouvée(s) pour cet exercice.`;
+
+            const labels = data.map(d => d.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'}));
+            const values = data.map(d => d.weight);
 
             const ctx = document.getElementById('myChart').getContext('2d');
             if(chartInstance) chartInstance.destroy();
@@ -350,20 +389,21 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Max Weight (kg)',
-                        data: dataPoints,
+                        label: 'Max (kg)',
+                        data: values,
                         borderColor: '#0A84FF',
                         backgroundColor: 'rgba(10, 132, 255, 0.2)',
                         borderWidth: 3,
                         pointBackgroundColor: '#fff',
-                        pointRadius: 5,
+                        pointRadius: 6, // Points bien visibles
+                        pointHoverRadius: 8,
                         fill: true,
                         tension: 0.2
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false, // Important : on remplit la boite
+                    maintainAspectRatio: false,
                     plugins: { legend: {display: false} },
                     scales: {
                         y: { beginAtZero: true, grid: {color:'#333'}, ticks: {color:'#aaa'} },
@@ -371,24 +411,23 @@
                     }
                 }
             });
-        };
+        }
 
-        // DATA DEMO
+        // DEMO DATA
         window.generateDemoData = async () => {
-            if(!confirm("Générer 5 séances passées ?")) return;
+            if(!confirm("Générer 5 séances de démo ?")) return;
             const exos = ["Squat", "Bench Press"];
             for(let i=5; i>=1; i--) {
                 const d = new Date();
-                d.setDate(d.getDate() - (i*3));
+                d.setDate(d.getDate() - (i*2));
                 const sExos = [];
                 exos.forEach(n => {
-                    const p = 50 + ((6-i)*5); 
+                    const p = 60 + ((6-i)*5); 
                     sExos.push({ nom: n, poids: p, reps: 10 });
                     sExos.push({ nom: n, poids: p, reps: 10 });
                 });
                 await addDoc(collection(db, "workouts"), {
-                    date: Timestamp.fromDate(d),
-                    exercises: sExos, duration: 3600
+                    date: Timestamp.fromDate(d), exercises: sExos, duration: 3600
                 });
             }
             loadHistory();
