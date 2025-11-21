@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* --- VARIABLES & DESIGN SYSTEM (DARK MODE) --- */
+        /* --- VARIABLES & DESIGN SYSTEM --- */
         :root {
             --bg-app: #000000; --bg-card: #1C1C1E; 
             --text-primary: #FFFFFF; --text-secondary: #8E8E93; 
@@ -19,7 +19,9 @@
         body {
             background-color: var(--bg-app); color: var(--text-primary);
             font-family: var(--font); margin: 0; padding: 0; 
-            padding-bottom: calc(var(--nav-height) + 20px); /* Espace pour la nav bar */
+            /* Espace pour ne pas que le contenu soit caché par la nav bar */
+            padding-bottom: calc(var(--nav-height) + 20px);
+            overscroll-behavior-y: none; /* Empêche le rebond élastique sur iOS */
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -28,6 +30,7 @@
             padding: 15px 20px; background: var(--bg-card);
             border-bottom: 1px solid var(--separator); position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: center; align-items: center;
+            height: 50px;
         }
         h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
 
@@ -36,17 +39,17 @@
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- VUE 1: ACCUEIL (START) --- */
+        /* --- VUE 1: ACCUEIL --- */
         #viewHome {
             height: 80vh; display: flex; flex-direction: column; 
             justify-content: center; align-items: center;
         }
         .big-start-btn {
             background: var(--accent-blue); color: white; border: none;
-            width: 200px; height: 200px; border-radius: 50%;
-            font-size: 24px; font-weight: 700; text-transform: uppercase;
+            width: 180px; height: 180px; border-radius: 50%;
+            font-size: 22px; font-weight: 700; text-transform: uppercase;
             box-shadow: 0 0 30px rgba(10, 132, 255, 0.4); cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.1s;
         }
         .big-start-btn:active { transform: scale(0.95); }
 
@@ -58,7 +61,7 @@
         .exo-line { margin-bottom: 8px; }
         .exo-title { color: white; font-weight: 600; font-size: 14px; }
 
-        /* --- VUE 3: GRAPHIQUES (LISTE EXOS) --- */
+        /* --- VUE 3: GRAPHIQUES --- */
         .exercises-list { list-style: none; padding: 0; margin: 0; }
         .exercise-row {
             background: var(--bg-card); padding: 15px; border-bottom: 1px solid var(--separator);
@@ -79,16 +82,18 @@
         .current-item { background: var(--bg-card); padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; border-left: 3px solid var(--accent-blue); }
         .btn-danger { background-color: var(--accent-red); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 16px; }
 
-        /* --- BOTTOM NAVIGATION BAR --- */
+        /* --- BOTTOM NAVIGATION BAR (FIXED) --- */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
             background: var(--bg-card); border-top: 1px solid var(--separator);
-            display: flex; justify-content: space-around; align-items: center; z-index: 999;
+            display: flex; justify-content: space-around; align-items: center; 
+            z-index: 9999; /* Très haut pour être sûr que c'est cliquable */
         }
         .nav-item {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             color: var(--text-secondary); text-decoration: none; font-size: 10px; flex: 1; height: 100%;
             cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
         .nav-item.active { color: var(--accent-blue); }
         .nav-icon { font-size: 20px; margin-bottom: 4px; }
@@ -107,11 +112,10 @@
     </header>
 
     <div id="viewHome" class="view active">
-        <button class="big-start-btn" onclick="startWorkout()">
+        <button id="btnStartWorkout" class="big-start-btn">
             Démarrer
         </button>
-        <p style="color: var(--text-secondary); margin-top: 20px;">Prêt à t'entraîner ?</p>
-        <button onclick="generateDemoData()" style="margin-top:30px; background:none; border:1px dashed #333; color:#555; padding:5px;">+ Data Test</button>
+        <button id="btnDemo" style="margin-top:50px; background:none; border:none; color:#333; font-size:10px;">+ Demo</button>
     </div>
 
     <div id="viewHistory" class="view">
@@ -119,9 +123,8 @@
     </div>
 
     <div id="viewCharts" class="view">
-        <div style="margin-bottom: 15px; color: var(--text-secondary); font-size:12px;">Sélectionne un exercice pour voir ta progression.</div>
-        <ul id="exercisesListContainer" class="exercises-list">
-            </ul>
+        <div style="margin-bottom: 15px; color: var(--text-secondary); font-size:12px;">Sélectionne un exercice :</div>
+        <ul id="exercisesListContainer" class="exercises-list"></ul>
     </div>
 
     <div id="viewWorkout" class="view">
@@ -146,25 +149,25 @@
             </div>
         </div>
 
-        <button class="btn-add" onclick="addSet()">+ AJOUTER SÉRIE</button>
+        <button id="btnAddSet" class="btn-add">+ AJOUTER SÉRIE</button>
         <ul id="currentList" style="list-style:none; padding:0;"></ul>
 
         <div style="margin-top: 40px;">
             <button id="btnSave" class="btn-danger">TERMINER LA SÉANCE</button>
-            <button style="background:none; border:none; color:#888; width:100%; padding:15px; margin-top:10px;" onclick="cancelWorkout()">Annuler</button>
+            <button id="btnCancel" style="background:none; border:none; color:#888; width:100%; padding:15px; margin-top:10px;">Annuler</button>
         </div>
     </div>
 
     <nav class="bottom-nav" id="mainNav">
-        <div class="nav-item active" onclick="switchTab('home')">
+        <div class="nav-item active" id="navHome">
             <span class="nav-icon">🏠</span>
             <span>Accueil</span>
         </div>
-        <div class="nav-item" onclick="switchTab('history')">
+        <div class="nav-item" id="navHistory">
             <span class="nav-icon">📅</span>
             <span>Historique</span>
         </div>
-        <div class="nav-item" onclick="switchTab('charts')">
+        <div class="nav-item" id="navCharts">
             <span class="nav-icon">📈</span>
             <span>Graphiques</span>
         </div>
@@ -172,7 +175,7 @@
 
     <div id="chartModal">
         <div class="chart-box">
-            <span class="close-chart" onclick="closeChart()">&times;</span>
+            <span class="close-chart" id="btnCloseChart">&times;</span>
             <h3 id="chartTitle" style="color:var(--accent-blue); margin-top:0; margin-bottom:5px;">Progression</h3>
             <p id="chartSubtitle" style="color:#666; font-size:12px; margin:0 0 20px 0;">Volume Total (kg)</p>
             <div class="chart-wrapper-fix">
@@ -199,11 +202,57 @@
 
         // --- STATE ---
         let currentSession = [];
-        let exerciseStats = {}; // { "squat": [{date, volume}, ...], ... }
-        let knownExercises = new Set(); // Pour l'autocomplete
+        let rawHistoryData = [];
+        let exerciseStats = {};
+        let knownExercises = new Set();
+        let uniqueExerciseNames = new Set();
         let timerInt, seconds = 0;
         let chartInstance = null;
-        let uniqueExerciseNames = new Set(); // Pour la liste des graphiques
+
+        // --- DOM ELEMENTS & LISTENERS (CORRECTION ICI) ---
+        // On attache les événements en JS pour être sûr que ça marche
+        document.getElementById('navHome').addEventListener('click', () => switchTab('home'));
+        document.getElementById('navHistory').addEventListener('click', () => switchTab('history'));
+        document.getElementById('navCharts').addEventListener('click', () => switchTab('charts'));
+        
+        document.getElementById('btnStartWorkout').addEventListener('click', startWorkout);
+        document.getElementById('btnDemo').addEventListener('click', generateDemoData);
+        document.getElementById('btnAddSet').addEventListener('click', addSet);
+        document.getElementById('btnSave').addEventListener('click', saveSession);
+        document.getElementById('btnCancel').addEventListener('click', cancelWorkout);
+        document.getElementById('btnCloseChart').addEventListener('click', closeChart);
+
+
+        // --- NAVIGATION FUNCTION ---
+        function switchTab(tabName) {
+            // 1. Masquer toutes les vues
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            // 2. Désactiver tous les boutons nav
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            // 3. Afficher Nav et Header (au cas où on revient du mode workout)
+            document.getElementById('mainNav').style.display = 'flex';
+            document.getElementById('appHeader').style.display = 'flex';
+
+            // 4. Activer la bonne vue
+            if(tabName === 'home') {
+                document.getElementById('viewHome').classList.add('active');
+                document.getElementById('navHome').classList.add('active');
+                document.getElementById('pageTitle').innerText = "B-STRONG";
+            }
+            else if(tabName === 'history') {
+                document.getElementById('viewHistory').classList.add('active');
+                document.getElementById('navHistory').classList.add('active');
+                document.getElementById('pageTitle').innerText = "Historique";
+                renderHistoryView();
+            }
+            else if(tabName === 'charts') {
+                document.getElementById('viewCharts').classList.add('active');
+                document.getElementById('navCharts').classList.add('active');
+                document.getElementById('pageTitle').innerText = "Mes Exercices";
+                renderChartsListView();
+            }
+        }
 
         // --- UTILS ---
         function normalizeText(txt) { 
@@ -215,57 +264,28 @@
             return txt.charAt(0).toUpperCase() + txt.slice(1); 
         }
 
-        // --- NAVIGATION ---
-        window.switchTab = (tabName) => {
-            // Cacher toutes les vues
-            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-
-            // Reset visibilité nav bar (au cas où on vient du workout)
-            document.getElementById('mainNav').style.display = 'flex';
-            document.getElementById('appHeader').style.display = 'flex';
-
-            if(tabName === 'home') {
-                document.getElementById('viewHome').classList.add('active');
-                document.querySelectorAll('.nav-item')[0].classList.add('active');
-                document.getElementById('pageTitle').innerText = "B-STRONG";
-            }
-            else if(tabName === 'history') {
-                document.getElementById('viewHistory').classList.add('active');
-                document.querySelectorAll('.nav-item')[1].classList.add('active');
-                document.getElementById('pageTitle').innerText = "Historique";
-                renderHistoryView(); // Rafraichir l'affichage
-            }
-            else if(tabName === 'charts') {
-                document.getElementById('viewCharts').classList.add('active');
-                document.querySelectorAll('.nav-item')[2].classList.add('active');
-                document.getElementById('pageTitle').innerText = "Mes Exercices";
-                renderChartsListView(); // Rafraichir la liste
-            }
-        };
-
-        window.startWorkout = () => {
+        // --- WORKOUT LOGIC ---
+        function startWorkout() {
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.getElementById('viewWorkout').classList.add('active');
             
-            // Masquer Header et Nav pendant la séance
+            // Cacher Nav et Header
             document.getElementById('mainNav').style.display = 'none';
             document.getElementById('appHeader').style.display = 'none';
             
             startTimer();
             updateSuggestions();
-        };
+        }
 
-        window.cancelWorkout = () => {
+        function cancelWorkout() {
             if(confirm("Annuler la séance en cours ?")) {
                 currentSession = [];
                 document.getElementById('currentList').innerHTML = '';
                 stopTimer();
-                window.switchTab('home');
+                switchTab('home');
             }
-        };
+        }
 
-        // --- WORKOUT LOGIC ---
         function startTimer() {
             seconds = 0; document.getElementById('timer').innerText = "00:00";
             clearInterval(timerInt);
@@ -288,7 +308,7 @@
             });
         }
 
-        window.addSet = () => {
+        function addSet() {
             let nom = document.getElementById('exoName').value;
             const w = document.getElementById('exoWeight').value;
             const r = document.getElementById('exoReps').value;
@@ -303,9 +323,9 @@
             li.innerHTML = `<div><strong>${nom}</strong> <span style="color:#888">${w}kg x ${r}</span></div><div style="color:var(--accent-green)">✔</div>`;
             ul.appendChild(li);
             document.getElementById('exoReps').value = '';
-        };
+        }
 
-        document.getElementById('btnSave').addEventListener('click', async () => {
+        async function saveSession() {
             if(currentSession.length === 0) return;
             const btn = document.getElementById('btnSave');
             btn.innerText = "Envoi...";
@@ -321,19 +341,15 @@
                 document.getElementById('exoName').value = '';
                 btn.innerText = "TERMINER LA SÉANCE";
                 
-                // Recharger les données et aller à l'historique
-                await loadAllData();
-                window.switchTab('history');
+                await loadAllData(); // Rafraichir données
+                switchTab('history');
             } catch(e) {
                 alert("Erreur: " + e.message);
                 btn.innerText = "TERMINER LA SÉANCE";
             }
-        });
+        }
 
-        // --- DATA LOADING (CENTRALISÉ) ---
-        // Cette variable stockera TOUT l'historique brut pour les différentes vues
-        let rawHistoryData = [];
-
+        // --- DATA LOADING ---
         async function loadAllData() {
             const q = query(collection(db, "workouts"), orderBy("date", "desc"));
             const snap = await getDocs(q);
@@ -346,69 +362,47 @@
             snap.forEach(doc => {
                 const data = doc.data();
                 const date = data.date ? data.date.toDate() : new Date();
-                
-                // Sauvegarde donnée brute
                 rawHistoryData.push({ id: doc.id, date: date, ...data });
 
-                // Traitement pour les stats
                 if(data.exercises) {
-                    // Pour grouper dans la même séance
                     let sessionGroups = {}; 
-
                     data.exercises.forEach(ex => {
                         const safeKey = normalizeText(ex.nom);
                         const displayName = formatTitle(ex.nom);
-                        
                         knownExercises.add(displayName);
-                        // On stocke le nom joli associé à la clé normalisée
                         uniqueExerciseNames.add(JSON.stringify({key: safeKey, name: displayName}));
 
-                        // Calcul Volume
                         if(!sessionGroups[safeKey]) sessionGroups[safeKey] = { vol: 0 };
                         const p = parseFloat(ex.poids) || 0;
                         const r = parseFloat(ex.reps) || 0;
                         sessionGroups[safeKey].vol += (p * r);
                     });
-
-                    // Pousser les stats
                     for(const key in sessionGroups) {
                         if(!exerciseStats[key]) exerciseStats[key] = [];
-                        exerciseStats[key].push({
-                            date: date,
-                            volume: sessionGroups[key].vol
-                        });
+                        exerciseStats[key].push({ date: date, volume: sessionGroups[key].vol });
                     }
                 }
             });
-
-            // Tri stats chrono
+            // Tri
             for(const key in exerciseStats) {
                 exerciseStats[key].sort((a, b) => a.date - b.date);
             }
         }
 
-        // --- VUE HISTORIQUE ---
+        // --- RENDER FUNCTIONS ---
         function renderHistoryView() {
             const container = document.getElementById('historyContainer');
             container.innerHTML = "";
-            
             if(rawHistoryData.length === 0) {
-                container.innerHTML = "<div style='text-align:center; padding:20px; color:#666'>Aucune séance enregistrée.</div>";
+                container.innerHTML = "<div style='text-align:center; padding:20px; color:#666'>Aucune séance.</div>";
                 return;
             }
-
             rawHistoryData.forEach(session => {
                 const dateStr = session.date.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'short'});
-                
                 const card = document.createElement('div');
                 card.className = 'history-card';
+                let html = `<div class="history-header"><div class="history-date">${dateStr}</div><div style="font-size:12px; color:#666">${Math.floor((session.duration||0)/60)} min</div></div>`;
                 
-                let html = `<div class="history-header">
-                    <div class="history-date">${dateStr}</div>
-                    <div style="font-size:12px; color:#666">${Math.floor((session.duration||0)/60)} min</div>
-                </div>`;
-
-                // Grouper les exercices pour l'affichage (pas de stats ici, juste du texte)
                 const grouped = {};
                 if(session.exercises) {
                     session.exercises.forEach(ex => {
@@ -417,14 +411,10 @@
                         grouped[name].push(ex);
                     });
                 }
-
                 for(const name in grouped) {
                     const sets = grouped[name];
                     const summary = sets.map(s => `${s.poids}×${s.reps}`).join(', ');
-                    html += `
-                        <div class="exo-line">
-                            <div class="exo-title">${name}</div>
-                            <div class="set-list">${sets.length} sets: ${summary}</div>
-                        </div>
-                    `;
-                
+                    html += `<div class="exo-line"><div class="exo-title">${name}</div><div class="set-list">${sets.length} sets: ${summary}</div></div>`;
+                }
+                card.innerHTML = html;
+                container.appendChil
