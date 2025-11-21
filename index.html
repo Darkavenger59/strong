@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* --- VARIABLES & DESIGN SYSTEM --- */
+        /* --- DESIGN SYSTEM (DARK MODE) --- */
         :root {
             --bg-app: #000000; --bg-card: #1C1C1E; 
             --text-primary: #FFFFFF; --text-secondary: #8E8E93; 
@@ -19,9 +19,8 @@
         body {
             background-color: var(--bg-app); color: var(--text-primary);
             font-family: var(--font); margin: 0; padding: 0; 
-            /* Espace pour ne pas que le contenu soit caché par la nav bar */
             padding-bottom: calc(var(--nav-height) + 20px);
-            overscroll-behavior-y: none; /* Empêche le rebond élastique sur iOS */
+            overscroll-behavior-y: none;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -29,31 +28,26 @@
         header {
             padding: 15px 20px; background: var(--bg-card);
             border-bottom: 1px solid var(--separator); position: sticky; top: 0; z-index: 100;
-            display: flex; justify-content: center; align-items: center;
-            height: 50px;
+            display: flex; justify-content: center; align-items: center; height: 50px;
         }
         h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
 
-        /* VIEWS (ONLGETS) */
+        /* VUES */
         .view { display: none; padding: 20px; animation: fadeIn 0.2s; }
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- VUE 1: ACCUEIL --- */
-        #viewHome {
-            height: 80vh; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center;
-        }
+        /* ACCUEIL */
+        #viewHome { height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .big-start-btn {
             background: var(--accent-blue); color: white; border: none;
             width: 180px; height: 180px; border-radius: 50%;
             font-size: 22px; font-weight: 700; text-transform: uppercase;
-            box-shadow: 0 0 30px rgba(10, 132, 255, 0.4); cursor: pointer;
-            transition: transform 0.1s;
+            box-shadow: 0 0 30px rgba(10, 132, 255, 0.4); cursor: pointer; transition: transform 0.1s;
         }
         .big-start-btn:active { transform: scale(0.95); }
 
-        /* --- VUE 2: HISTORIQUE --- */
+        /* HISTORIQUE */
         .history-card { background: var(--bg-card); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
         .history-header { display: flex; justify-content: space-between; border-bottom: 1px solid var(--separator); padding-bottom: 10px; margin-bottom: 10px; }
         .history-date { font-weight: 600; font-size: 15px; }
@@ -61,19 +55,17 @@
         .exo-line { margin-bottom: 8px; }
         .exo-title { color: white; font-weight: 600; font-size: 14px; }
 
-        /* --- VUE 3: GRAPHIQUES --- */
+        /* GRAPHIQUES */
         .exercises-list { list-style: none; padding: 0; margin: 0; }
         .exercise-row {
             background: var(--bg-card); padding: 15px; border-bottom: 1px solid var(--separator);
             display: flex; justify-content: space-between; align-items: center; cursor: pointer;
         }
-        .exercise-row:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
-        .exercise-row:last-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; border-bottom: none; }
         .exercise-row:active { background: #2c2c2e; }
         .row-name { font-size: 16px; font-weight: 500; }
         .row-arrow { color: var(--text-secondary); font-size: 18px; }
 
-        /* --- VUE 4: WORKOUT ACTIF --- */
+        /* WORKOUT */
         .input-row { display: flex; gap: 10px; background: var(--bg-card); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
         .input-wrapper { flex: 1; }
         label { display: block; color: var(--text-secondary); font-size: 11px; text-transform: uppercase; margin-bottom: 4px; }
@@ -82,23 +74,22 @@
         .current-item { background: var(--bg-card); padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; border-left: 3px solid var(--accent-blue); }
         .btn-danger { background-color: var(--accent-red); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 16px; }
 
-        /* --- BOTTOM NAVIGATION BAR (FIXED) --- */
+        /* NAV BAR */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
             background: var(--bg-card); border-top: 1px solid var(--separator);
             display: flex; justify-content: space-around; align-items: center; 
-            z-index: 9999; /* Très haut pour être sûr que c'est cliquable */
+            z-index: 9999;
         }
         .nav-item {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             color: var(--text-secondary); text-decoration: none; font-size: 10px; flex: 1; height: 100%;
             cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
         }
         .nav-item.active { color: var(--accent-blue); }
         .nav-icon { font-size: 20px; margin-bottom: 4px; }
 
-        /* --- MODAL CHART --- */
+        /* MODAL */
         #chartModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; }
         .chart-box { background: var(--bg-card); width: 95%; max-width: 500px; padding: 20px; border-radius: 16px; position: relative; display: flex; flex-direction: column; }
         .chart-wrapper-fix { position: relative; height: 300px; width: 100%; }
@@ -112,10 +103,8 @@
     </header>
 
     <div id="viewHome" class="view active">
-        <button id="btnStartWorkout" class="big-start-btn">
-            Démarrer
-        </button>
-        <button id="btnDemo" style="margin-top:50px; background:none; border:none; color:#333; font-size:10px;">+ Demo</button>
+        <button class="big-start-btn" onclick="startWorkout()">Démarrer</button>
+        <button onclick="generateDemoData()" style="margin-top:50px; background:none; border:none; color:#333; font-size:10px;">+ Demo Data</button>
     </div>
 
     <div id="viewHistory" class="view">
@@ -132,7 +121,6 @@
             <h2>En cours...</h2>
             <span id="timer" style="color:#888;">00:00</span>
         </div>
-
         <div class="input-row">
             <div class="input-wrapper" style="flex: 2;">
                 <label>Exercice</label>
@@ -148,34 +136,29 @@
                 <input type="number" id="exoReps" placeholder="0">
             </div>
         </div>
-
-        <button id="btnAddSet" class="btn-add">+ AJOUTER SÉRIE</button>
+        <button class="btn-add" onclick="addSet()">+ AJOUTER SÉRIE</button>
         <ul id="currentList" style="list-style:none; padding:0;"></ul>
-
         <div style="margin-top: 40px;">
-            <button id="btnSave" class="btn-danger">TERMINER LA SÉANCE</button>
-            <button id="btnCancel" style="background:none; border:none; color:#888; width:100%; padding:15px; margin-top:10px;">Annuler</button>
+            <button class="btn-danger" onclick="saveSession()">TERMINER LA SÉANCE</button>
+            <button style="background:none; border:none; color:#888; width:100%; padding:15px; margin-top:10px;" onclick="cancelWorkout()">Annuler</button>
         </div>
     </div>
 
     <nav class="bottom-nav" id="mainNav">
-        <div class="nav-item active" id="navHome">
-            <span class="nav-icon">🏠</span>
-            <span>Accueil</span>
+        <div class="nav-item active" id="navHome" onclick="switchTab('home')">
+            <span class="nav-icon">🏠</span><span>Accueil</span>
         </div>
-        <div class="nav-item" id="navHistory">
-            <span class="nav-icon">📅</span>
-            <span>Historique</span>
+        <div class="nav-item" id="navHistory" onclick="switchTab('history')">
+            <span class="nav-icon">📅</span><span>Historique</span>
         </div>
-        <div class="nav-item" id="navCharts">
-            <span class="nav-icon">📈</span>
-            <span>Graphiques</span>
+        <div class="nav-item" id="navCharts" onclick="switchTab('charts')">
+            <span class="nav-icon">📈</span><span>Graphiques</span>
         </div>
     </nav>
 
     <div id="chartModal">
         <div class="chart-box">
-            <span class="close-chart" id="btnCloseChart">&times;</span>
+            <span class="close-chart" onclick="closeChart()">&times;</span>
             <h3 id="chartTitle" style="color:var(--accent-blue); margin-top:0; margin-bottom:5px;">Progression</h3>
             <p id="chartSubtitle" style="color:#666; font-size:12px; margin:0 0 20px 0;">Volume Total (kg)</p>
             <div class="chart-wrapper-fix">
@@ -188,6 +171,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, orderBy, query, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // CONFIG
         const firebaseConfig = {
           apiKey: "AIzaSyBuzNrrB-rK_xcjSeGtFc3I9yUKHhRUcIY",
           authDomain: "b-strong-4c3d1.firebaseapp.com",
@@ -197,10 +181,17 @@
           appId: "1:746501272062:web:b2181766fd23ce8a3f10af"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // INIT
+        try {
+            const app = initializeApp(firebaseConfig);
+            window.db = getFirestore(app); // Attacher db à window
+            console.log("Firebase initialized");
+        } catch(e) {
+            console.error("Firebase Error:", e);
+            alert("Erreur de connexion Firebase");
+        }
 
-        // --- STATE ---
+        // STATE
         let currentSession = [];
         let rawHistoryData = [];
         let exerciseStats = {};
@@ -209,83 +200,145 @@
         let timerInt, seconds = 0;
         let chartInstance = null;
 
-        // --- DOM ELEMENTS & LISTENERS (CORRECTION ICI) ---
-        // On attache les événements en JS pour être sûr que ça marche
-        document.getElementById('navHome').addEventListener('click', () => switchTab('home'));
-        document.getElementById('navHistory').addEventListener('click', () => switchTab('history'));
-        document.getElementById('navCharts').addEventListener('click', () => switchTab('charts'));
-        
-        document.getElementById('btnStartWorkout').addEventListener('click', startWorkout);
-        document.getElementById('btnDemo').addEventListener('click', generateDemoData);
-        document.getElementById('btnAddSet').addEventListener('click', addSet);
-        document.getElementById('btnSave').addEventListener('click', saveSession);
-        document.getElementById('btnCancel').addEventListener('click', cancelWorkout);
-        document.getElementById('btnCloseChart').addEventListener('click', closeChart);
-
-
-        // --- NAVIGATION FUNCTION ---
-        function switchTab(tabName) {
-            // 1. Masquer toutes les vues
+        // --- EXPOSER LES FONCTIONS GLOBALES (POUR QUE LE HTML LES VOIT) ---
+        window.switchTab = function(tabName) {
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-            // 2. Désactiver tous les boutons nav
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
-            // 3. Afficher Nav et Header (au cas où on revient du mode workout)
             document.getElementById('mainNav').style.display = 'flex';
             document.getElementById('appHeader').style.display = 'flex';
 
-            // 4. Activer la bonne vue
             if(tabName === 'home') {
                 document.getElementById('viewHome').classList.add('active');
                 document.getElementById('navHome').classList.add('active');
                 document.getElementById('pageTitle').innerText = "B-STRONG";
-            }
-            else if(tabName === 'history') {
+            } else if(tabName === 'history') {
                 document.getElementById('viewHistory').classList.add('active');
                 document.getElementById('navHistory').classList.add('active');
                 document.getElementById('pageTitle').innerText = "Historique";
                 renderHistoryView();
-            }
-            else if(tabName === 'charts') {
+            } else if(tabName === 'charts') {
                 document.getElementById('viewCharts').classList.add('active');
                 document.getElementById('navCharts').classList.add('active');
                 document.getElementById('pageTitle').innerText = "Mes Exercices";
                 renderChartsListView();
             }
-        }
+        };
 
-        // --- UTILS ---
-        function normalizeText(txt) { 
-            if(!txt) return "";
-            return txt.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
-        }
-        function formatTitle(txt) { 
-            if(!txt) return "";
-            return txt.charAt(0).toUpperCase() + txt.slice(1); 
-        }
-
-        // --- WORKOUT LOGIC ---
-        function startWorkout() {
+        window.startWorkout = function() {
+            window.switchTab('workout'); // Hack pour nettoyer
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.getElementById('viewWorkout').classList.add('active');
-            
-            // Cacher Nav et Header
             document.getElementById('mainNav').style.display = 'none';
             document.getElementById('appHeader').style.display = 'none';
-            
             startTimer();
             updateSuggestions();
-        }
+        };
 
-        function cancelWorkout() {
-            if(confirm("Annuler la séance en cours ?")) {
+        window.cancelWorkout = function() {
+            if(confirm("Annuler ?")) {
                 currentSession = [];
                 document.getElementById('currentList').innerHTML = '';
                 stopTimer();
-                switchTab('home');
+                window.switchTab('home');
             }
-        }
+        };
 
+        window.addSet = function() {
+            let nom = document.getElementById('exoName').value;
+            const w = document.getElementById('exoWeight').value;
+            const r = document.getElementById('exoReps').value;
+            if(!nom || !r) return alert("Remplir Nom et Reps");
+            
+            nom = formatTitle(nom.trim());
+            currentSession.push({ nom: nom, poids: w, reps: r });
+
+            const ul = document.getElementById('currentList');
+            const li = document.createElement('li');
+            li.className = 'current-item';
+            li.innerHTML = `<div><strong>${nom}</strong> <span style="color:#888">${w}kg x ${r}</span></div><div style="color:var(--accent-green)">✔</div>`;
+            ul.appendChild(li);
+            document.getElementById('exoReps').value = '';
+        };
+
+        window.saveSession = async function() {
+            if(currentSession.length === 0) return;
+            const btn = document.querySelector('.btn-danger'); // Sélecteur générique
+            if(btn) btn.innerText = "Envoi...";
+            
+            try {
+                await addDoc(collection(window.db, "workouts"), {
+                    date: serverTimestamp(),
+                    exercises: currentSession,
+                    duration: seconds
+                });
+                stopTimer();
+                currentSession = [];
+                document.getElementById('currentList').innerHTML = '';
+                document.getElementById('exoName').value = '';
+                if(btn) btn.innerText = "TERMINER LA SÉANCE";
+                await loadAllData();
+                window.switchTab('history');
+            } catch(e) {
+                alert("Erreur: " + e.message);
+            }
+        };
+
+        window.generateDemoData = async function() {
+            if(!confirm("Générer data ?")) return;
+            const exos = ["Squat", "Bench Press", "Curl Biceps"];
+            for(let i=5; i>=1; i--) {
+                const d = new Date(); d.setDate(d.getDate() - (i*2));
+                const sExos = [];
+                exos.forEach(n => {
+                    const p = 50 + ((6-i)*5); 
+                    sExos.push({ nom: n, poids: p, reps: 10 });
+                    sExos.push({ nom: n, poids: p, reps: 10 });
+                });
+                await addDoc(collection(window.db, "workouts"), {
+                    date: Timestamp.fromDate(d), exercises: sExos, duration: 3600
+                });
+            }
+            alert("Fait !");
+            await loadAllData();
+            window.switchTab('history');
+        };
+
+        window.openChart = function(key, name) {
+            const modal = document.getElementById('chartModal');
+            const subtitle = document.getElementById('chartSubtitle');
+            modal.style.display = 'flex';
+            document.getElementById('chartTitle').innerText = name;
+
+            const data = exerciseStats[key] || [];
+            const lifetimeVol = data.reduce((acc, curr) => acc + curr.volume, 0);
+            subtitle.innerText = `${data.length} séance(s) | Total : ${(lifetimeVol/1000).toFixed(1)} T`;
+
+            const labels = data.map(d => d.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'}));
+            const values = data.map(d => d.volume);
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Volume (kg)', data: values,
+                        borderColor: '#0A84FF', backgroundColor: 'rgba(10, 132, 255, 0.2)',
+                        borderWidth: 3, pointBackgroundColor: '#fff', pointRadius: 5, fill: true, tension: 0.2
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display: false} }, scales: { y: { beginAtZero: true, grid: {color:'#333'}, ticks: {color:'#aaa'} }, x: { grid: {display:false}, ticks: {color:'#aaa'} } } }
+            });
+        };
+
+        window.closeChart = function() {
+            document.getElementById('chartModal').style.display = 'none';
+        };
+
+        // --- INTERNAL LOGIC ---
         function startTimer() {
             seconds = 0; document.getElementById('timer').innerText = "00:00";
             clearInterval(timerInt);
@@ -296,7 +349,6 @@
                 document.getElementById('timer').innerText = `${m}:${s}`;
             }, 1000);
         }
-        function stopTimer() { clearInterval(timerInt); }
 
         function updateSuggestions() {
             const dl = document.getElementById('suggestions');
@@ -308,50 +360,17 @@
             });
         }
 
-        function addSet() {
-            let nom = document.getElementById('exoName').value;
-            const w = document.getElementById('exoWeight').value;
-            const r = document.getElementById('exoReps').value;
-            if(!nom || !r) return alert("Nom et Reps requis");
-            
-            nom = formatTitle(nom.trim());
-            currentSession.push({ nom: nom, poids: w, reps: r });
-
-            const ul = document.getElementById('currentList');
-            const li = document.createElement('li');
-            li.className = 'current-item';
-            li.innerHTML = `<div><strong>${nom}</strong> <span style="color:#888">${w}kg x ${r}</span></div><div style="color:var(--accent-green)">✔</div>`;
-            ul.appendChild(li);
-            document.getElementById('exoReps').value = '';
+        function normalizeText(txt) { 
+            if(!txt) return "";
+            return txt.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
+        }
+        function formatTitle(txt) { 
+            if(!txt) return "";
+            return txt.charAt(0).toUpperCase() + txt.slice(1); 
         }
 
-        async function saveSession() {
-            if(currentSession.length === 0) return;
-            const btn = document.getElementById('btnSave');
-            btn.innerText = "Envoi...";
-            try {
-                await addDoc(collection(db, "workouts"), {
-                    date: serverTimestamp(),
-                    exercises: currentSession,
-                    duration: seconds
-                });
-                stopTimer();
-                currentSession = [];
-                document.getElementById('currentList').innerHTML = '';
-                document.getElementById('exoName').value = '';
-                btn.innerText = "TERMINER LA SÉANCE";
-                
-                await loadAllData(); // Rafraichir données
-                switchTab('history');
-            } catch(e) {
-                alert("Erreur: " + e.message);
-                btn.innerText = "TERMINER LA SÉANCE";
-            }
-        }
-
-        // --- DATA LOADING ---
         async function loadAllData() {
-            const q = query(collection(db, "workouts"), orderBy("date", "desc"));
+            const q = query(collection(window.db, "workouts"), orderBy("date", "desc"));
             const snap = await getDocs(q);
             
             rawHistoryData = [];
@@ -383,13 +402,9 @@
                     }
                 }
             });
-            // Tri
-            for(const key in exerciseStats) {
-                exerciseStats[key].sort((a, b) => a.date - b.date);
-            }
+            for(const key in exerciseStats) exerciseStats[key].sort((a, b) => a.date - b.date);
         }
 
-        // --- RENDER FUNCTIONS ---
         function renderHistoryView() {
             const container = document.getElementById('historyContainer');
             container.innerHTML = "";
@@ -401,20 +416,4 @@
                 const dateStr = session.date.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'short'});
                 const card = document.createElement('div');
                 card.className = 'history-card';
-                let html = `<div class="history-header"><div class="history-date">${dateStr}</div><div style="font-size:12px; color:#666">${Math.floor((session.duration||0)/60)} min</div></div>`;
-                
-                const grouped = {};
-                if(session.exercises) {
-                    session.exercises.forEach(ex => {
-                        const name = formatTitle(ex.nom);
-                        if(!grouped[name]) grouped[name] = [];
-                        grouped[name].push(ex);
-                    });
-                }
-                for(const name in grouped) {
-                    const sets = grouped[name];
-                    const summary = sets.map(s => `${s.poids}×${s.reps}`).join(', ');
-                    html += `<div class="exo-line"><div class="exo-title">${name}</div><div class="set-list">${sets.length} sets: ${summary}</div></div>`;
-                }
-                card.innerHTML = html;
-                container.appendChil
+                let html = `<div class="history-header"
