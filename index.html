@@ -60,10 +60,8 @@
             display: flex; justify-content: space-between; align-items: center;
             background: var(--card); cursor: pointer;
         }
-        .list-item:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
-        .list-item:last-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; border-bottom: none; }
-
-        /* WORKOUT */
+        
+        /* INPUTS */
         .input-row { display: flex; gap: 10px; background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
         .field { flex: 1; }
         label { display: block; font-size: 10px; color: var(--sub); text-transform: uppercase; margin-bottom: 5px; }
@@ -77,16 +75,16 @@
         .current-ul { list-style: none; padding: 0; }
         .current-ul li { background: var(--card); padding: 10px; margin-bottom: 5px; border-radius: 8px; display: flex; justify-content: space-between; border-left: 3px solid var(--blue); }
 
-        /* NAV */
+        /* NAV BAR */
         .nav {
             position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
             background: var(--card); border-top: 1px solid var(--line);
-            display: flex; justify-content: space-around; align-items: center; z-index: 999;
+            display: flex; justify-content: space-around; align-items: center; z-index: 9999;
         }
         .nav-item {
             flex: 1; height: 100%; display: flex; flex-direction: column;
             align-items: center; justify-content: center; color: var(--sub); font-size: 10px;
-            cursor: pointer;
+            cursor: pointer; /* Important pour le clic */
         }
         .nav-item.active { color: var(--blue); }
         .icon { font-size: 20px; margin-bottom: 4px; }
@@ -94,7 +92,7 @@
         /* MODAL CHART */
         #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000; justify-content:center; align-items:center; }
         .modal-box { background: var(--card); width: 95%; max-width: 500px; padding: 20px; border-radius: 15px; position: relative; }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 30px; cursor: pointer; }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 30px; cursor: pointer; z-index: 2001; }
         .chart-area { position: relative; height: 300px; width: 100%; }
         
         #error-log { display: none; position: fixed; top: 0; left: 0; width: 100%; background: red; color: white; font-size: 12px; padding: 10px; z-index: 10000; }
@@ -110,8 +108,8 @@
 
     <div id="v-home" class="view active">
         <div class="home-container">
-            <button id="btn-start" class="btn-big">Démarrer</button>
-            <button id="btn-demo" style="margin-top:40px; background:none; border:none; color:#444;">+ Demo Data</button>
+            <button class="btn-big" onclick="window.startWorkout()">Démarrer</button>
+            <button onclick="window.addDemoData()" style="margin-top:40px; background:none; border:none; color:#444;">+ Demo Data</button>
         </div>
     </div>
 
@@ -138,29 +136,31 @@
             <div class="field"><label>Kg</label><input type="number" id="w-kg"></div>
             <div class="field"><label>Reps</label><input type="number" id="w-reps"></div>
         </div>
-        <button id="btn-add" class="btn-action blue">+ AJOUTER</button>
+        <button class="btn-action blue" onclick="window.addSet()">+ AJOUTER</button>
+        
         <ul id="w-list" class="current-ul"></ul>
+
         <div style="margin-top:40px;">
-            <button id="btn-save" class="btn-action red">TERMINER</button>
-            <button id="btn-cancel" class="btn-action text">Annuler</button>
+            <button class="btn-action red" onclick="window.saveWorkout()">TERMINER</button>
+            <button class="btn-action text" onclick="window.cancelWorkout()">Annuler</button>
         </div>
     </div>
 
     <div class="nav" id="navbar">
-        <div class="nav-item active" id="n-home">
+        <div class="nav-item active" id="n-home" onclick="window.switchTab('home')">
             <span class="icon">🏠</span>Accueil
         </div>
-        <div class="nav-item" id="n-hist">
+        <div class="nav-item" id="n-hist" onclick="window.switchTab('history')">
             <span class="icon">📅</span>Historique
         </div>
-        <div class="nav-item" id="n-chart">
+        <div class="nav-item" id="n-chart" onclick="window.switchTab('charts')">
             <span class="icon">📈</span>Graphiques
         </div>
     </div>
 
     <div id="modal">
         <div class="modal-box">
-            <span id="btn-close-modal" class="close-btn">&times;</span>
+            <span class="close-btn" onclick="window.closeModal()">&times;</span>
             <h3 id="m-title" style="color:var(--blue); margin-top:0;">Titre</h3>
             <p id="m-sub" style="font-size:12px; color:var(--sub);">Infos</p>
             <div class="chart-area"><canvas id="myChart"></canvas></div>
@@ -168,6 +168,11 @@
     </div>
 
     <script>
+        // --- LOGGING ---
+        function log(msg) {
+            console.log(msg);
+        }
+
         // --- CONFIG FIREBASE ---
         const firebaseConfig = {
           apiKey: "AIzaSyBuzNrrB-rK_xcjSeGtFc3I9yUKHhRUcIY",
@@ -178,12 +183,15 @@
           appId: "1:746501272062:web:b2181766fd23ce8a3f10af"
         };
 
+        // --- INIT ---
         let db;
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
-            console.log("Firebase OK");
-        } catch(e) { console.log("Erreur: " + e.message); }
+            log("Firebase OK");
+        } catch(e) { 
+            log("Erreur: " + e.message); 
+        }
 
         // --- VARIABLES ---
         let currentSession = [];
@@ -193,35 +201,18 @@
         let timerInt, seconds = 0;
         let chartInstance = null;
 
-        // --- ECOUTEURS D'EVENEMENTS (La clé du succès !) ---
-        // On attend que la page soit chargée, puis on attache les clics
-        document.addEventListener("DOMContentLoaded", () => {
+        // --- FONCTIONS GLOBALES (WINDOW) ---
+        
+        window.switchTab = function(tab) {
+            // Masquer toutes les vues
+            const views = document.querySelectorAll('.view');
+            for(let i=0; i<views.length; i++) { views[i].classList.remove('active'); }
             
-            // Navigation
-            document.getElementById('n-home').addEventListener('click', () => switchTab('home'));
-            document.getElementById('n-hist').addEventListener('click', () => switchTab('history'));
-            document.getElementById('n-chart').addEventListener('click', () => switchTab('charts'));
+            // Masquer nav active
+            const navs = document.querySelectorAll('.nav-item');
+            for(let i=0; i<navs.length; i++) { navs[i].classList.remove('active'); }
 
-            // Actions Workout
-            document.getElementById('btn-start').addEventListener('click', startWorkout);
-            document.getElementById('btn-demo').addEventListener('click', addDemoData);
-            document.getElementById('btn-add').addEventListener('click', addSet);
-            document.getElementById('btn-save').addEventListener('click', saveWorkout);
-            document.getElementById('btn-cancel').addEventListener('click', cancelWorkout);
-            
-            // Modal
-            document.getElementById('btn-close-modal').addEventListener('click', closeModal);
-
-            // Chargement initial des données
-            loadData();
-        });
-
-        // --- FONCTIONS ---
-
-        function switchTab(tab) {
-            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
-            
+            // Afficher Nav bar et Header
             document.getElementById('navbar').style.display = 'flex';
             document.querySelector('header').style.display = 'flex';
 
@@ -242,16 +233,20 @@
                 document.getElementById('title').innerText = "Mes Exercices";
                 renderChartsList();
             }
-        }
+        };
 
-        function startWorkout() {
-            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+        window.startWorkout = function() {
+            const views = document.querySelectorAll('.view');
+            for(let i=0; i<views.length; i++) { views[i].classList.remove('active'); }
+            
             document.getElementById('v-workout').classList.add('active');
             document.getElementById('navbar').style.display = 'none';
             document.querySelector('header').style.display = 'none';
             
-            seconds = 0; document.getElementById('timer').innerText = "00:00";
-            clearInterval(timerInt);
+            seconds = 0; 
+            document.getElementById('timer').innerText = "00:00";
+            if(timerInt) clearInterval(timerInt);
+            
             timerInt = setInterval(() => {
                 seconds++;
                 const m = Math.floor(seconds/60).toString().padStart(2,'0');
@@ -259,26 +254,218 @@
                 document.getElementById('timer').innerText = `${m}:${s}`;
             }, 1000);
             renderDatalist();
-        }
+        };
 
-        function cancelWorkout() {
+        window.cancelWorkout = function() {
             if(confirm("Annuler ?")) {
                 currentSession = [];
                 document.getElementById('w-list').innerHTML = '';
-                clearInterval(timerInt);
-                switchTab('home');
+                if(timerInt) clearInterval(timerInt);
+                window.switchTab('home');
             }
-        }
+        };
 
-        function addSet() {
+        window.addSet = function() {
             let nom = document.getElementById('w-name').value.trim();
             const w = document.getElementById('w-kg').value;
             const r = document.getElementById('w-reps').value;
+
             if(!nom || !r) return alert("Nom et Reps requis");
+            
             nom = nom.charAt(0).toUpperCase() + nom.slice(1);
             currentSession.push({ nom, poids: w, reps: r });
+
             const li = document.createElement('li');
             li.innerHTML = `<span><b>${nom}</b></span><span>${w}kg x ${r}</span>`;
             document.getElementById('w-list').appendChild(li);
-            document.getElementById('w-re
-                                    
+            
+            document.getElementById('w-reps').value = '';
+        };
+
+        window.saveWorkout = async function() {
+            if(currentSession.length === 0) return;
+            const btn = document.querySelector('.red'); // Sélectionne le bouton terminer
+            btn.innerText = "Envoi...";
+            
+            try {
+                await db.collection("workouts").add({
+                    date: firebase.firestore.FieldValue.serverTimestamp(),
+                    exercises: currentSession,
+                    duration: seconds
+                });
+                
+                currentSession = [];
+                document.getElementById('w-list').innerHTML = '';
+                document.getElementById('w-name').value = '';
+                if(timerInt) clearInterval(timerInt);
+                btn.innerText = "TERMINER";
+                
+                await loadData();
+                window.switchTab('history');
+
+            } catch(e) {
+                alert("Erreur: " + e.message);
+                btn.innerText = "TERMINER";
+            }
+        };
+
+        window.closeModal = function() {
+            document.getElementById('modal').style.display = 'none';
+        };
+
+        window.addDemoData = async function() {
+            if(!confirm("Ajouter data demo ?")) return;
+            const dates = [2, 3, 9, 10, 16]; // Plusieurs semaines
+            try {
+                for(let dOffset of dates) {
+                    const d = new Date(); d.setDate(d.getDate() - dOffset);
+                    await db.collection("workouts").add({
+                        date: firebase.firestore.Timestamp.fromDate(d),
+                        duration: 3000,
+                        exercises: [{nom:"Squat", poids:60, reps:10}, {nom:"Bench", poids:50, reps:10}]
+                    });
+                }
+                alert("Fait !");
+                await loadData();
+                window.switchTab('history');
+            } catch(e) { log(e.message); }
+        };
+
+        // --- CHARGEMENT DONNEES ---
+        async function loadData() {
+            try {
+                const snap = await db.collection("workouts").orderBy("date", "desc").get();
+                allData = [];
+                stats = {};
+                knownExos.clear();
+
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const date = d.date ? d.date.toDate() : new Date();
+                    allData.push({ ...d, date });
+
+                    if(d.exercises) {
+                        let sessionVol = {};
+                        d.exercises.forEach(ex => {
+                            const key = ex.nom.trim().toLowerCase();
+                            const display = ex.nom.charAt(0).toUpperCase() + ex.nom.slice(1);
+                            knownExos.add(JSON.stringify({key, display}));
+
+                            const vol = (parseFloat(ex.poids)||0)*(parseFloat(ex.reps)||0);
+                            if(!sessionVol[key]) sessionVol[key]=0;
+                            sessionVol[key]+=vol;
+                        });
+
+                        for(const k in sessionVol) {
+                            if(!stats[k]) stats[k] = [];
+                            stats[k].push({ date, vol: sessionVol[k] });
+                        }
+                    }
+                });
+                for(const k in stats) stats[k].sort((a,b) => a.date - b.date);
+
+            } catch(e) {
+                log("Erreur chargement: " + e.message);
+            }
+        }
+
+        // --- RENDUS ---
+        function renderHistory() {
+            const div = document.getElementById('history-list');
+            div.innerHTML = "";
+            if(allData.length === 0) { div.innerHTML = "<p style='text-align:center; padding:20px;'>Vide</p>"; return; }
+
+            allData.forEach(s => {
+                const dateStr = s.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
+                let txt = "";
+                const grp = {};
+                if(s.exercises) {
+                    s.exercises.forEach(e => {
+                        if(!grp[e.nom]) grp[e.nom] = [];
+                        grp[e.nom].push(`${e.poids}x${e.reps}`);
+                    });
+                }
+                for(const n in grp) {
+                    txt += `<div style="margin-top:5px;"><strong>${n}</strong> <span style="color:#888">${grp[n].join(', ')}</span></div>`;
+                }
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<div class="row-sb"><span class="date">${dateStr}</span><span class="sub">${Math.floor((s.duration||0)/60)} min</span></div>${txt}`;
+                div.appendChild(card);
+            });
+        }
+
+        function renderChartsList() {
+            const div = document.getElementById('charts-list');
+            div.innerHTML = "";
+            
+            let arr = [];
+            knownExos.forEach(j => arr.push(JSON.parse(j)));
+            const map = new Map();
+            arr.forEach(o => map.set(o.key, o.display));
+            const sorted = Array.from(map.entries()).sort((a,b) => a[1].localeCompare(b[1]));
+
+            if(sorted.length === 0) { div.innerHTML = "<p style='text-align:center'>Rien</p>"; return; }
+
+            sorted.forEach(([key, display]) => {
+                const el = document.createElement('div');
+                el.className = 'list-item';
+                el.innerHTML = `<span>${display}</span><span style="color:#666">›</span>`;
+                // ONCLICK DIRECT EN JS
+                el.onclick = function() { openChart(key, display); };
+                div.appendChild(el);
+            });
+        }
+
+        function renderDatalist() {
+            const dl = document.getElementById('dl-exos');
+            dl.innerHTML = "";
+            knownExos.forEach(j => {
+                const o = JSON.parse(j);
+                const opt = document.createElement('option');
+                opt.value = o.display;
+                dl.appendChild(opt);
+            });
+        }
+
+        // --- GRAPHIQUE SEMAINE (LOGIQUE DEMANDÉE) ---
+        function getMonday(d) {
+            d = new Date(d);
+            var day = d.getDay(),
+                diff = d.getDate() - day + (day == 0 ? -6 : 1); 
+            return new Date(d.setDate(diff));
+        }
+
+        window.openChart = function(key, title) {
+            const modal = document.getElementById('modal');
+            modal.style.display = "flex";
+            document.getElementById('m-title').innerText = title;
+            
+            const rawData = stats[key] || [];
+            
+            // AGREGATION HEBDOMADAIRE
+            const weeklyMap = new Map();
+
+            rawData.forEach(item => {
+                const monday = getMonday(item.date);
+                const mondayStr = monday.toISOString().split('T')[0]; 
+                const label = "Sem " + monday.toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
+
+                if(!weeklyMap.has(mondayStr)) {
+                    weeklyMap.set(mondayStr, { label: label, vol: 0, dateObj: monday });
+                }
+                weeklyMap.get(mondayStr).vol += item.vol;
+            });
+
+            const weeklyData = Array.from(weeklyMap.values()).sort((a,b) => a.dateObj - b.dateObj);
+
+            const totalVol = rawData.reduce((acc,cur) => acc+cur.vol, 0);
+            document.getElementById('m-sub').innerText = `Total à vie: ${(totalVol/1000).toFixed(1)} Tonnes`;
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels
