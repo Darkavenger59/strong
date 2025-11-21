@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>B-STRONG</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <style>
+        /* --- CSS (DESIGN) --- */
         :root {
             --bg-app: #000000; --bg-card: #1C1C1E; 
             --text-primary: #FFFFFF; --text-secondary: #8E8E93; 
@@ -14,16 +19,22 @@
             --separator: #2C2C2E; --font: -apple-system, BlinkMacSystemFont, sans-serif;
             --nav-height: 60px;
         }
-
         body {
             background-color: var(--bg-app); color: var(--text-primary);
             font-family: var(--font); margin: 0; padding: 0; 
             padding-bottom: calc(var(--nav-height) + 20px);
-            user-select: none; /* Empêche la sélection de texte accidentelle */
+            user-select: none; -webkit-tap-highlight-color: transparent;
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; }
 
-        /* HEADER */
+        /* ZONE DE DIAGNOSTIC (DEBUG) */
+        #debug-console {
+            display: none; /* Caché par défaut, s'affiche si erreur */
+            background: #ff0000; color: white; padding: 10px; font-size: 12px;
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 10000;
+            white-space: pre-wrap;
+        }
+
         header {
             padding: 15px; background: var(--bg-card);
             border-bottom: 1px solid var(--separator); position: sticky; top: 0; z-index: 100;
@@ -36,8 +47,7 @@
         .view.active { display: block; animation: fade 0.2s; }
         @keyframes fade { from{opacity:0} to{opacity:1} }
 
-        /* ACCUEIL */
-        #viewHome { height: 70vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        /* BOUTONS & INPUTS */
         .big-btn {
             background: var(--accent-blue); color: white; border: none;
             width: 160px; height: 160px; border-radius: 50%;
@@ -46,19 +56,11 @@
         }
         .big-btn:active { transform: scale(0.95); opacity: 0.8; }
 
-        /* LISTES */
         .card { background: var(--bg-card); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-        .row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .date { font-weight: bold; font-size: 15px; }
-        .sub { font-size: 13px; color: var(--text-secondary); }
-        
         .list-item { 
             background: var(--bg-card); padding: 15px; border-bottom: 1px solid var(--separator); 
             display: flex; justify-content: space-between; cursor: pointer;
         }
-        .list-item:active { background: #333; }
-
-        /* INPUTS */
         .input-row { display: flex; gap: 10px; background: var(--bg-card); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
         .wrapper { flex: 1; }
         label { display: block; color: var(--text-secondary); font-size: 10px; text-transform: uppercase; }
@@ -92,25 +94,21 @@
         .box { background: var(--bg-card); width:90%; padding:20px; border-radius:15px; position: relative; }
         .close { position: absolute; top:10px; right:15px; font-size:30px; padding: 10px; }
         .chart-wrap { position: relative; height: 300px; width: 100%; }
-
-        /* DEBUG ERROR BOX */
-        #errorBox { 
-            display:none; background:red; color:white; padding:10px; 
-            position:fixed; top:0; left:0; width:100%; z-index:9999; font-size:12px; 
-        }
     </style>
 </head>
 <body>
 
-    <div id="errorBox"></div>
+    <div id="debug-console"></div>
 
     <header>
         <h1 id="pageTitle">B-STRONG</h1>
     </header>
 
     <div id="v-home" class="view active">
-        <button id="btn-start" class="big-btn">Démarrer</button>
-        <button id="btn-demo" style="margin-top:40px; background:none; border:none; color:#444; font-size:12px;">+ Demo Data</button>
+        <div style="height: 70vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <button id="btn-start" class="big-btn">Démarrer</button>
+            <button id="btn-demo" style="margin-top:40px; background:none; border:none; color:#444; font-size:12px;">+ Demo Data</button>
+        </div>
     </div>
 
     <div id="v-history" class="view">
@@ -123,7 +121,7 @@
     </div>
 
     <div id="v-workout" class="view">
-        <div class="row">
+        <div style="display:flex; justify-content: space-between;">
             <h2>En cours...</h2>
             <span id="timer" style="color:#888;">00:00</span>
         </div>
@@ -156,21 +154,19 @@
         </div>
     </div>
 
-    <script type="module">
-        // --- 1. IMPORTS ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, orderBy, query, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        // --- 2. GESTION DES ERREURS (Affiche les bugs à l'écran) ---
-        function showError(msg) {
-            const el = document.getElementById('errorBox');
+    <script>
+        // --- GESTION DES ERREURS ---
+        function logError(msg) {
+            const el = document.getElementById('debug-console');
             el.style.display = 'block';
-            el.innerText = "ERREUR: " + msg;
+            el.innerText += "ERREUR: " + msg + "\n";
             console.error(msg);
         }
-        window.addEventListener('error', (e) => showError(e.message));
+        window.onerror = function(message, source, lineno, colno, error) {
+            logError(message);
+        };
 
-        // --- 3. CONFIG FIREBASE ---
+        // --- CONFIGURATION FIREBASE ---
         const firebaseConfig = {
           apiKey: "AIzaSyBuzNrrB-rK_xcjSeGtFc3I9yUKHhRUcIY",
           authDomain: "b-strong-4c3d1.firebaseapp.com",
@@ -180,16 +176,17 @@
           appId: "1:746501272062:web:b2181766fd23ce8a3f10af"
         };
 
+        // --- INITIALISATION ---
         let db;
         try {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            console.log("Firebase OK");
-        } catch(e) {
-            showError("Firebase Init Failed: " + e.message);
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log("Firebase connecté !");
+        } catch (e) {
+            logError("Impossible de connecter Firebase : " + e.message);
         }
 
-        // --- 4. VARIABLES ---
+        // --- VARIABLES ---
         let currentSession = [];
         let allData = [];
         let stats = {};
@@ -197,64 +194,64 @@
         let timerInt, seconds = 0;
         let chartInstance = null;
 
-        // --- 5. NAVIGATION (La partie importante !) ---
-        // On sélectionne les éléments par ID et on ajoute les écouteurs
-        
-        // Nav Bar
-        document.getElementById('nav-home').addEventListener('click', () => goToTab('home'));
-        document.getElementById('nav-history').addEventListener('click', () => goToTab('history'));
-        document.getElementById('nav-charts').addEventListener('click', () => goToTab('charts'));
-
-        // Actions
-        document.getElementById('btn-start').addEventListener('click', startWorkout);
-        document.getElementById('btn-demo').addEventListener('click', addDemoData);
-        document.getElementById('btn-add-set').addEventListener('click', addSet);
-        document.getElementById('btn-finish').addEventListener('click', saveWorkout);
-        document.getElementById('btn-cancel').addEventListener('click', cancelWorkout);
-        
-        // Modal
-        document.getElementById('btn-close-chart').addEventListener('click', () => {
-            document.getElementById('modal').style.display = 'none';
-        });
-
-        // --- 6. FONCTIONS ---
-
-        function goToTab(tab) {
-            // Cacher tout
-            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
+        // --- FONCTIONS DE NAVIGATION ---
+        function goToTab(tabName) {
+            // Cacher les vues
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
             
             // Afficher Nav et Header
             document.getElementById('navbar').style.display = 'flex';
             document.querySelector('header').style.display = 'flex';
 
             // Activer
-            if(tab === 'home') {
+            if(tabName === 'home') {
                 document.getElementById('v-home').classList.add('active');
                 document.getElementById('nav-home').classList.add('active');
                 document.getElementById('pageTitle').innerText = "B-STRONG";
             }
-            else if(tab === 'history') {
+            else if(tabName === 'history') {
                 document.getElementById('v-history').classList.add('active');
                 document.getElementById('nav-history').classList.add('active');
                 document.getElementById('pageTitle').innerText = "Historique";
                 renderHistory();
             }
-            else if(tab === 'charts') {
+            else if(tabName === 'charts') {
                 document.getElementById('v-charts').classList.add('active');
                 document.getElementById('nav-charts').classList.add('active');
-                document.getElementById('pageTitle').innerText = "Graphiques";
+                document.getElementById('pageTitle').innerText = "Mes Exercices";
                 renderChartsList();
             }
         }
 
+        // --- ECOUTEURS D'EVENEMENTS (CLICKS) ---
+        // On attend que la page soit chargée pour attacher les clics
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // Navigation
+            document.getElementById('nav-home').onclick = function() { goToTab('home'); };
+            document.getElementById('nav-history').onclick = function() { goToTab('history'); };
+            document.getElementById('nav-charts').onclick = function() { goToTab('charts'); };
+
+            // Actions
+            document.getElementById('btn-start').onclick = startWorkout;
+            document.getElementById('btn-demo').onclick = addDemoData;
+            document.getElementById('btn-add-set').onclick = addSet;
+            document.getElementById('btn-finish').onclick = saveWorkout;
+            document.getElementById('btn-cancel').onclick = cancelWorkout;
+            document.getElementById('btn-close-chart').onclick = function() { 
+                document.getElementById('modal').style.display = 'none'; 
+            };
+        });
+
+        // --- LOGIQUE MÉTIER ---
         function startWorkout() {
-            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.getElementById('v-workout').classList.add('active');
             document.getElementById('navbar').style.display = 'none';
             document.querySelector('header').style.display = 'none';
             
-            seconds = 0; 
+            seconds = 0;
             document.getElementById('timer').innerText = "00:00";
             clearInterval(timerInt);
             timerInt = setInterval(() => {
@@ -263,7 +260,6 @@
                 const s = (seconds%60).toString().padStart(2,'0');
                 document.getElementById('timer').innerText = `${m}:${s}`;
             }, 1000);
-            
             renderDatalist();
         }
 
@@ -283,18 +279,13 @@
             const r = document.getElementById('w-reps').value;
 
             if(!nom || !r) return alert("Nom et Reps requis");
-
-            // Formatage Nom
-            nom = nom.charAt(0).toUpperCase() + nom.slice(1);
             
+            nom = nom.charAt(0).toUpperCase() + nom.slice(1);
             currentSession.push({ nom, poids: w, reps: r });
 
-            // Ajout visuel
             const li = document.createElement('li');
             li.innerHTML = `<span><b>${nom}</b></span> <span>${w}kg x ${r}</span>`;
             document.getElementById('w-list').appendChild(li);
-
-            // Reset champs reps (on garde le reste pour enchainer)
             document.getElementById('w-reps').value = '';
         }
 
@@ -304,8 +295,8 @@
             btn.innerText = "Envoi...";
             
             try {
-                await addDoc(collection(db, "workouts"), {
-                    date: serverTimestamp(),
+                await db.collection("workouts").add({
+                    date: firebase.firestore.FieldValue.serverTimestamp(),
                     exercises: currentSession,
                     duration: seconds
                 });
@@ -316,21 +307,20 @@
                 clearInterval(timerInt);
                 btn.innerText = "TERMINER";
                 
-                await loadData(); // Recharger les données
+                await loadData(); 
                 goToTab('history');
 
             } catch(e) {
-                showError(e.message);
+                logError("Erreur sauvegarde : " + e.message);
                 btn.innerText = "TERMINER";
             }
         }
 
-        // --- 7. DATA & RENDU ---
-
+        // --- CHARGEMENT DONNEES ---
         async function loadData() {
             try {
-                const q = query(collection(db, "workouts"), orderBy("date", "desc"));
-                const snap = await getDocs(q);
+                // Récupérer les données depuis Firestore
+                const snap = await db.collection("workouts").orderBy("date", "desc").get();
                 
                 allData = [];
                 stats = {};
@@ -339,25 +329,21 @@
                 snap.forEach(doc => {
                     const d = doc.data();
                     const date = d.date ? d.date.toDate() : new Date();
-                    allData.push({ ...d, date }); // Stocker
+                    allData.push({ ...d, date });
 
                     if(d.exercises) {
                         let sessionVol = {};
                         d.exercises.forEach(ex => {
-                            // Clé unique simplifiée pour grouper
                             const key = ex.nom.trim().toLowerCase();
                             const display = ex.nom.charAt(0).toUpperCase() + ex.nom.slice(1);
                             
-                            // Enregistrer le nom propre pour la liste
                             knownExos.add(JSON.stringify({key, display}));
 
-                            // Calcul volume
                             const vol = (parseFloat(ex.poids)||0) * (parseFloat(ex.reps)||0);
                             if(!sessionVol[key]) sessionVol[key] = 0;
                             sessionVol[key] += vol;
                         });
 
-                        // Ajouter aux stats globales
                         for(const k in sessionVol) {
                             if(!stats[k]) stats[k] = [];
                             stats[k].push({ date: date, vol: sessionVol[k] });
@@ -365,14 +351,17 @@
                     }
                 });
 
-                // Trier stats
+                // Trier par date
                 for(const k in stats) stats[k].sort((a,b) => a.date - b.date);
 
             } catch(e) {
-                showError(e.message);
+                // Erreur silencieuse si DB vide, sinon log
+                if(e.message.includes("offline")) logError("Erreur connexion internet");
+                else logError(e.message);
             }
         }
 
+        // --- RENDU VISUEL ---
         function renderHistory() {
             const div = document.getElementById('history-list');
             div.innerHTML = "";
@@ -381,7 +370,6 @@
             allData.forEach(s => {
                 const dateStr = s.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
                 
-                // Grouper par nom pour affichage joli
                 let txt = "";
                 const grp = {};
                 if(s.exercises) {
@@ -405,14 +393,10 @@
             const div = document.getElementById('charts-list');
             div.innerHTML = "";
             
-            // Convertir Set en Array propre
             let arr = [];
             knownExos.forEach(j => arr.push(JSON.parse(j)));
-            // Dédoublonner par clé
             const map = new Map();
             arr.forEach(o => map.set(o.key, o.display));
-            
-            // Trier
             const sorted = Array.from(map.entries()).sort((a,b) => a[1].localeCompare(b[1]));
 
             if(sorted.length === 0) { div.innerHTML = "<p style='text-align:center;'>Rien à afficher</p>"; return; }
@@ -421,8 +405,7 @@
                 const el = document.createElement('div');
                 el.className = 'list-item';
                 el.innerHTML = `<span>${display}</span> <span style="color:#666">›</span>`;
-                // CLIC SUR EXERCICE
-                el.addEventListener('click', () => openChart(key, display));
+                el.onclick = function() { openChart(key, display); };
                 div.appendChild(el);
             });
         }
@@ -456,4 +439,12 @@
                     labels: data.map(d => d.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'})),
                     datasets: [{
                         label: 'Volume (kg)',
-                
+                        data: data.map(d => d.vol),
+                        borderColor: '#0A84FF', backgroundColor: 'rgba(10, 132, 255, 0.2)',
+                        borderWidth: 3, pointBackgroundColor: '#fff', pointRadius: 5, fill: true, tension: 0.2
+                    }]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: {display: false} },
+                    scales: { y: { beginAtZero: true, grid: {
