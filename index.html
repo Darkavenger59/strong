@@ -6,108 +6,114 @@
     <title>B-STRONG</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <style>
-        /* --- CSS (DESIGN) --- */
+        /* --- DESIGN DARK MODE --- */
         :root {
-            --bg-app: #000000; --bg-card: #1C1C1E; 
-            --text-primary: #FFFFFF; --text-secondary: #8E8E93; 
-            --accent-blue: #0A84FF; --accent-red: #FF453A; --accent-green: #30D158;
-            --separator: #2C2C2E; --font: -apple-system, BlinkMacSystemFont, sans-serif;
-            --nav-height: 60px;
+            --bg: #000000; --card: #1C1C1E; --text: #FFFFFF; --sub: #8E8E93;
+            --blue: #0A84FF; --red: #FF453A; --green: #30D158;
+            --line: #2C2C2E;
         }
         body {
-            background-color: var(--bg-app); color: var(--text-primary);
-            font-family: var(--font); margin: 0; padding: 0; 
-            padding-bottom: calc(var(--nav-height) + 20px);
+            background-color: var(--bg); color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0; padding: 0; padding-bottom: 80px;
             user-select: none; -webkit-tap-highlight-color: transparent;
         }
         * { box-sizing: border-box; }
 
-        /* ZONE DE DIAGNOSTIC (DEBUG) */
-        #debug-console {
-            display: none; /* Caché par défaut, s'affiche si erreur */
-            background: #ff0000; color: white; padding: 10px; font-size: 12px;
-            position: fixed; top: 0; left: 0; width: 100%; z-index: 10000;
-            white-space: pre-wrap;
-        }
-
+        /* HEADER */
         header {
-            padding: 15px; background: var(--bg-card);
-            border-bottom: 1px solid var(--separator); position: sticky; top: 0; z-index: 100;
-            display: flex; justify-content: center; height: 50px; align-items: center;
+            background: var(--card); border-bottom: 1px solid var(--line);
+            padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100;
+            height: 50px; display: flex; align-items: center; justify-content: center;
         }
-        h1 { margin: 0; font-size: 18px; font-weight: 700; }
+        h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 1px; }
 
         /* VUES */
-        .view { display: none; padding: 20px; }
-        .view.active { display: block; animation: fade 0.2s; }
-        @keyframes fade { from{opacity:0} to{opacity:1} }
+        .view { display: none; padding: 20px; min-height: 80vh; }
+        .view.active { display: block; }
 
-        /* BOUTONS & INPUTS */
-        .big-btn {
-            background: var(--accent-blue); color: white; border: none;
-            width: 160px; height: 160px; border-radius: 50%;
-            font-size: 20px; font-weight: 700; text-transform: uppercase;
-            box-shadow: 0 0 20px rgba(10, 132, 255, 0.3); cursor: pointer;
+        /* ACCUEIL */
+        .home-container {
+            height: 70vh; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center;
         }
-        .big-btn:active { transform: scale(0.95); opacity: 0.8; }
+        .btn-big {
+            width: 180px; height: 180px; border-radius: 50%;
+            background: var(--blue); color: white; border: none;
+            font-size: 24px; font-weight: 700; text-transform: uppercase;
+            box-shadow: 0 0 30px rgba(10, 132, 255, 0.4); cursor: pointer;
+        }
+        .btn-big:active { transform: scale(0.95); }
 
-        .card { background: var(--bg-card); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-        .list-item { 
-            background: var(--bg-card); padding: 15px; border-bottom: 1px solid var(--separator); 
-            display: flex; justify-content: space-between; cursor: pointer;
-        }
-        .input-row { display: flex; gap: 10px; background: var(--bg-card); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-        .wrapper { flex: 1; }
-        label { display: block; color: var(--text-secondary); font-size: 10px; text-transform: uppercase; }
-        input { width: 100%; background: transparent; border: none; border-bottom: 1px solid #444; color: white; font-size: 18px; padding: 5px 0; border-radius: 0; }
+        /* HISTORIQUE & LISTES */
+        .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .row-sb { display: flex; justify-content: space-between; align-items: center; }
+        .date { font-weight: 700; font-size: 15px; }
+        .sub { color: var(--sub); font-size: 13px; }
         
-        button.action { width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; border: none; margin-bottom: 10px; font-size: 16px; }
-        .btn-blue { background: #2C2C2E; color: var(--accent-blue); border: 1px solid var(--accent-blue); }
-        .btn-red { background: var(--accent-red); color: white; }
-        .btn-text { background: none; color: #888; }
-
-        .current-list li { 
-            background: var(--bg-card); padding: 10px; border-radius: 8px; margin-bottom: 5px; 
-            display: flex; justify-content: space-between; border-left: 3px solid var(--accent-blue);
+        /* GRAPHIQUES LISTE */
+        .list-item {
+            padding: 15px; border-bottom: 1px solid var(--line);
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--card); cursor: pointer;
         }
+        .list-item:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+        .list-item:last-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; border-bottom: none; }
 
-        /* NAV */
+        /* WORKOUT INPUTS */
+        .input-row { display: flex; gap: 10px; background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .field { flex: 1; }
+        label { display: block; font-size: 10px; color: var(--sub); text-transform: uppercase; margin-bottom: 5px; }
+        input { width: 100%; background: transparent; border: none; border-bottom: 1px solid #444; color: white; font-size: 18px; padding: 5px 0; border-radius: 0; }
+
+        .btn-action { width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; border: none; font-size: 16px; margin-bottom: 10px; cursor: pointer; }
+        .blue { background: #222; color: var(--blue); border: 1px solid var(--blue); }
+        .red { background: var(--red); color: white; }
+        .text { background: transparent; color: var(--sub); }
+
+        .current-ul { list-style: none; padding: 0; }
+        .current-ul li { background: var(--card); padding: 10px; margin-bottom: 5px; border-radius: 8px; display: flex; justify-content: space-between; border-left: 3px solid var(--blue); }
+
+        /* NAV BAR */
         .nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
-            background: var(--bg-card); border-top: 1px solid var(--separator);
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+            background: var(--card); border-top: 1px solid var(--line);
             display: flex; justify-content: space-around; align-items: center; z-index: 999;
         }
-        .nav-btn {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #666; font-size: 10px; flex: 1; height: 100%; cursor: pointer;
+        .nav-item {
+            flex: 1; height: 100%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; color: var(--sub); font-size: 10px;
+            cursor: pointer;
         }
-        .nav-btn.active { color: var(--accent-blue); }
-        .icon { font-size: 22px; margin-bottom: 3px; }
+        .nav-item.active { color: var(--blue); }
+        .icon { font-size: 20px; margin-bottom: 4px; }
 
-        /* MODAL */
-        #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center; }
-        .box { background: var(--bg-card); width:90%; padding:20px; border-radius:15px; position: relative; }
-        .close { position: absolute; top:10px; right:15px; font-size:30px; padding: 10px; }
-        .chart-wrap { position: relative; height: 300px; width: 100%; }
+        /* MODAL CHART */
+        #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000; justify-content:center; align-items:center; }
+        .modal-box { background: var(--card); width: 95%; max-width: 500px; padding: 20px; border-radius: 15px; position: relative; }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 30px; cursor: pointer; }
+        .chart-area { position: relative; height: 300px; width: 100%; }
+        
+        /* DEBUG */
+        #error-log { display: none; position: fixed; top: 0; left: 0; width: 100%; background: red; color: white; font-size: 12px; padding: 10px; z-index: 10000; }
     </style>
 </head>
 <body>
 
-    <div id="debug-console"></div>
+    <div id="error-log"></div>
 
     <header>
-        <h1 id="pageTitle">B-STRONG</h1>
+        <h1 id="title">B-STRONG</h1>
     </header>
 
     <div id="v-home" class="view active">
-        <div style="height: 70vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <button id="btn-start" class="big-btn">Démarrer</button>
-            <button id="btn-demo" style="margin-top:40px; background:none; border:none; color:#444; font-size:12px;">+ Demo Data</button>
+        <div class="home-container">
+            <button class="btn-big" onclick="window.startWorkout()">Démarrer</button>
+            <button onclick="window.addDemoData()" style="margin-top:40px; background:none; border:none; color:#444;">+ Demo</button>
         </div>
     </div>
 
@@ -116,57 +122,65 @@
     </div>
 
     <div id="v-charts" class="view">
-        <p style="color:#666; font-size:12px; margin-bottom:10px;">Cliquez sur un exercice :</p>
+        <p style="color:var(--sub); font-size:12px; margin-bottom:10px;">Sélectionnez un exercice :</p>
         <div id="charts-list"></div>
     </div>
 
     <div id="v-workout" class="view">
-        <div style="display:flex; justify-content: space-between;">
+        <div class="row-sb" style="margin-bottom:20px;">
             <h2>En cours...</h2>
-            <span id="timer" style="color:#888;">00:00</span>
+            <span id="timer" style="color:var(--sub)">00:00</span>
         </div>
         <div class="input-row">
-            <div class="wrapper" style="flex:2"><label>Exercice</label><input type="text" id="w-name" list="dl-exos" placeholder="Squat"></div>
-            <datalist id="dl-exos"></datalist>
-            <div class="wrapper"><label>kg</label><input type="number" id="w-kg" placeholder="0"></div>
-            <div class="wrapper"><label>Reps</label><input type="number" id="w-reps" placeholder="0"></div>
+            <div class="field" style="flex:2">
+                <label>Nom</label>
+                <input type="text" id="w-name" list="dl-exos" placeholder="Squat">
+                <datalist id="dl-exos"></datalist>
+            </div>
+            <div class="field"><label>Kg</label><input type="number" id="w-kg"></div>
+            <div class="field"><label>Reps</label><input type="number" id="w-reps"></div>
         </div>
-        <button id="btn-add-set" class="action btn-blue">+ AJOUTER</button>
-        <ul id="w-list" class="current-list" style="padding:0; list-style:none;"></ul>
-        <div style="margin-top:30px;">
-            <button id="btn-finish" class="action btn-red">TERMINER</button>
-            <button id="btn-cancel" class="action btn-text">Annuler</button>
+        <button class="btn-action blue" onclick="window.addSet()">+ AJOUTER</button>
+        
+        <ul id="w-list" class="current-ul"></ul>
+
+        <div style="margin-top:40px;">
+            <button class="btn-action red" onclick="window.saveWorkout()">TERMINER</button>
+            <button class="btn-action text" onclick="window.cancelWorkout()">Annuler</button>
         </div>
     </div>
 
     <div class="nav" id="navbar">
-        <div class="nav-btn active" id="nav-home"><span class="icon">🏠</span>Accueil</div>
-        <div class="nav-btn" id="nav-history"><span class="icon">📅</span>Historique</div>
-        <div class="nav-btn" id="nav-charts"><span class="icon">📈</span>Graphiques</div>
+        <div class="nav-item active" id="n-home" onclick="window.switchTab('home')">
+            <span class="icon">🏠</span>Accueil
+        </div>
+        <div class="nav-item" id="n-hist" onclick="window.switchTab('history')">
+            <span class="icon">📅</span>Historique
+        </div>
+        <div class="nav-item" id="n-chart" onclick="window.switchTab('charts')">
+            <span class="icon">📈</span>Graphiques
+        </div>
     </div>
 
     <div id="modal">
-        <div class="box">
-            <span id="btn-close-chart" class="close">&times;</span>
-            <h3 id="chart-title" style="color:var(--accent-blue); margin-top:0;">Titre</h3>
-            <p id="chart-sub" style="font-size:12px; color:#888;">Infos</p>
-            <div class="chart-wrap"><canvas id="myChart"></canvas></div>
+        <div class="modal-box">
+            <span class="close-btn" onclick="window.closeModal()">&times;</span>
+            <h3 id="m-title" style="color:var(--blue); margin-top:0;">Titre</h3>
+            <p id="m-sub" style="font-size:12px; color:var(--sub);">Infos</p>
+            <div class="chart-area"><canvas id="myChart"></canvas></div>
         </div>
     </div>
 
     <script>
-        // --- GESTION DES ERREURS ---
-        function logError(msg) {
-            const el = document.getElementById('debug-console');
-            el.style.display = 'block';
-            el.innerText += "ERREUR: " + msg + "\n";
-            console.error(msg);
+        // --- GESTION ERREURS ---
+        function log(msg) {
+            console.log(msg);
+            const el = document.getElementById('error-log');
+            // Décommentez la ligne suivante si vous voulez voir les erreurs sur l'écran du téléphone
+            // el.style.display = 'block'; el.innerText = msg; 
         }
-        window.onerror = function(message, source, lineno, colno, error) {
-            logError(message);
-        };
 
-        // --- CONFIGURATION FIREBASE ---
+        // --- CONFIG FIREBASE ---
         const firebaseConfig = {
           apiKey: "AIzaSyBuzNrrB-rK_xcjSeGtFc3I9yUKHhRUcIY",
           authDomain: "b-strong-4c3d1.firebaseapp.com",
@@ -176,14 +190,14 @@
           appId: "1:746501272062:web:b2181766fd23ce8a3f10af"
         };
 
-        // --- INITIALISATION ---
+        // --- INIT ---
         let db;
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
-            console.log("Firebase connecté !");
-        } catch (e) {
-            logError("Impossible de connecter Firebase : " + e.message);
+            log("Firebase OK");
+        } catch(e) {
+            log("Erreur Firebase: " + e.message);
         }
 
         // --- VARIABLES ---
@@ -194,65 +208,44 @@
         let timerInt, seconds = 0;
         let chartInstance = null;
 
-        // --- FONCTIONS DE NAVIGATION ---
-        function goToTab(tabName) {
-            // Cacher les vues
-            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        // --- FONCTIONS GLOBALES (WINDOW.) ---
+        
+        window.switchTab = function(tab) {
+            // Cacher Vues
+            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
             
-            // Afficher Nav et Header
+            // Montrer Nav
             document.getElementById('navbar').style.display = 'flex';
             document.querySelector('header').style.display = 'flex';
 
             // Activer
-            if(tabName === 'home') {
+            if(tab === 'home') {
                 document.getElementById('v-home').classList.add('active');
-                document.getElementById('nav-home').classList.add('active');
-                document.getElementById('pageTitle').innerText = "B-STRONG";
+                document.getElementById('n-home').classList.add('active');
+                document.getElementById('title').innerText = "B-STRONG";
             }
-            else if(tabName === 'history') {
+            else if(tab === 'history') {
                 document.getElementById('v-history').classList.add('active');
-                document.getElementById('nav-history').classList.add('active');
-                document.getElementById('pageTitle').innerText = "Historique";
+                document.getElementById('n-hist').classList.add('active');
+                document.getElementById('title').innerText = "Historique";
                 renderHistory();
             }
-            else if(tabName === 'charts') {
+            else if(tab === 'charts') {
                 document.getElementById('v-charts').classList.add('active');
-                document.getElementById('nav-charts').classList.add('active');
-                document.getElementById('pageTitle').innerText = "Mes Exercices";
+                document.getElementById('n-chart').classList.add('active');
+                document.getElementById('title').innerText = "Mes Exercices";
                 renderChartsList();
             }
-        }
+        };
 
-        // --- ECOUTEURS D'EVENEMENTS (CLICKS) ---
-        // On attend que la page soit chargée pour attacher les clics
-        document.addEventListener('DOMContentLoaded', function() {
-            
-            // Navigation
-            document.getElementById('nav-home').onclick = function() { goToTab('home'); };
-            document.getElementById('nav-history').onclick = function() { goToTab('history'); };
-            document.getElementById('nav-charts').onclick = function() { goToTab('charts'); };
-
-            // Actions
-            document.getElementById('btn-start').onclick = startWorkout;
-            document.getElementById('btn-demo').onclick = addDemoData;
-            document.getElementById('btn-add-set').onclick = addSet;
-            document.getElementById('btn-finish').onclick = saveWorkout;
-            document.getElementById('btn-cancel').onclick = cancelWorkout;
-            document.getElementById('btn-close-chart').onclick = function() { 
-                document.getElementById('modal').style.display = 'none'; 
-            };
-        });
-
-        // --- LOGIQUE MÉTIER ---
-        function startWorkout() {
-            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+        window.startWorkout = function() {
+            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
             document.getElementById('v-workout').classList.add('active');
             document.getElementById('navbar').style.display = 'none';
             document.querySelector('header').style.display = 'none';
             
-            seconds = 0;
-            document.getElementById('timer').innerText = "00:00";
+            seconds = 0; document.getElementById('timer').innerText = "00:00";
             clearInterval(timerInt);
             timerInt = setInterval(() => {
                 seconds++;
@@ -261,37 +254,37 @@
                 document.getElementById('timer').innerText = `${m}:${s}`;
             }, 1000);
             renderDatalist();
-        }
+        };
 
-        function cancelWorkout() {
+        window.cancelWorkout = function() {
             if(confirm("Annuler ?")) {
                 currentSession = [];
                 document.getElementById('w-list').innerHTML = '';
                 clearInterval(timerInt);
-                goToTab('home');
+                window.switchTab('home');
             }
-        }
+        };
 
-        function addSet() {
-            const nameInput = document.getElementById('w-name');
-            let nom = nameInput.value.trim();
+        window.addSet = function() {
+            let nom = document.getElementById('w-name').value.trim();
             const w = document.getElementById('w-kg').value;
             const r = document.getElementById('w-reps').value;
 
-            if(!nom || !r) return alert("Nom et Reps requis");
+            if(!nom || !r) return alert("Remplissez Nom et Reps");
             
             nom = nom.charAt(0).toUpperCase() + nom.slice(1);
             currentSession.push({ nom, poids: w, reps: r });
 
             const li = document.createElement('li');
-            li.innerHTML = `<span><b>${nom}</b></span> <span>${w}kg x ${r}</span>`;
+            li.innerHTML = `<span><b>${nom}</b></span><span>${w}kg x ${r}</span>`;
             document.getElementById('w-list').appendChild(li);
+            
             document.getElementById('w-reps').value = '';
-        }
+        };
 
-        async function saveWorkout() {
+        window.saveWorkout = async function() {
             if(currentSession.length === 0) return;
-            const btn = document.getElementById('btn-finish');
+            const btn = document.querySelector('.red');
             btn.innerText = "Envoi...";
             
             try {
@@ -307,21 +300,38 @@
                 clearInterval(timerInt);
                 btn.innerText = "TERMINER";
                 
-                await loadData(); 
-                goToTab('history');
+                await loadData();
+                window.switchTab('history');
 
             } catch(e) {
-                logError("Erreur sauvegarde : " + e.message);
+                alert("Erreur: " + e.message);
                 btn.innerText = "TERMINER";
             }
-        }
+        };
 
-        // --- CHARGEMENT DONNEES ---
+        window.closeModal = function() {
+            document.getElementById('modal').style.display = 'none';
+        };
+
+        window.addDemoData = async function() {
+            if(!confirm("Ajouter data demo ?")) return;
+            const d = new Date(); d.setDate(d.getDate()-2);
+            try {
+                await db.collection("workouts").add({
+                    date: firebase.firestore.Timestamp.fromDate(d),
+                    duration: 3000,
+                    exercises: [{nom:"Squat", poids:60, reps:10}, {nom:"Bench", poids:50, reps:10}]
+                });
+                alert("Fait");
+                await loadData();
+                window.switchTab('history');
+            } catch(e) { alert(e.message); }
+        };
+
+        // --- CHARGEMENT DONNÉES ---
         async function loadData() {
             try {
-                // Récupérer les données depuis Firestore
                 const snap = await db.collection("workouts").orderBy("date", "desc").get();
-                
                 allData = [];
                 stats = {};
                 knownExos.clear();
@@ -336,32 +346,28 @@
                         d.exercises.forEach(ex => {
                             const key = ex.nom.trim().toLowerCase();
                             const display = ex.nom.charAt(0).toUpperCase() + ex.nom.slice(1);
-                            
                             knownExos.add(JSON.stringify({key, display}));
 
-                            const vol = (parseFloat(ex.poids)||0) * (parseFloat(ex.reps)||0);
-                            if(!sessionVol[key]) sessionVol[key] = 0;
-                            sessionVol[key] += vol;
+                            const vol = (parseFloat(ex.poids)||0)*(parseFloat(ex.reps)||0);
+                            if(!sessionVol[key]) sessionVol[key]=0;
+                            sessionVol[key]+=vol;
                         });
 
                         for(const k in sessionVol) {
                             if(!stats[k]) stats[k] = [];
-                            stats[k].push({ date: date, vol: sessionVol[k] });
+                            stats[k].push({ date, vol: sessionVol[k] });
                         }
                     }
                 });
 
-                // Trier par date
                 for(const k in stats) stats[k].sort((a,b) => a.date - b.date);
 
             } catch(e) {
-                // Erreur silencieuse si DB vide, sinon log
-                if(e.message.includes("offline")) logError("Erreur connexion internet");
-                else logError(e.message);
+                log("Erreur chargement: " + e.message);
             }
         }
 
-        // --- RENDU VISUEL ---
+        // --- RENDUS ---
         function renderHistory() {
             const div = document.getElementById('history-list');
             div.innerHTML = "";
@@ -369,7 +375,6 @@
 
             allData.forEach(s => {
                 const dateStr = s.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
-                
                 let txt = "";
                 const grp = {};
                 if(s.exercises) {
@@ -378,13 +383,12 @@
                         grp[e.nom].push(`${e.poids}x${e.reps}`);
                     });
                 }
-                for(const name in grp) {
-                    txt += `<div style="margin-top:5px;"><strong>${name}</strong>: <span style="color:#888">${grp[name].join(', ')}</span></div>`;
+                for(const n in grp) {
+                    txt += `<div style="margin-top:5px;"><strong>${n}</strong> <span style="color:#888">${grp[n].join(', ')}</span></div>`;
                 }
-
                 const card = document.createElement('div');
                 card.className = 'card';
-                card.innerHTML = `<div class="row"><span class="date">${dateStr}</span><span class="sub">${Math.floor((s.duration||0)/60)} min</span></div>${txt}`;
+                card.innerHTML = `<div class="row-sb"><span class="date">${dateStr}</span><span class="sub">${Math.floor((s.duration||0)/60)} min</span></div>${txt}`;
                 div.appendChild(card);
             });
         }
@@ -399,12 +403,13 @@
             arr.forEach(o => map.set(o.key, o.display));
             const sorted = Array.from(map.entries()).sort((a,b) => a[1].localeCompare(b[1]));
 
-            if(sorted.length === 0) { div.innerHTML = "<p style='text-align:center;'>Rien à afficher</p>"; return; }
+            if(sorted.length === 0) { div.innerHTML = "<p style='text-align:center'>Rien</p>"; return; }
 
             sorted.forEach(([key, display]) => {
                 const el = document.createElement('div');
                 el.className = 'list-item';
-                el.innerHTML = `<span>${display}</span> <span style="color:#666">›</span>`;
+                el.innerHTML = `<span>${display}</span><span style="color:#666">›</span>`;
+                // IMPORTANT: on appelle window.openChart explicitement
                 el.onclick = function() { openChart(key, display); };
                 div.appendChild(el);
             });
@@ -424,11 +429,11 @@
         function openChart(key, title) {
             const modal = document.getElementById('modal');
             modal.style.display = "flex";
-            document.getElementById('chart-title').innerText = title;
+            document.getElementById('m-title').innerText = title;
             
             const data = stats[key] || [];
             const total = data.reduce((acc,cur) => acc+cur.vol, 0);
-            document.getElementById('chart-sub').innerText = `${data.length} sessions | Total: ${(total/1000).toFixed(1)} T`;
+            document.getElementById('m-sub').innerText = `${data.length} séances | Total: ${(total/1000).toFixed(1)} T`;
 
             const ctx = document.getElementById('myChart').getContext('2d');
             if(chartInstance) chartInstance.destroy();
@@ -438,8 +443,7 @@
                 data: {
                     labels: data.map(d => d.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'})),
                     datasets: [{
-                        label: 'Volume (kg)',
-                        data: data.map(d => d.vol),
+                        label: 'Volume (kg)', data: data.map(d => d.vol),
                         borderColor: '#0A84FF', backgroundColor: 'rgba(10, 132, 255, 0.2)',
                         borderWidth: 3, pointBackgroundColor: '#fff', pointRadius: 5, fill: true, tension: 0.2
                     }]
@@ -447,4 +451,14 @@
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
                     plugins: { legend: {display: false} },
-                    scales: { y: { beginAtZero: true, grid: {
+                    scales: { y: { beginAtZero: true, grid: {color:'#333'}, ticks: {color:'#888'} }, x: { grid: {display:false}, ticks: {color:'#888'} } }
+                }
+            });
+        }
+
+        // Lancer le chargement
+        loadData();
+
+    </script>
+</body>
+</html>
