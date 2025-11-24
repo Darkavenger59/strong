@@ -1,19 +1,37 @@
-const CACHE_NAME = 'b-strong-gh-pages-v1';
+const CACHE_NAME = 'b-strong-v3-final'; // J'ai changé le nom pour forcer la mise à jour
 const ASSETS = [
-  '/strong/',
-  '/strong/index.html',
-  '/strong/manifest.json',
-  'https://cdn.jsdelivr.net/npm/chart.js',
-  'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
-  'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js',
-  'https://placehold.co/192x192/0A84FF/ffffff?text=B',
-  'https://placehold.co/512x512/0A84FF/ffffff?text=B'
+  './',
+  './index.html',
+  './manifest.json'
+  // J'ai retiré les liens externes (Firebase/Chart.js) du cache forcé
+  // pour éviter que ça plante si Internet est lent ou si l'URL change.
+  // L'app fonctionnera quand même, mais les graphiques chargeront via le réseau.
 ];
 
 self.addEventListener('install', (e) => {
+  console.log('[SW] Installation...');
   e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[SW] Mise en cache');
+      return cache.addAll(ASSETS);
+    })
   );
+  self.skipWaiting(); // Force l'activation immédiate
+});
+
+self.addEventListener('activate', (e) => {
+  console.log('[SW] Activation...');
+  e.waitUntil(
+    caches.keys().then((keyList) => {
+      return Promise.all(keyList.map((key) => {
+        if (key !== CACHE_NAME) {
+          console.log('[SW] Suppression ancien cache', key);
+          return caches.delete(key);
+        }
+      }));
+    })
+  );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (e) => {
