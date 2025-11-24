@@ -1,12 +1,13 @@
 {
   "name": "B-STRONG",
   "short_name": "B-STRONG",
-  "start_url": "./index.html",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#1C1C1E",
-  "description": "Application de suivi de musculation",
+  "description": "Suivi musculation",
   "orientation": "portrait",
+  "scope": "./",
   "icons": [
     {
       "src": "icon-192.png",
