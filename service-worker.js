@@ -1,44 +1,24 @@
-const CACHE_NAME = 'b-strong-v1';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'b-strong-v2';
+const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   'https://cdn.jsdelivr.net/npm/chart.js',
   'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
-  'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js'
+  'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js',
+  // On met en cache les icônes générées pour que l'app marche hors ligne
+  'https://placehold.co/192x192/0A84FF/ffffff?text=B',
+  'https://placehold.co/512x512/0A84FF/ffffff?text=B'
 ];
 
-// Installation du Service Worker
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[Service Worker] Mise en cache des fichiers');
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
 });
 
-// Activation et nettoyage des anciens caches
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keyList) => {
-      return Promise.all(keyList.map((key) => {
-        if (key !== CACHE_NAME) {
-          return caches.delete(key);
-        }
-      }));
-    })
-  );
-});
-
-// Interception des requêtes réseau (Mode Hors Ligne)
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Retourne le fichier du cache s'il existe, sinon le télécharge
-        return response || fetch(event.request);
-      })
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((response) => response || fetch(e.request))
   );
 });
