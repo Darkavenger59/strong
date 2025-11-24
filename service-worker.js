@@ -1,12 +1,11 @@
-const CACHE_NAME = 'b-strong-v2';
+const CACHE_NAME = 'b-strong-gh-pages-v1';
 const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
+  '/strong/',
+  '/strong/index.html',
+  '/strong/manifest.json',
   'https://cdn.jsdelivr.net/npm/chart.js',
   'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js',
-  // On met en cache les icônes générées pour que l'app marche hors ligne
   'https://placehold.co/192x192/0A84FF/ffffff?text=B',
   'https://placehold.co/512x512/0A84FF/ffffff?text=B'
 ];
