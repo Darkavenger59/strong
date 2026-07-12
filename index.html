@@ -10,202 +10,63 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <style>
-        /* DESIGN SYSTEM PREMIUM */
-        :root { 
-            --bg: #121212; 
-            --card: #1E1E1E; 
-            --text: #F5F5F5; 
-            --text-muted: #A0A0A5;
-            --accent: #0A84FF; 
-            --danger: #FF453A; 
-            --success: #32D74B;
-        }
-        
-        body { 
-            background: var(--bg); 
-            color: var(--text); 
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            margin: 0; 
-            padding-bottom: 90px; 
-            user-select: none; 
-            -webkit-font-smoothing: antialiased;
-        }
-        
+        :root { --bg: #121212; --card: #1E1E1E; --text: #F5F5F5; --text-muted: #A0A0A5; --accent: #0A84FF; --danger: #FF453A; --success: #32D74B; }
+        body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; margin: 0; padding-bottom: 90px; user-select: none; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        h1 { text-align: center; margin: 20px 0; font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+        h1 { text-align: center; margin: 20px 0; font-size: 22px; font-weight: 700; }
         h2 { font-size: 18px; color: var(--text-muted); font-weight: 500; margin-bottom: 15px; }
-        
-        /* TRANSITIONS ET VUES */
-        .view { 
-            display: none; 
-            padding: 20px; 
-            animation: fadeIn 0.3s ease-out;
-        }
+        .view { display: none; padding: 20px; }
         .view.active { display: block; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* COMPOSANTS UI */
-        .card { 
-            background: var(--card); 
-            padding: 18px; 
-            margin-bottom: 15px; 
-            border-radius: 16px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-
-        /* BOUTONS */
-        .btn-big {
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto;
-            width: 160px; height: 160px; border-radius: 50%;
-            background: linear-gradient(135deg, #0A84FF, #0055A4);
-            color: white; border: none;
-            font-size: 28px; font-weight: 800; cursor: pointer;
-            box-shadow: 0 8px 20px rgba(10, 132, 255, 0.4);
-            transition: transform 0.1s;
-        }
-        .btn-big:active { transform: scale(0.92); }
-
-        .btn-action { 
-            width: 100%; padding: 16px; margin-bottom: 12px; 
-            border-radius: 12px; border: none; 
-            font-weight: 600; font-size: 16px; transition: opacity 0.2s;
-        }
-        .btn-action:active { opacity: 0.7; }
+        .card { background: var(--card); padding: 18px; margin-bottom: 15px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .btn-big { display: flex; align-items: center; justify-content: center; margin: 0 auto; width: 160px; height: 160px; border-radius: 50%; background: linear-gradient(135deg, #0A84FF, #0055A4); color: white; border: none; font-size: 28px; font-weight: 800; cursor: pointer; }
+        .btn-action { width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 12px; border: none; font-weight: 600; font-size: 16px; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--danger); }
         .btn-ghost { background: transparent; color: var(--text-muted); }
-
-        /* INPUTS ET CONTROLES ERGONOMIQUES */
-        input[type="text"], input[type="number"] { 
-            background: #2C2C2E; border: none; color: white; 
-            padding: 14px; width: 100%; border-radius: 10px; font-size: 16px; outline: none;
-        }
-        input::placeholder { color: #8E8E93; }
-
-        .stepper-group {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #2C2C2E; border-radius: 10px; padding: 5px; margin-bottom: 15px;
-        }
-        .stepper-btn {
-            background: transparent; color: var(--accent); border: none;
-            font-size: 24px; width: 45px; height: 45px; border-radius: 8px; font-weight: bold;
-        }
-        .stepper-btn:active { background: rgba(10, 132, 255, 0.2); }
-        .stepper-input {
-            background: transparent; border: none; color: white;
-            text-align: center; font-size: 18px; font-weight: 600; flex: 1; outline: none;
-            -moz-appearance: textfield;
-        }
-        .stepper-input::-webkit-outer-spin-button, .stepper-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        
+        input, select { background: #2C2C2E; border: none; color: white; padding: 14px; width: 100%; border-radius: 10px; font-size: 16px; outline: none; }
+        .stepper-group { display: flex; align-items: center; justify-content: space-between; background: #2C2C2E; border-radius: 10px; padding: 5px; margin-bottom: 15px; }
+        .stepper-btn { background: transparent; color: var(--accent); border: none; font-size: 24px; width: 45px; height: 45px; font-weight: bold; }
         .input-label { font-size: 13px; color: var(--text-muted); margin-bottom: 5px; display: block; padding-left: 5px; }
-
-        /* LISTE DE SÉRIES */
-        #w-list { list-style: none; padding: 0; margin: 20px 0; }
-        #w-list li { 
-            background: #2C2C2E; padding: 12px 15px; border-radius: 10px; 
-            margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
-        }
-        .set-number { color: var(--text-muted); font-size: 14px; font-weight: 500;}
-        
-        /* CHRONO REPOS */
-        #rest-timer-container {
-            text-align: center; margin: 15px 0; padding: 10px;
-            background: rgba(50, 215, 75, 0.1); border-radius: 10px;
-            color: var(--success); font-weight: 600; display: none;
-        }
-
-        /* HEATMAP (Couleurs GitHub) */
-        .heatmap-wrapper { width: 100%; overflow-x: auto; padding: 10px 0; margin-top: 20px; }
-        .heatmap-wrapper::-webkit-scrollbar { height: 0px; }
-        .heatmap { display: grid; grid-template-rows: repeat(7, 12px); grid-auto-flow: column; gap: 4px; width: max-content; margin: 0 auto; }
-        .heatmap .day { width: 12px; height: 12px; background-color: #161b22; border-radius: 3px; }
-        .heatmap .day[data-level="1"] { background-color: #0e4429; }
-        .heatmap .day[data-level="2"] { background-color: #006d32; }
-        .heatmap .day[data-level="3"] { background-color: #26a641; }
-        .heatmap .day[data-level="4"] { background-color: #39d353; }
-        .heatmap-title { text-align: center; font-size: 14px; color: var(--text-muted); margin-bottom: 5px; }
-
-        /* NAV BAR */
-        .nav { 
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; 
-            background: rgba(30, 30, 30, 0.95); backdrop-filter: blur(10px);
-            display: flex; border-top: 1px solid #333; padding-bottom: env(safe-area-inset-bottom);
-        }
-        .nav-item { 
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            color: var(--text-muted); font-size: 11px; font-weight: 500; transition: color 0.2s;
-        }
+        .nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: rgba(30, 30, 30, 0.95); backdrop-filter: blur(10px); display: flex; border-top: 1px solid #333; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; }
         .nav-item.active { color: var(--accent); }
-        .nav-icon { font-size: 22px; margin-bottom: 4px; }
-
-        /* DEBUG */
-        #debug-log { background: var(--danger); color: white; padding: 15px; font-size: 12px; position: fixed; top: 0; width: 100%; z-index: 10000; display: none; }
     </style>
 </head>
 <body>
 
-    <div id="debug-log"></div>
-
-    <h1>B-STRONG</h1>
-
-    <!-- VUE : ACCUEIL -->
     <div id="v-home" class="view active">
-        <div style="height:35vh; display:flex; align-items:center; justify-content:center;">
-            <button class="btn-big" onclick="startWorkout()">GO</button>
-        </div>
-        
-        <div class="heatmap-title">Activité (365 derniers jours)</div>
-        <div class="heatmap-wrapper" id="heatmap-container">
-            <div id="heatmap" class="heatmap"></div>
-        </div>
+        <div style="height:35vh; display:flex; align-items:center; justify-content:center;"><button class="btn-big" onclick="startWorkout()">GO</button></div>
+        <div id="heatmap" class="heatmap" style="display:grid; grid-template-rows:repeat(7, 12px); grid-auto-flow:column; gap:4px; width:max-content; margin:0 auto;"></div>
     </div>
 
-    <!-- VUE : HISTORIQUE -->
     <div id="v-history" class="view">
         <h2>Historique des séances</h2>
-        <div id="hist-list">Chargement...</div>
+        <div id="hist-list"></div>
     </div>
 
-    <!-- VUE : GRAPHIQUES -->
     <div id="v-charts" class="view">
-        <h2>Progression du volume</h2>
-        <p style="color:var(--text-muted); font-size:14px; margin-top:-10px; margin-bottom:20px;">Sélectionnez un exercice pour analyser sa courbe de progression.</p>
+        <h2>Progression</h2>
         <div id="chart-list"></div>
     </div>
 
-    <!-- VUE : ENTRAÎNEMENT EN COURS -->
     <div id="v-workout" class="view">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-            <h2 style="margin:0; color:white;">Séance en cours</h2>
-            <span id="timer" style="color:var(--accent); font-size:18px; font-weight:bold;">00:00</span>
+            <h2 style="margin:0; color:white;">Séance</h2>
+            <span id="timer" style="color:var(--accent); font-weight:bold;">00:00</span>
         </div>
-        
         <div class="card">
             <label class="input-label">Mouvement</label>
-            <input type="text" id="w-name" placeholder="Ex: Soulevé de terre" list="dl" style="margin-bottom: 5px;" oninput="updateExerciseStats()">
+            <input type="text" id="w-name" list="dl" oninput="updateExerciseStats()">
             <datalist id="dl"></datalist>
-
-            <!-- STATISTIQUES (Dernière séance vs Actuel) -->
-            <div id="exercise-stats" style="font-size: 13px; color: var(--accent); margin-bottom: 15px; font-weight: 500; display: none; background: rgba(10, 132, 255, 0.1); padding: 8px; border-radius: 6px; text-align: center;">
-                Dernière fois : <span id="last-vol">0</span> kg | Actuel : <span id="cur-vol">0</span> kg
+            <div id="exercise-stats" style="font-size: 13px; color: var(--accent); margin-top:10px; display: none; background: rgba(10,132,255,0.1); padding: 8px; border-radius: 6px; text-align: center;">
+                Total Hier : <span id="last-vol">0</span> kg | Total Aujourd'hui : <span id="cur-vol">0</span> kg
             </div>
-
-            <div style="display:flex; gap:15px;">
+            <div style="display:flex; gap:15px; margin-top:15px;">
                 <div style="flex:1;">
                     <label class="input-label">Charge (kg)</label>
                     <div class="stepper-group">
                         <button class="stepper-btn" onclick="adjustWeightIndex(-1)">-</button>
-                        <!-- SELECTEUR DE POIDS DÉROULANT -->
-                        <select id="w-kg" class="stepper-input" style="appearance: none; background: transparent; color: white; border: none; text-align: center; width: 100%; outline: none; font-size: 16px; padding: 0 5px;">
-                            <!-- Options générées par Javascript -->
-                        </select>
+                        <select id="w-kg" style="appearance:none; background:transparent; border:none; text-align:center; font-size:18px; font-weight:600;"></select>
                         <button class="stepper-btn" onclick="adjustWeightIndex(1)">+</button>
                     </div>
                 </div>
@@ -213,544 +74,114 @@
                     <label class="input-label">Répétitions</label>
                     <div class="stepper-group">
                         <button class="stepper-btn" onclick="adjustValue('w-reps', -1)">-</button>
-                        <input type="number" id="w-reps" class="stepper-input" value="0">
+                        <input type="number" id="w-reps" value="0" style="text-align:center; font-size:18px; font-weight:600;">
                         <button class="stepper-btn" onclick="adjustValue('w-reps', 1)">+</button>
                     </div>
                 </div>
             </div>
-
             <button class="btn-action btn-primary" onclick="addSet()">Valider la série</button>
         </div>
-
-        <div id="rest-timer-container">
-            Récupération : <span id="rest-timer">00:00</span>
-        </div>
-
-        <ul id="w-list"></ul>
-
-        <div style="margin-top:40px;">
-            <button class="btn-action btn-danger" style="color:var(--danger); background:#2C2C2E;" onclick="saveWorkout()">Terminer la séance</button>
-            <button class="btn-action btn-ghost" onclick="cancelWorkout()">Annuler</button>
-        </div>
+        <ul id="w-list" style="list-style:none; padding:0;"></ul>
+        <button class="btn-action btn-danger" onclick="saveWorkout()">Terminer</button>
     </div>
 
-    <!-- NAVIGATION -->
     <div class="nav">
-        <div class="nav-item active" onclick="showTab('home', this)">
-            <span class="nav-icon">🏠</span>Accueil
-        </div>
-        <div class="nav-item" onclick="showTab('history', this)">
-            <span class="nav-icon">📅</span>Historique
-        </div>
-        <div class="nav-item" onclick="showTab('charts', this)">
-            <span class="nav-icon">📈</span>Progression
-        </div>
-    </div>
-
-    <!-- MODAL GRAPHIQUES -->
-    <div id="modal" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:5000; justify-content:center; align-items:center;">
-        <div class="card" style="width:90%; position: relative;">
-            <span style="position: absolute; top:10px; right:15px; font-size:28px; color:var(--text-muted); cursor:pointer;" onclick="document.getElementById('modal').style.display='none'">&times;</span>
-            <h3 id="m-title" style="color:var(--accent); margin-top:0;">Titre</h3>
-            <p id="m-sub" style="color:var(--text-muted); font-size:12px;">...</p>
-            <div style="height:250px;"><canvas id="myChart"></canvas></div>
-        </div>
+        <div class="nav-item active" onclick="showTab('home', this)">🏠 Accueil</div>
+        <div class="nav-item" onclick="showTab('history', this)">📅 Historique</div>
+        <div class="nav-item" onclick="showTab('charts', this)">📈 Progrès</div>
     </div>
 
     <script>
-        // --- GESTION DES ERREURS ---
-        function logError(msg) {
-            var box = document.getElementById('debug-log');
-            box.style.display = 'block';
-            box.innerText += "⚠️ " + msg + "\n";
-            console.error(msg);
-        }
-        window.onerror = function(message) { logError(message); };
+        var currentSession = [], allData = [], stats = {}, db = null;
+        const firebaseConfig = { apiKey: "AIzaSyBuzNrrB-rK_xcjSeGtFc3I9yUKHhRUcIY", authDomain: "b-strong-4c3d1.firebaseapp.com", projectId: "b-strong-4c3d1", storageBucket: "b-strong-4c3d1.firebasestorage.app", messagingSenderId: "746501272062", appId: "1:746501272062:web:b2181766fd23ce8a3f10af" };
+        firebase.initializeApp(firebaseConfig); db = firebase.firestore();
 
-        // --- VARIABLES GLOBALES ---
-        var currentSession = [];
-        var allData = [];
-        var stats = {};
-        var known = new Set();
-        var db = null;
-        var timerInt = null;
-        var restTimerInt = null;
-        var seconds = 0;
-        var restSeconds = 0;
-        var myChart = null;
-
-        // --- INIT FIREBASE ---
-        const firebaseConfig = {
-          apiKey: "AIzaSyBuzNrrB-rK_xcjSeGtFc3I9yUKHhRUcIY",
-          authDomain: "b-strong-4c3d1.firebaseapp.com",
-          projectId: "b-strong-4c3d1",
-          storageBucket: "b-strong-4c3d1.firebasestorage.app",
-          messagingSenderId: "746501272062",
-          appId: "1:746501272062:web:b2181766fd23ce8a3f10af"
-        };
-
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            loadData();
-        } catch(e) {
-            logError("Erreur Firebase: " + e.message);
-        }
-
-        // --- NAVIGATION ---
-        window.showTab = function(name, el) {
+        // Fonctions utilitaires
+        window.showTab = (n, e) => {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('v-'+name).classList.add('active');
-            
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            if(el) el.classList.add('active');
-
-            if(name === 'history') renderHistory();
-            if(name === 'charts') renderCharts();
+            document.getElementById('v-'+n).classList.add('active');
+            if(n==='history') renderHistory();
+            if(n==='charts') renderCharts();
         };
 
-        // --- GESTION DU MENU DÉROULANT DES POIDS ---
         function populateWeights() {
             var select = document.getElementById('w-kg');
-            select.innerHTML = "";
-            
-            // 1. Poids Libres / Standards (de 0 à 200kg par pas de 2.5)
-            var optGroupLibre = document.createElement('optgroup');
-            optGroupLibre.label = "Poids libres & Haltères";
-            for(var i = 0; i <= 200; i += 2.5) {
-                var opt = document.createElement('option');
-                opt.value = i; opt.text = i + " kg";
-                optGroupLibre.appendChild(opt);
-            }
-            select.appendChild(optGroupLibre);
-
-            // 2. Machines Basic-Fit (Matrix/Technogym : conversion lbs -> kg)
-            var optGroupMachine = document.createElement('optgroup');
-            optGroupMachine.label = "Plaques Machines (Matrix/Câbles)";
-            var machineWeights = [2.3, 4.5, 6.8, 9.1, 11.3, 13.6, 15.8, 18.1, 20.4, 22.7, 25.0, 27.2, 29.5, 31.8, 34.0, 36.3, 38.6, 40.8, 43.1, 45.4, 49.0, 52.0, 59.0, 66.0, 73.0];
-            machineWeights.forEach(function(w) {
-                var opt = document.createElement('option');
-                opt.value = w; opt.text = w + " kg";
-                optGroupMachine.appendChild(opt);
-            });
-            select.appendChild(optGroupMachine);
-
-            select.selectedIndex = 0; 
+            for(var i = 0; i <= 200; i += 2.5) select.innerHTML += `<option value="${i}">${i} kg</option>`;
+            [2.3, 4.5, 6.8, 9.1, 11.3, 13.6, 15.8, 18.1, 20.4, 22.7].forEach(w => select.innerHTML += `<option value="${w}">${w} kg</option>`);
         }
 
-        // --- NAVIGATION AVEC BOUTONS +/- ---
-        window.adjustWeightIndex = function(direction) {
-            var select = document.getElementById('w-kg');
-            var newIndex = select.selectedIndex + direction;
-            if (newIndex >= 0 && newIndex < select.options.length) {
-                select.selectedIndex = newIndex;
-            }
-        };
+        window.adjustWeightIndex = (d) => { var s = document.getElementById('w-kg'); s.selectedIndex = Math.max(0, Math.min(s.options.length - 1, s.selectedIndex + d)); };
+        window.adjustValue = (id, a) => { var el = document.getElementById(id); el.value = Math.max(0, parseInt(el.value) + a); };
 
-        window.adjustValue = function(id, amount) {
-            var el = document.getElementById(id);
-            var val = parseFloat(el.value) || 0;
-            var newVal = val + amount;
-            if(newVal < 0) newVal = 0;
-            el.value = newVal;
-        };
-
-        // --- CALCUL DES STATISTIQUES (Dernière Séance vs Actuel) ---
-        window.updateExerciseStats = function() {
-            var inputName = document.getElementById('w-name').value.trim().toLowerCase();
-            var statsDiv = document.getElementById('exercise-stats');
+        window.updateExerciseStats = () => {
+            var name = document.getElementById('w-name').value.toLowerCase();
+            if(!name) return;
             
-            if(!inputName) {
-                statsDiv.style.display = 'none';
-                return;
-            }
-
-            var currentVol = 0;
+            var curVol = 0;
+            currentSession.forEach(s => { if(s.nom.toLowerCase() === name) curVol += s.poids * s.reps; });
+            
             var lastVol = 0;
-
-            // 1. Calcul du volume actuel (dans la séance en cours)
-            currentSession.forEach(function(ex) {
-                if(ex.nom.toLowerCase() === inputName) {
-                    currentVol += (parseFloat(ex.poids) || 0) * (parseFloat(ex.reps) || 0);
-                }
-            });
-
-            // 2. Recherche du volume de la DERNIÈRE séance contenant cet exercice
-            for (var i = 0; i < allData.length; i++) {
-                var doc = allData[i].data;
-                if (doc.exercises) {
-                    var found = false;
-                    var sessionVol = 0;
-                    doc.exercises.forEach(function(ex) {
-                        if(ex.nom.toLowerCase() === inputName) {
-                            found = true;
-                            sessionVol += (parseFloat(ex.poids) || 0) * (parseFloat(ex.reps) || 0);
-                        }
-                    });
-                    if(found) {
-                        lastVol = sessionVol;
-                        break;
-                    }
+            var sorted = allData.sort((a,b) => b.date - a.date);
+            var lastDate = null;
+            for(var item of sorted) {
+                var vol = 0;
+                item.data.exercises.forEach(e => { if(e.nom.toLowerCase() === name) vol += e.poids * e.reps; });
+                if(vol > 0) {
+                    if(!lastDate) lastDate = item.date;
+                    if(item.date.toDateString() === lastDate.toDateString()) lastVol += vol;
+                    else break;
                 }
             }
-
-            // 3. Affichage si des données existent
-            if(lastVol > 0 || currentVol > 0) {
-                document.getElementById('last-vol').innerText = lastVol.toFixed(1);
-                document.getElementById('cur-vol').innerText = currentVol.toFixed(1);
-                statsDiv.style.display = 'block';
-            } else {
-                statsDiv.style.display = 'none';
-            }
+            document.getElementById('exercise-stats').style.display = 'block';
+            document.getElementById('last-vol').innerText = lastVol;
+            document.getElementById('cur-vol').innerText = curVol;
         };
 
-        // --- CHRONOMETRES ---
-        function formatTime(sec) {
-            var m = Math.floor(sec/60).toString().padStart(2,'0');
-            var s = (sec%60).toString().padStart(2,'0');
-            return m + ":" + s;
-        }
-
-        function startRestTimer() {
-            var container = document.getElementById('rest-timer-container');
-            var display = document.getElementById('rest-timer');
-            container.style.display = 'block';
-            restSeconds = 0;
-            display.innerText = "00:00";
-            clearInterval(restTimerInt);
-            restTimerInt = setInterval(function() {
-                restSeconds++;
-                display.innerText = formatTime(restSeconds);
-            }, 1000);
-        }
-
-        // --- LOGIQUE ENTRAÎNEMENT ---
-        window.startWorkout = function() {
-            showTab('workout');
-            seconds = 0; document.getElementById('timer').innerText = "00:00";
-            document.getElementById('rest-timer-container').style.display = 'none';
-            document.getElementById('exercise-stats').style.display = 'none';
-            clearInterval(timerInt);
-            clearInterval(restTimerInt);
-            timerInt = setInterval(function(){
-                seconds++;
-                document.getElementById('timer').innerText = formatTime(seconds);
-            }, 1000);
-            updateDatalist();
-            populateWeights();
-        };
-
-        window.cancelWorkout = function() {
-            if(confirm("Annuler la séance en cours ?")) {
-                currentSession=[];
-                document.getElementById('w-list').innerHTML='';
-                clearInterval(timerInt);
-                clearInterval(restTimerInt);
-                showTab('home');
-            }
-        };
-
-        window.addSet = function() {
-            var n = document.getElementById('w-name').value.trim();
-            var k = document.getElementById('w-kg').value;
-            var r = document.getElementById('w-reps').value;
-            if(!n || parseFloat(r) <= 0) return alert("Veuillez entrer un mouvement et des répétitions valides.");
-            
-            n = n.charAt(0).toUpperCase() + n.slice(1);
-            
-            currentSession.push({nom:n, poids:k, reps:r}); 
-            
+        window.addSet = () => {
+            var name = document.getElementById('w-name').value;
+            var poids = parseFloat(document.getElementById('w-kg').value);
+            var reps = parseInt(document.getElementById('w-reps').value);
+            currentSession.push({nom: name, poids, reps});
             var li = document.createElement('li');
-            li.innerHTML = `<span class="set-number">Série ${currentSession.length}</span>
-                            <span style="font-weight:600;">${n} : ${k}kg x ${r}</span>`;
-            
-            var list = document.getElementById('w-list');
-            list.insertBefore(li, list.firstChild);
-            
-            startRestTimer();
+            li.innerHTML = `<div class="card">${name} : ${poids}kg x ${reps}</div>`;
+            document.getElementById('w-list').prepend(li);
             updateExerciseStats();
         };
 
-        window.saveWorkout = function() {
-            if(currentSession.length === 0) {
-                alert("Aucune série validée.");
-                return;
-            }
-            
-            var btn = document.querySelector('.btn-danger');
-            var originalText = btn.innerText;
-            btn.innerText = "Enregistrement...";
-
-            db.collection("workouts").add({
-                date: firebase.firestore.FieldValue.serverTimestamp(),
-                exercises: currentSession,
-                duration: seconds
-            }).then(function() {
-                btn.innerText = originalText;
-                currentSession=[];
-                document.getElementById('w-list').innerHTML='';
-                document.getElementById('w-name').value='';
-                document.getElementById('w-kg').selectedIndex = 0;
-                document.getElementById('w-reps').value='0';
-                document.getElementById('exercise-stats').style.display = 'none';
-                clearInterval(timerInt);
-                clearInterval(restTimerInt);
-                loadData();
-                showTab('history', document.querySelectorAll('.nav-item')[1]);
-            }).catch(function(error) {
-                logError(error.message);
-                btn.innerText = "Erreur";
-            });
-        };
-
-        // --- CHARGEMENT DES DONNÉES ---
-        function loadData() {
-            db.collection("workouts").orderBy("date", "desc").get().then(function(snap) {
-                allData = [];
-                stats = {};
-                known.clear();
-
-                snap.forEach(function(doc) {
-                    var d = doc.data();
-                    var dateObj = d.date ? d.date.toDate() : new Date();
-                    allData.push({data:d, date:dateObj});
-
-                    if(d.exercises) {
-                        var sessionVol = {};
-                        d.exercises.forEach(function(ex) {
-                            var key = ex.nom.trim().toLowerCase();
-                            var display = ex.nom.charAt(0).toUpperCase() + ex.nom.slice(1);
-                            known.add(display);
-
-                            var vol = (parseFloat(ex.poids)||0) * (parseFloat(ex.reps)||0);
-                            if(!sessionVol[key]) sessionVol[key]=0;
-                            sessionVol[key]+=vol;
-                        });
-
-                        for(var k in sessionVol) {
-                            if(!stats[k]) stats[k]=[];
-                            stats[k].push({date: dateObj, vol: sessionVol[k]});
-                        }
-                    }
-                });
-                renderHeatmap();
-            }).catch(function(err){
-                logError(err.message);
-            });
-        }
-
-        function updateDatalist() {
-            var dl = document.getElementById('dl');
-            dl.innerHTML="";
-            known.forEach(function(k){
-                var opt = document.createElement('option');
-                opt.value=k; dl.appendChild(opt);
-            });
-        }
-
-      // --- RENDU HISTORIQUE (Avec regroupement par jour) ---
         function renderHistory() {
-            var div = document.getElementById('hist-list');
-            div.innerHTML = "";
-
-            // 1. Regrouper les séances de la même journée
-            var groupedArray = [];
-            var currentKey = null;
-            var currentGroup = null;
-
-            allData.forEach(function(item) {
-                var d = item.date;
-                // Création d'une clé unique par jour (Ex: "2026-07-12")
-                var key = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
-
-                // Si on change de jour, on sauvegarde le groupe précédent et on en crée un nouveau
-                if (key !== currentKey) {
-                    if (currentGroup) groupedArray.push(currentGroup);
-                    currentKey = key;
-                    currentGroup = {
-                        dateObj: d,
-                        duration: 0,
-                        exercises: []
-                    };
-                }
-                
-                // On additionne le temps et on regroupe les exercices
-                currentGroup.duration += (item.data.duration || 0);
-                if (item.data.exercises) {
-                    currentGroup.exercises = currentGroup.exercises.concat(item.data.exercises);
-                }
+            var div = document.getElementById('hist-list'); div.innerHTML = "";
+            var groups = {};
+            allData.forEach(item => {
+                var dKey = item.date.toDateString();
+                if(!groups[dKey]) groups[dKey] = {};
+                item.data.exercises.forEach(ex => {
+                    if(!groups[dKey][ex.nom]) groups[dKey][ex.nom] = [];
+                    groups[dKey][ex.nom].push(ex);
+                });
             });
-            // Pousser le tout dernier groupe de la boucle
-            if (currentGroup) groupedArray.push(currentGroup);
 
-            // 2. Afficher les groupes (Un groupe = Une carte = Un jour)
-            groupedArray.forEach(function(group) {
-                var dStr = group.dateObj.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
-                var card = document.createElement('div');
-                card.className = 'card';
-                
-                var html = `<div style="color:var(--accent); font-weight:600; margin-bottom:10px; text-transform:capitalize;">${dStr}</div>`;
-                html += `<div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Durée totale : ${Math.floor(group.duration/60)} min</div>`;
-                
-                if(group.exercises.length > 0) {
-                    group.exercises.forEach(function(e){
-                        html += `<div style="display:flex; justify-content:space-between; font-size:14px; padding:4px 0; border-bottom:1px solid #333;">
-                                    <span>${e.nom}</span>
-                                    <span>${e.poids}kg × ${e.reps} rép</span>
-                                 </div>`;
+            for(var date in groups) {
+                var card = document.createElement('div'); card.className = 'card';
+                card.innerHTML = `<h3>${date}</h3>`;
+                for(var exName in groups[date]) {
+                    card.innerHTML += `<b>${exName}</b>`;
+                    groups[date][exName].forEach((s, i) => {
+                        card.innerHTML += `<div>Série ${i+1} : ${s.poids}kg x ${s.reps}</div>`;
                     });
-                } else {
-                    html += `<div style="font-size:14px; color:#666; font-style:italic;">Aucune série enregistrée</div>`;
                 }
-                
-                card.innerHTML = html;
                 div.appendChild(card);
-            });
-        }
-        // --- RENDU GRAPHIQUES ---
-        function renderCharts() {
-            var div = document.getElementById('chart-list');
-            div.innerHTML = "";
-            for(var k in stats) {
-                var btn = document.createElement('div');
-                btn.className = 'card';
-                btn.style.cursor = 'pointer';
-                btn.style.fontWeight = '600';
-                btn.style.display = 'flex';
-                btn.style.justifyContent = 'space-between';
-                btn.innerHTML = `<span>${k.charAt(0).toUpperCase() + k.slice(1)}</span> <span style="color:var(--text-muted);">▶</span>`;
-                
-                (function(key){
-                    btn.onclick = function() { openChart(key); };
-                })(k);
-                div.appendChild(btn);
             }
         }
 
-        function getMonday(d) {
-            d = new Date(d);
-            var day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1);
-            return new Date(d.setDate(diff));
+        function loadData() {
+            db.collection("workouts").get().then(snap => {
+                allData = [];
+                snap.forEach(doc => allData.push({data: doc.data(), date: doc.data().date.toDate()}));
+            });
         }
-
-        window.openChart = function(key) {
-            document.getElementById('modal').style.display='flex';
-            document.getElementById('m-title').innerText = key.charAt(0).toUpperCase() + key.slice(1);
-
-            var raw = stats[key] || [];
-            raw.sort(function(a,b){ return a.date - b.date; });
-
-            var weeks = {};
-            raw.forEach(function(r){
-                var mon = getMonday(r.date);
-                var kWeek = mon.toISOString().split('T')[0];
-                var label = mon.toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
-                
-                if(!weeks[kWeek]) weeks[kWeek] = {label:label, vol:0, date:mon};
-                weeks[kWeek].vol += r.vol;
-            });
-
-            var finalData = [];
-            for(var w in weeks) finalData.push(weeks[w]);
-            finalData.sort(function(a,b){ return a.date - b.date; });
-
-            var total = 0; raw.forEach(function(x){ total+=x.vol; });
-            document.getElementById('m-sub').innerText = "Volume cumulé (historique) : " + (total/1000).toFixed(1) + " Tonnes";
-
-            var ctx = document.getElementById('myChart').getContext('2d');
-            if(myChart) myChart.destroy();
-            
-            myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: finalData.map(function(x){return x.label}),
-                    datasets: [{
-                        label: 'Volume (kg)',
-                        data: finalData.map(function(x){return x.vol}),
-                        borderColor: '#0A84FF', backgroundColor: 'rgba(10, 132, 255, 0.1)',
-                        borderWidth: 3, fill: true, tension: 0.3, pointBackgroundColor: '#0A84FF'
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-            });
-        };
-
-        // --- HEATMAP ---
-        function renderHeatmap() {
-            var map = {};
-            var maxVol = 0;
-
-            allData.forEach(function(item) {
-                var y = item.date.getFullYear();
-                var m = String(item.date.getMonth() + 1).padStart(2, '0');
-                var d = String(item.date.getDate()).padStart(2, '0');
-                var dateStr = y + '-' + m + '-' + d;
-                
-                var vol = 0;
-                if(item.data.exercises) {
-                    item.data.exercises.forEach(function(ex){
-                        vol += (parseFloat(ex.poids)||0) * (parseFloat(ex.reps)||0);
-                    });
-                }
-                
-                if(!map[dateStr]) map[dateStr] = 0;
-                map[dateStr] += vol;
-                if(map[dateStr] > maxVol) maxVol = map[dateStr];
-            });
-
-            var heatmapEl = document.getElementById('heatmap');
-            heatmapEl.innerHTML = '';
-
-            var today = new Date();
-            var startDate = new Date();
-            startDate.setDate(today.getDate() - 364);
-
-            var startDay = startDate.getDay(); 
-            var padDays = (startDay + 6) % 7; 
-            
-            for(var i = 0; i < padDays; i++) {
-                var empty = document.createElement('div');
-                empty.style.width = '12px'; empty.style.height = '12px';
-                heatmapEl.appendChild(empty);
-            }
-
-            for (var dTemp = new Date(startDate); dTemp <= today; dTemp.setDate(dTemp.getDate() + 1)) {
-                var ty = dTemp.getFullYear();
-                var tm = String(dTemp.getMonth() + 1).padStart(2, '0');
-                var td = String(dTemp.getDate()).padStart(2, '0');
-                var dStr = ty + '-' + tm + '-' + td;
-
-                var cell = document.createElement('div');
-                cell.className = 'day';
-                cell.title = dTemp.toLocaleDateString('fr-FR', {day:'numeric', month:'short'}) + 
-                             (map[dStr] ? " - Volume: " + map[dStr] + " kg" : " - Repos");
-
-                if(map[dStr]) {
-                    var ratio = map[dStr] / maxVol;
-                    if(ratio > 0.75) cell.dataset.level = "4";
-                    else if(ratio > 0.5) cell.dataset.level = "3";
-                    else if(ratio > 0.25) cell.dataset.level = "2";
-                    else cell.dataset.level = "1";
-                } else {
-                    cell.dataset.level = "0";
-                }
-                heatmapEl.appendChild(cell);
-            }
-
-            setTimeout(function() {
-                var container = document.getElementById('heatmap-container');
-                if(container) container.scrollLeft = container.scrollWidth;
-            }, 100);
-        }
-    </script>
-    <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./service-worker.js')
-                .then(reg => console.log('SW enregistré:', reg))
-                .catch(err => console.log('Erreur SW:', err));
-        });
-    }
+        
+        window.startWorkout = () => { showTab('workout'); populateWeights(); };
+        loadData();
     </script>
 </body>
 </html>
