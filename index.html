@@ -56,6 +56,43 @@
         #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:5000; justify-content:center; align-items:center; }
         .box { background: #222; width:95%; padding:20px; border-radius:15px; position: relative; }
         .close { position: absolute; top:10px; right:15px; font-size:30px; }
+
+        /* HEATMAP (Style GitHub) */
+        .heatmap-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            padding: 10px 0;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .heatmap-wrapper::-webkit-scrollbar { height: 6px; }
+        .heatmap-wrapper::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        .heatmap {
+            display: grid;
+            grid-template-rows: repeat(7, 12px);
+            grid-auto-flow: column;
+            gap: 4px;
+            width: max-content;
+            margin: 0 auto;
+        }
+        .heatmap .day {
+            width: 12px;
+            height: 12px;
+            background-color: #222;
+            border-radius: 3px;
+        }
+        .heatmap .day[data-level="1"] { background-color: #003366; }
+        .heatmap .day[data-level="2"] { background-color: #0055a4; }
+        .heatmap .day[data-level="3"] { background-color: #0a84ff; }
+        .heatmap .day[data-level="4"] { background-color: #66b2ff; }
+        .heatmap-title {
+            text-align: center;
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 5px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -65,11 +102,17 @@
     <h1>B-STRONG</h1>
 
     <div id="v-home" class="view active">
-        <div style="height:60vh; display:flex; align-items:center; justify-content:center;">
+        <div style="height:40vh; display:flex; align-items:center; justify-content:center;">
             <button class="btn-big" onclick="startWorkout()">GO</button>
         </div>
         <div style="text-align:center;">
             <button onclick="addDemoData()" style="background:none; border:none; color:#666;">+ Ajouter démo</button>
+        </div>
+
+        <!-- HEATMAP HTML -->
+        <div class="heatmap-title">Activité (365 derniers jours)</div>
+        <div class="heatmap-wrapper" id="heatmap-container">
+            <div id="heatmap" class="heatmap"></div>
         </div>
     </div>
 
@@ -152,8 +195,6 @@
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
-            // Test de connexion
-            // alert("App Prête ! Firebase OK."); 
             loadData();
         } catch(e) {
             logError("Erreur Init Firebase: " + e.message);
@@ -277,6 +318,10 @@
                         }
                     }
                 });
+
+                // INTEGRATION DE LA HEATMAP APRES LE CHARGEMENT DES DONNEES
+                renderHeatmap();
+
             }).catch(function(err){
                 logError(err.message);
             });
@@ -379,18 +424,95 @@
             });
         };
 
+        // --- 8. HEATMAP (Style GitHub) ---
+        function renderHeatmap() {
+            var map = {};
+            var maxVol = 0;
+
+            // 1. Calculer le volume total par jour (Format YYYY-MM-DD local)
+            allData.forEach(function(item) {
+                var y = item.date.getFullYear();
+                var m = String(item.date.getMonth() + 1).padStart(2, '0');
+                var d = String(item.date.getDate()).padStart(2, '0');
+                var dateStr = y + '-' + m + '-' + d;
+                
+                var vol = 0;
+                if(item.data.exercises) {
+                    item.data.exercises.forEach(function(ex){
+                        vol += (parseFloat(ex.poids)||0) * (parseFloat(ex.reps)||0);
+                    });
+                }
+                
+                if(!map[dateStr]) map[dateStr] = 0;
+                map[dateStr] += vol;
+                
+                if(map[dateStr] > maxVol) maxVol = map[dateStr];
+            });
+
+            var heatmapEl = document.getElementById('heatmap');
+            heatmapEl.innerHTML = '';
+
+            // 2. Préparer les dates (Les 364 derniers jours)
+            var today = new Date();
+            var startDate = new Date();
+            startDate.setDate(today.getDate() - 364);
+
+            // 3. Aligner le début pour que la première ligne de la grille soit toujours Lundi
+            // getDay() : Dimanche = 0, Lundi = 1...
+            var startDay = startDate.getDay(); 
+            var padDays = (startDay + 6) % 7; // Convertir pour que Lundi = 0
+            
+            // Remplir les jours vides en haut de la première colonne pour aligner
+            for(var i = 0; i < padDays; i++) {
+                var empty = document.createElement('div');
+                empty.style.width = '12px'; 
+                empty.style.height = '12px';
+                heatmapEl.appendChild(empty);
+            }
+
+            // 4. Générer les carrés
+            for (var dTemp = new Date(startDate); dTemp <= today; dTemp.setDate(dTemp.getDate() + 1)) {
+                var ty = dTemp.getFullYear();
+                var tm = String(dTemp.getMonth() + 1).padStart(2, '0');
+                var td = String(dTemp.getDate()).padStart(2, '0');
+                var dStr = ty + '-' + tm + '-' + td;
+
+                var cell = document.createElement('div');
+                cell.className = 'day';
+                
+                // Tooltip native lors du survol
+                cell.title = dTemp.toLocaleDateString('fr-FR', {day:'numeric', month:'short'}) + 
+                             (map[dStr] ? " - Volume: " + map[dStr] + " kg" : " - Repos");
+
+                if(map[dStr]) {
+                    // Attribution de l'intensité (4 niveaux)
+                    var ratio = map[dStr] / maxVol;
+                    if(ratio > 0.75) cell.dataset.level = "4";
+                    else if(ratio > 0.5) cell.dataset.level = "3";
+                    else if(ratio > 0.25) cell.dataset.level = "2";
+                    else cell.dataset.level = "1";
+                } else {
+                    cell.dataset.level = "0"; // Jour vide
+                }
+                heatmapEl.appendChild(cell);
+            }
+
+            // 5. Scroller tout à droite (pour voir aujourd'hui en premier)
+            setTimeout(function() {
+                var container = document.getElementById('heatmap-container');
+                if(container) container.scrollLeft = container.scrollWidth;
+            }, 100);
+        }
     </script>
-  <script>
+    <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            // Le point . est important pour dire "dans ce dossier actuel"
             navigator.serviceWorker.register('./service-worker.js')
                 .then(reg => console.log('SW enregistré:', reg))
                 .catch(err => console.log('Erreur SW:', err));
         });
     }
-  </script>
-    
+    </script>
     
 </body>
 </html>
