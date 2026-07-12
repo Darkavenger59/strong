@@ -30,17 +30,28 @@
         .nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: rgba(30, 30, 30, 0.95); backdrop-filter: blur(10px); display: flex; border-top: 1px solid #333; }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; }
         .nav-item.active { color: var(--accent); }
+        
+        /* Heatmap Styles */
+        .heatmap { display: grid; grid-template-rows: repeat(7, 12px); grid-auto-flow: column; gap: 4px; width: max-content; margin: 0 auto; }
+        .day { width: 12px; height: 12px; background-color: #161b22; border-radius: 3px; }
+        .day[data-level="1"] { background-color: #0e4429; }
+        .day[data-level="2"] { background-color: #006d32; }
+        .day[data-level="3"] { background-color: #26a641; }
+        .day[data-level="4"] { background-color: #39d353; }
+        
+        /* Numérotation série */
+        .serie-num { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; border: 1px solid #444; color: #666; font-size: 12px; margin-right: 10px; }
     </style>
 </head>
 <body>
 
     <div id="v-home" class="view active">
         <div style="height:35vh; display:flex; align-items:center; justify-content:center;"><button class="btn-big" onclick="startWorkout()">GO</button></div>
-        <div id="heatmap" class="heatmap" style="display:grid; grid-template-rows:repeat(7, 12px); grid-auto-flow:column; gap:4px; width:max-content; margin:0 auto;"></div>
+        <div id="heatmap" class="heatmap"></div>
     </div>
 
     <div id="v-history" class="view">
-        <h2>Historique des séances</h2>
+        <h2>Historique</h2>
         <div id="hist-list"></div>
     </div>
 
@@ -55,34 +66,19 @@
             <span id="timer" style="color:var(--accent); font-weight:bold;">00:00</span>
         </div>
         <div class="card">
-            <label class="input-label">Mouvement</label>
-            <input type="text" id="w-name" list="dl" oninput="updateExerciseStats()">
+            <input type="text" id="w-name" list="dl" placeholder="Mouvement" oninput="updateExerciseStats()">
             <datalist id="dl"></datalist>
-            <div id="exercise-stats" style="font-size: 13px; color: var(--accent); margin-top:10px; display: none; background: rgba(10,132,255,0.1); padding: 8px; border-radius: 6px; text-align: center;">
-                Total Hier : <span id="last-vol">0</span> kg | Total Aujourd'hui : <span id="cur-vol">0</span> kg
+            <div id="exercise-stats" style="font-size: 12px; color: var(--accent); margin-top:10px; display: none; text-align: center;">
+                Hier total: <span id="last-vol">0</span>kg | Aujourd'hui: <span id="cur-vol">0</span>kg
             </div>
             <div style="display:flex; gap:15px; margin-top:15px;">
-                <div style="flex:1;">
-                    <label class="input-label">Charge (kg)</label>
-                    <div class="stepper-group">
-                        <button class="stepper-btn" onclick="adjustWeightIndex(-1)">-</button>
-                        <select id="w-kg" style="appearance:none; background:transparent; border:none; text-align:center; font-size:18px; font-weight:600;"></select>
-                        <button class="stepper-btn" onclick="adjustWeightIndex(1)">+</button>
-                    </div>
-                </div>
-                <div style="flex:1;">
-                    <label class="input-label">Répétitions</label>
-                    <div class="stepper-group">
-                        <button class="stepper-btn" onclick="adjustValue('w-reps', -1)">-</button>
-                        <input type="number" id="w-reps" value="0" style="text-align:center; font-size:18px; font-weight:600;">
-                        <button class="stepper-btn" onclick="adjustValue('w-reps', 1)">+</button>
-                    </div>
-                </div>
+                <div style="flex:1;"><label class="input-label">Poids (kg)</label><div class="stepper-group"><button class="stepper-btn" onclick="adjustWeightIndex(-1)">-</button><select id="w-kg" style="appearance:none; background:transparent; border:none; text-align:center; font-size:18px; font-weight:600;"></select><button class="stepper-btn" onclick="adjustWeightIndex(1)">+</button></div></div>
+                <div style="flex:1;"><label class="input-label">Reps</label><div class="stepper-group"><button class="stepper-btn" onclick="adjustValue('w-reps', -1)">-</button><input type="number" id="w-reps" value="0" style="text-align:center; font-size:18px; font-weight:600;"><button class="stepper-btn" onclick="adjustValue('w-reps', 1)">+</button></div></div>
             </div>
             <button class="btn-action btn-primary" onclick="addSet()">Valider la série</button>
         </div>
         <ul id="w-list" style="list-style:none; padding:0;"></ul>
-        <button class="btn-action btn-danger" onclick="saveWorkout()">Terminer</button>
+        <button class="btn-action btn-danger" onclick="saveWorkout()">Terminer la séance</button>
     </div>
 
     <div class="nav">
@@ -92,22 +88,21 @@
     </div>
 
     <script>
-        var currentSession = [], allData = [], stats = {}, db = null;
+        var currentSession = [], allData = [], db = null;
         const firebaseConfig = { apiKey: "AIzaSyBuzNrrB-rK_xcjSeGtFc3I9yUKHhRUcIY", authDomain: "b-strong-4c3d1.firebaseapp.com", projectId: "b-strong-4c3d1", storageBucket: "b-strong-4c3d1.firebasestorage.app", messagingSenderId: "746501272062", appId: "1:746501272062:web:b2181766fd23ce8a3f10af" };
         firebase.initializeApp(firebaseConfig); db = firebase.firestore();
 
-        // Fonctions utilitaires
         window.showTab = (n, e) => {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById('v-'+n).classList.add('active');
             if(n==='history') renderHistory();
-            if(n==='charts') renderCharts();
         };
 
         function populateWeights() {
-            var select = document.getElementById('w-kg');
-            for(var i = 0; i <= 200; i += 2.5) select.innerHTML += `<option value="${i}">${i} kg</option>`;
-            [2.3, 4.5, 6.8, 9.1, 11.3, 13.6, 15.8, 18.1, 20.4, 22.7].forEach(w => select.innerHTML += `<option value="${w}">${w} kg</option>`);
+            var s = document.getElementById('w-kg');
+            s.innerHTML = "";
+            for(var i = 0; i <= 200; i += 2.5) s.innerHTML += `<option value="${i}">${i} kg</option>`;
+            [2.3, 4.5, 6.8, 9.1, 11.3, 13.6, 15.8, 18.1, 20.4, 22.7].forEach(w => s.innerHTML += `<option value="${w}">${w} kg</option>`);
         }
 
         window.adjustWeightIndex = (d) => { var s = document.getElementById('w-kg'); s.selectedIndex = Math.max(0, Math.min(s.options.length - 1, s.selectedIndex + d)); };
@@ -116,19 +111,16 @@
         window.updateExerciseStats = () => {
             var name = document.getElementById('w-name').value.toLowerCase();
             if(!name) return;
-            
-            var curVol = 0;
+            var curVol = 0, lastVol = 0;
             currentSession.forEach(s => { if(s.nom.toLowerCase() === name) curVol += s.poids * s.reps; });
-            
-            var lastVol = 0;
             var sorted = allData.sort((a,b) => b.date - a.date);
             var lastDate = null;
             for(var item of sorted) {
                 var vol = 0;
                 item.data.exercises.forEach(e => { if(e.nom.toLowerCase() === name) vol += e.poids * e.reps; });
                 if(vol > 0) {
-                    if(!lastDate) lastDate = item.date;
-                    if(item.date.toDateString() === lastDate.toDateString()) lastVol += vol;
+                    if(!lastDate) lastDate = item.date.toDateString();
+                    if(item.date.toDateString() === lastDate) lastVol += vol;
                     else break;
                 }
             }
@@ -159,27 +151,39 @@
                     groups[dKey][ex.nom].push(ex);
                 });
             });
-
             for(var date in groups) {
                 var card = document.createElement('div'); card.className = 'card';
                 card.innerHTML = `<h3>${date}</h3>`;
                 for(var exName in groups[date]) {
-                    card.innerHTML += `<b>${exName}</b>`;
+                    card.innerHTML += `<div style="margin-top:10px; font-weight:bold">${exName}</div>`;
                     groups[date][exName].forEach((s, i) => {
-                        card.innerHTML += `<div>Série ${i+1} : ${s.poids}kg x ${s.reps}</div>`;
+                        card.innerHTML += `<div style="padding:5px 0;"><span class="serie-num">${i+1}</span> ${s.poids}kg x ${s.reps}</div>`;
                     });
                 }
                 div.appendChild(card);
             }
         }
 
-        function loadData() {
-            db.collection("workouts").get().then(snap => {
-                allData = [];
-                snap.forEach(doc => allData.push({data: doc.data(), date: doc.data().date.toDate()}));
+        function renderHeatmap() {
+            var bests = {}, scores = {}, heatmap = document.getElementById('heatmap'); heatmap.innerHTML = '';
+            allData.forEach(i => i.data.exercises.forEach(e => {
+                var v = e.poids * e.reps, n = e.nom.toLowerCase();
+                if(!bests[n] || v > bests[n]) bests[n] = v;
+            }));
+            allData.forEach(i => {
+                var d = i.date.toISOString().split('T')[0], r = [];
+                i.data.exercises.forEach(e => r.push((e.poids * e.reps) / bests[e.nom.toLowerCase()]));
+                scores[d] = r.reduce((a,b) => a+b, 0) / r.length;
             });
+            for(var j=0; j<365; j++) {
+                var d = new Date(); d.setDate(d.getDate() - 364 + j);
+                var k = d.toISOString().split('T')[0], s = scores[k], c = document.createElement('div');
+                c.className = 'day'; if(s) c.dataset.level = s >= 1 ? "4" : s >= 0.75 ? "3" : s >= 0.5 ? "2" : "1";
+                heatmap.appendChild(c);
+            }
         }
-        
+
+        function loadData() { db.collection("workouts").get().then(snap => { allData = []; snap.forEach(doc => allData.push({data: doc.data(), date: doc.data().date.toDate()})); renderHeatmap(); }); }
         window.startWorkout = () => { showTab('workout'); populateWeights(); };
         loadData();
     </script>
