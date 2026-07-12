@@ -189,16 +189,24 @@
         
         <div class="card">
             <label class="input-label">Mouvement</label>
-            <input type="text" id="w-name" placeholder="Ex: Soulevé de terre" list="dl" style="margin-bottom: 15px;">
+            <input type="text" id="w-name" placeholder="Ex: Soulevé de terre" list="dl" style="margin-bottom: 5px;" oninput="updateExerciseStats()">
             <datalist id="dl"></datalist>
+
+            <!-- STATISTIQUES (Dernière séance vs Actuel) -->
+            <div id="exercise-stats" style="font-size: 13px; color: var(--accent); margin-bottom: 15px; font-weight: 500; display: none; background: rgba(10, 132, 255, 0.1); padding: 8px; border-radius: 6px; text-align: center;">
+                Dernière fois : <span id="last-vol">0</span> kg | Actuel : <span id="cur-vol">0</span> kg
+            </div>
 
             <div style="display:flex; gap:15px;">
                 <div style="flex:1;">
                     <label class="input-label">Charge (kg)</label>
                     <div class="stepper-group">
-                        <button class="stepper-btn" onclick="adjustValue('w-kg', -2.5)">-</button>
-                        <input type="number" id="w-kg" class="stepper-input" value="0" step="0.5">
-                        <button class="stepper-btn" onclick="adjustValue('w-kg', 2.5)">+</button>
+                        <button class="stepper-btn" onclick="adjustWeightIndex(-1)">-</button>
+                        <!-- SELECTEUR DE POIDS DÉROULANT -->
+                        <select id="w-kg" class="stepper-input" style="appearance: none; background: transparent; color: white; border: none; text-align: center; width: 100%; outline: none; font-size: 16px; padding: 0 5px;">
+                            <!-- Options générées par Javascript -->
+                        </select>
+                        <button class="stepper-btn" onclick="adjustWeightIndex(1)">+</button>
                     </div>
                 </div>
                 <div style="flex:1;">
@@ -301,13 +309,99 @@
             if(name === 'charts') renderCharts();
         };
 
-        // --- ERGONOMIE (Boutons +/-) ---
+        // --- GESTION DU MENU DÉROULANT DES POIDS ---
+        function populateWeights() {
+            var select = document.getElementById('w-kg');
+            select.innerHTML = "";
+            
+            // 1. Poids Libres / Standards (de 0 à 200kg par pas de 2.5)
+            var optGroupLibre = document.createElement('optgroup');
+            optGroupLibre.label = "Poids libres & Haltères";
+            for(var i = 0; i <= 200; i += 2.5) {
+                var opt = document.createElement('option');
+                opt.value = i; opt.text = i + " kg";
+                optGroupLibre.appendChild(opt);
+            }
+            select.appendChild(optGroupLibre);
+
+            // 2. Machines Basic-Fit (Matrix/Technogym : conversion lbs -> kg)
+            var optGroupMachine = document.createElement('optgroup');
+            optGroupMachine.label = "Plaques Machines (Matrix/Câbles)";
+            var machineWeights = [2.3, 4.5, 6.8, 9.1, 11.3, 13.6, 15.8, 18.1, 20.4, 22.7, 25.0, 27.2, 29.5, 31.8, 34.0, 36.3, 38.6, 40.8, 43.1, 45.4, 49.0, 52.0, 59.0, 66.0, 73.0];
+            machineWeights.forEach(function(w) {
+                var opt = document.createElement('option');
+                opt.value = w; opt.text = w + " kg";
+                optGroupMachine.appendChild(opt);
+            });
+            select.appendChild(optGroupMachine);
+
+            select.selectedIndex = 0; 
+        }
+
+        // --- NAVIGATION AVEC BOUTONS +/- ---
+        window.adjustWeightIndex = function(direction) {
+            var select = document.getElementById('w-kg');
+            var newIndex = select.selectedIndex + direction;
+            if (newIndex >= 0 && newIndex < select.options.length) {
+                select.selectedIndex = newIndex;
+            }
+        };
+
         window.adjustValue = function(id, amount) {
             var el = document.getElementById(id);
             var val = parseFloat(el.value) || 0;
             var newVal = val + amount;
             if(newVal < 0) newVal = 0;
             el.value = newVal;
+        };
+
+        // --- CALCUL DES STATISTIQUES (Dernière Séance vs Actuel) ---
+        window.updateExerciseStats = function() {
+            var inputName = document.getElementById('w-name').value.trim().toLowerCase();
+            var statsDiv = document.getElementById('exercise-stats');
+            
+            if(!inputName) {
+                statsDiv.style.display = 'none';
+                return;
+            }
+
+            var currentVol = 0;
+            var lastVol = 0;
+
+            // 1. Calcul du volume actuel (dans la séance en cours)
+            currentSession.forEach(function(ex) {
+                if(ex.nom.toLowerCase() === inputName) {
+                    currentVol += (parseFloat(ex.poids) || 0) * (parseFloat(ex.reps) || 0);
+                }
+            });
+
+            // 2. Recherche du volume de la DERNIÈRE séance contenant cet exercice
+            for (var i = 0; i < allData.length; i++) {
+                var doc = allData[i].data;
+                if (doc.exercises) {
+                    var found = false;
+                    var sessionVol = 0;
+                    doc.exercises.forEach(function(ex) {
+                        if(ex.nom.toLowerCase() === inputName) {
+                            found = true;
+                            sessionVol += (parseFloat(ex.poids) || 0) * (parseFloat(ex.reps) || 0);
+                        }
+                    });
+                    if(found) {
+                        lastVol = sessionVol;
+                        break;
+                    }
+                }
+            }
+
+            // 3. Affichage si des données existent
+            if(lastVol > 0 || currentVol > 0) {
+                document.getElementById('last-vol').innerText = lastVol.toFixed(1);
+                document.getElementById('cur-vol').innerText = currentVol.toFixed(1);
+                statsDiv.style.display = 'block';
+            } else {
+                statsDiv.style.display = 'none';
+            }
         };
 
         // --- CHRONOMETRES ---
@@ -335,6 +429,7 @@
             showTab('workout');
             seconds = 0; document.getElementById('timer').innerText = "00:00";
             document.getElementById('rest-timer-container').style.display = 'none';
+            document.getElementById('exercise-stats').style.display = 'none';
             clearInterval(timerInt);
             clearInterval(restTimerInt);
             timerInt = setInterval(function(){
@@ -342,6 +437,7 @@
                 document.getElementById('timer').innerText = formatTime(seconds);
             }, 1000);
             updateDatalist();
+            populateWeights();
         };
 
         window.cancelWorkout = function() {
@@ -362,20 +458,17 @@
             
             n = n.charAt(0).toUpperCase() + n.slice(1);
             
-            // Conservation du mot clé "reps" pour la base de données existante
             currentSession.push({nom:n, poids:k, reps:r}); 
             
             var li = document.createElement('li');
             li.innerHTML = `<span class="set-number">Série ${currentSession.length}</span>
                             <span style="font-weight:600;">${n} : ${k}kg x ${r}</span>`;
             
-            // Ajout en haut de la liste pour voir la dernière série immédiatement
             var list = document.getElementById('w-list');
             list.insertBefore(li, list.firstChild);
             
-            // Relance le chrono de récupération
             startRestTimer();
-            // Note: On ne vide pas w-kg et w-reps pour faciliter la saisie de la série suivante
+            updateExerciseStats();
         };
 
         window.saveWorkout = function() {
@@ -397,8 +490,9 @@
                 currentSession=[];
                 document.getElementById('w-list').innerHTML='';
                 document.getElementById('w-name').value='';
-                document.getElementById('w-kg').value='0';
+                document.getElementById('w-kg').selectedIndex = 0;
                 document.getElementById('w-reps').value='0';
+                document.getElementById('exercise-stats').style.display = 'none';
                 clearInterval(timerInt);
                 clearInterval(restTimerInt);
                 loadData();
@@ -454,31 +548,65 @@
             });
         }
 
-        // --- RENDU HISTORIQUE ---
+      // --- RENDU HISTORIQUE (Avec regroupement par jour) ---
         function renderHistory() {
             var div = document.getElementById('hist-list');
             div.innerHTML = "";
+
+            // 1. Regrouper les séances de la même journée
+            var groupedArray = [];
+            var currentKey = null;
+            var currentGroup = null;
+
             allData.forEach(function(item) {
-                var dStr = item.date.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+                var d = item.date;
+                // Création d'une clé unique par jour (Ex: "2026-07-12")
+                var key = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+
+                // Si on change de jour, on sauvegarde le groupe précédent et on en crée un nouveau
+                if (key !== currentKey) {
+                    if (currentGroup) groupedArray.push(currentGroup);
+                    currentKey = key;
+                    currentGroup = {
+                        dateObj: d,
+                        duration: 0,
+                        exercises: []
+                    };
+                }
+                
+                // On additionne le temps et on regroupe les exercices
+                currentGroup.duration += (item.data.duration || 0);
+                if (item.data.exercises) {
+                    currentGroup.exercises = currentGroup.exercises.concat(item.data.exercises);
+                }
+            });
+            // Pousser le tout dernier groupe de la boucle
+            if (currentGroup) groupedArray.push(currentGroup);
+
+            // 2. Afficher les groupes (Un groupe = Une carte = Un jour)
+            groupedArray.forEach(function(group) {
+                var dStr = group.dateObj.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
                 var card = document.createElement('div');
                 card.className = 'card';
                 
                 var html = `<div style="color:var(--accent); font-weight:600; margin-bottom:10px; text-transform:capitalize;">${dStr}</div>`;
-                html += `<div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Durée : ${Math.floor((item.data.duration||0)/60)} min</div>`;
+                html += `<div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Durée totale : ${Math.floor(group.duration/60)} min</div>`;
                 
-                if(item.data.exercises) {
-                    item.data.exercises.forEach(function(e){
+                if(group.exercises.length > 0) {
+                    group.exercises.forEach(function(e){
                         html += `<div style="display:flex; justify-content:space-between; font-size:14px; padding:4px 0; border-bottom:1px solid #333;">
                                     <span>${e.nom}</span>
                                     <span>${e.poids}kg × ${e.reps} rép</span>
                                  </div>`;
                     });
+                } else {
+                    html += `<div style="font-size:14px; color:#666; font-style:italic;">Aucune série enregistrée</div>`;
                 }
+                
                 card.innerHTML = html;
                 div.appendChild(card);
             });
         }
-
         // --- RENDU GRAPHIQUES ---
         function renderCharts() {
             var div = document.getElementById('chart-list');
