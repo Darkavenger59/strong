@@ -549,25 +549,61 @@
         }
 
         // --- RENDU HISTORIQUE ---
+// --- RENDU HISTORIQUE (Avec regroupement par jour) ---
         function renderHistory() {
             var div = document.getElementById('hist-list');
             div.innerHTML = "";
+
+            // 1. Regrouper les séances de la même journée
+            var groupedArray = [];
+            var currentKey = null;
+            var currentGroup = null;
+
             allData.forEach(function(item) {
-                var dStr = item.date.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+                var d = item.date;
+                // Création d'une clé unique par jour (Ex: "2026-07-12")
+                var key = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+
+                // Si on change de jour, on sauvegarde le groupe précédent et on en crée un nouveau
+                if (key !== currentKey) {
+                    if (currentGroup) groupedArray.push(currentGroup);
+                    currentKey = key;
+                    currentGroup = {
+                        dateObj: d,
+                        duration: 0,
+                        exercises: []
+                    };
+                }
+                
+                // On additionne le temps et on regroupe les exercices
+                currentGroup.duration += (item.data.duration || 0);
+                if (item.data.exercises) {
+                    currentGroup.exercises = currentGroup.exercises.concat(item.data.exercises);
+                }
+            });
+            // Pousser le tout dernier groupe de la boucle
+            if (currentGroup) groupedArray.push(currentGroup);
+
+            // 2. Afficher les groupes (Un groupe = Une carte = Un jour)
+            groupedArray.forEach(function(group) {
+                var dStr = group.dateObj.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
                 var card = document.createElement('div');
                 card.className = 'card';
                 
                 var html = `<div style="color:var(--accent); font-weight:600; margin-bottom:10px; text-transform:capitalize;">${dStr}</div>`;
-                html += `<div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Durée : ${Math.floor((item.data.duration||0)/60)} min</div>`;
+                html += `<div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Durée totale : ${Math.floor(group.duration/60)} min</div>`;
                 
-                if(item.data.exercises) {
-                    item.data.exercises.forEach(function(e){
+                if(group.exercises.length > 0) {
+                    group.exercises.forEach(function(e){
                         html += `<div style="display:flex; justify-content:space-between; font-size:14px; padding:4px 0; border-bottom:1px solid #333;">
                                     <span>${e.nom}</span>
                                     <span>${e.poids}kg × ${e.reps} rép</span>
                                  </div>`;
                     });
+                } else {
+                    html += `<div style="font-size:14px; color:#666; font-style:italic;">Aucune série enregistrée</div>`;
                 }
+                
                 card.innerHTML = html;
                 div.appendChild(card);
             });
@@ -642,72 +678,64 @@
         };
 
         // --- HEATMAP ---
-        function renderHeatmap() {
-            var map = {};
-            var maxVol = 0;
+   function renderHeatmap() {
+    var dailyScores = {}; // Stockera la moyenne des ratios par jour
+    var bestPerExercise = {}; // Stockera le record (volume max) de chaque exercice
 
-            allData.forEach(function(item) {
-                var y = item.date.getFullYear();
-                var m = String(item.date.getMonth() + 1).padStart(2, '0');
-                var d = String(item.date.getDate()).padStart(2, '0');
-                var dateStr = y + '-' + m + '-' + d;
-                
-                var vol = 0;
-                if(item.data.exercises) {
-                    item.data.exercises.forEach(function(ex){
-                        vol += (parseFloat(ex.poids)||0) * (parseFloat(ex.reps)||0);
-                    });
-                }
-                
-                if(!map[dateStr]) map[dateStr] = 0;
-                map[dateStr] += vol;
-                if(map[dateStr] > maxVol) maxVol = map[dateStr];
-            });
-
-            var heatmapEl = document.getElementById('heatmap');
-            heatmapEl.innerHTML = '';
-
-            var today = new Date();
-            var startDate = new Date();
-            startDate.setDate(today.getDate() - 364);
-
-            var startDay = startDate.getDay(); 
-            var padDays = (startDay + 6) % 7; 
-            
-            for(var i = 0; i < padDays; i++) {
-                var empty = document.createElement('div');
-                empty.style.width = '12px'; empty.style.height = '12px';
-                heatmapEl.appendChild(empty);
+    // 1. Trouver le record (max volume) pour CHAQUE exercice
+    allData.forEach(function(item) {
+        if(!item.data.exercises) return;
+        item.data.exercises.forEach(function(ex) {
+            var vol = (parseFloat(ex.poids)||0) * (parseFloat(ex.reps)||0);
+            var name = ex.nom.toLowerCase();
+            if(!bestPerExercise[name] || vol > bestPerExercise[name]) {
+                bestPerExercise[name] = vol;
             }
+        });
+    });
 
-            for (var dTemp = new Date(startDate); dTemp <= today; dTemp.setDate(dTemp.getDate() + 1)) {
-                var ty = dTemp.getFullYear();
-                var tm = String(dTemp.getMonth() + 1).padStart(2, '0');
-                var td = String(dTemp.getDate()).padStart(2, '0');
-                var dStr = ty + '-' + tm + '-' + td;
+    // 2. Calculer le ratio de performance pour chaque jour
+    allData.forEach(function(item) {
+        if(!item.data.exercises) return;
+        var y = item.date.getFullYear();
+        var m = String(item.date.getMonth() + 1).padStart(2, '0');
+        var d = String(item.date.getDate()).padStart(2, '0');
+        var dateStr = y + '-' + m + '-' + d;
 
-                var cell = document.createElement('div');
-                cell.className = 'day';
-                cell.title = dTemp.toLocaleDateString('fr-FR', {day:'numeric', month:'short'}) + 
-                             (map[dStr] ? " - Volume: " + map[dStr] + " kg" : " - Repos");
+        var ratios = [];
+        item.data.exercises.forEach(function(ex) {
+            var vol = (parseFloat(ex.poids)||0) * (parseFloat(ex.reps)||0);
+            var name = ex.nom.toLowerCase();
+            // Ratio = performance du jour / record historique de cet exercice
+            ratios.push(vol / bestPerExercise[name]);
+        });
 
-                if(map[dStr]) {
-                    var ratio = map[dStr] / maxVol;
-                    if(ratio > 0.75) cell.dataset.level = "4";
-                    else if(ratio > 0.5) cell.dataset.level = "3";
-                    else if(ratio > 0.25) cell.dataset.level = "2";
-                    else cell.dataset.level = "1";
-                } else {
-                    cell.dataset.level = "0";
-                }
-                heatmapEl.appendChild(cell);
-            }
+        // La note du jour est la moyenne des ratios de tes exercices
+        var avgRatio = ratios.reduce((a,b) => a + b, 0) / ratios.length;
+        dailyScores[dateStr] = avgRatio;
+    });
 
-            setTimeout(function() {
-                var container = document.getElementById('heatmap-container');
-                if(container) container.scrollLeft = container.scrollWidth;
-            }, 100);
-        }
+    // 3. Génération des carrés (le reste du code reste identique)
+    var heatmapEl = document.getElementById('heatmap');
+    heatmapEl.innerHTML = '';
+    
+    var today = new Date();
+    var startDate = new Date();
+    startDate.setDate(today.getDate() - 364);
+    
+    // ... (Le code de remplissage des cases vides reste le même) ...
+    // ... (Le code de la boucle de génération des jours reste le même) ...
+
+    // Dans la boucle de génération, remplace la partie qui donne le niveau par :
+    if(dailyScores[dStr]) {
+        var score = dailyScores[dStr];
+        // Si tu es à 100% de tes records (ou plus), tu es en vert brillant (Niveau 4)
+        if(score >= 1.0) cell.dataset.level = "4";
+        else if(score >= 0.75) cell.dataset.level = "3";
+        else if(score >= 0.50) cell.dataset.level = "2";
+        else cell.dataset.level = "1";
+    }
+}
     </script>
     <script>
     if ('serviceWorker' in navigator) {
