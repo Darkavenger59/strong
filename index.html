@@ -723,10 +723,55 @@
     var startDate = new Date();
     startDate.setDate(today.getDate() - 364);
     
-    // ... (Le code de remplissage des cases vides reste le même) ...
-    // ... (Le code de la boucle de génération des jours reste le même) ...
+function renderHeatmap() {
+            var map = {};
+            var maxVol = 0;
 
-    // Dans la boucle de génération, remplace la partie qui donne le niveau par :
+            allData.forEach(function(item) {
+                var y = item.date.getFullYear();
+                var m = String(item.date.getMonth() + 1).padStart(2, '0');
+                var d = String(item.date.getDate()).padStart(2, '0');
+                var dateStr = y + '-' + m + '-' + d;
+                
+                var vol = 0;
+                if(item.data.exercises) {
+                    item.data.exercises.forEach(function(ex){
+                        vol += (parseFloat(ex.poids)||0) * (parseFloat(ex.reps)||0);
+                    });
+                }
+                
+                if(!map[dateStr]) map[dateStr] = 0;
+                map[dateStr] += vol;
+                if(map[dateStr] > maxVol) maxVol = map[dateStr];
+            });
+
+            var heatmapEl = document.getElementById('heatmap');
+            heatmapEl.innerHTML = '';
+
+            var today = new Date();
+            var startDate = new Date();
+            startDate.setDate(today.getDate() - 364);
+
+            var startDay = startDate.getDay(); 
+            var padDays = (startDay + 6) % 7; 
+            
+            for(var i = 0; i < padDays; i++) {
+                var empty = document.createElement('div');
+                empty.style.width = '12px'; empty.style.height = '12px';
+                heatmapEl.appendChild(empty);
+            }
+
+            for (var dTemp = new Date(startDate); dTemp <= today; dTemp.setDate(dTemp.getDate() + 1)) {
+                var ty = dTemp.getFullYear();
+                var tm = String(dTemp.getMonth() + 1).padStart(2, '0');
+                var td = String(dTemp.getDate()).padStart(2, '0');
+                var dStr = ty + '-' + tm + '-' + td;
+
+                var cell = document.createElement('div');
+                cell.className = 'day';
+                cell.title = dTemp.toLocaleDateString('fr-FR', {day:'numeric', month:'short'}) + 
+                             (map[dStr] ? " - Volume: " + map[dStr] + " kg" : " - Repos");
+
     if(dailyScores[dStr]) {
         var score = dailyScores[dStr];
         // Si tu es à 100% de tes records (ou plus), tu es en vert brillant (Niveau 4)
@@ -735,6 +780,17 @@
         else if(score >= 0.50) cell.dataset.level = "2";
         else cell.dataset.level = "1";
     }
+                } else {
+                    cell.dataset.level = "0";
+                }
+                heatmapEl.appendChild(cell);
+            }
+
+            setTimeout(function() {
+                var container = document.getElementById('heatmap-container');
+                if(container) container.scrollLeft = container.scrollWidth;
+            }, 100);
+        }
 }
     </script>
     <script>
