@@ -3,27 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>B-STRONG PRO</title>
+    <title>B-STRONG</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
-        :root { --bg: #121212; --card: #1E1E1E; --text: #F5F5F5; --text-muted: #8E8E93; --accent: #0A84FF; --danger: #FF453A; }
+        :root { --bg: #121212; --card: #1E1E1E; --text: #F5F5F5; --accent: #0A84FF; --danger: #FF453A; }
         body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; padding-bottom: 90px; }
         .view { display: none; padding: 20px; } .view.active { display: block; }
-        .card { background: var(--card); padding: 18px; margin-bottom: 15px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .btn-big { width: 160px; height: 160px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 24px; font-weight: 800; display: block; margin: 0 auto; }
-        .heatmap { display: grid; grid-template-rows: repeat(7, 12px); grid-auto-flow: column; gap: 3px; width: max-content; margin: 20px auto; overflow-x: auto; }
+        .card { background: var(--card); padding: 18px; margin-bottom: 15px; border-radius: 16px; }
+        .btn-big { width: 160px; height: 160px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 28px; font-weight: 800; display: block; margin: 0 auto; }
+        /* Heatmap style GitHub */
+        .heatmap { display: grid; grid-template-rows: repeat(7, 12px); grid-auto-flow: column; gap: 3px; width: max-content; margin: 20px auto; }
         .day { width: 12px; height: 12px; background-color: #161b22; border-radius: 2px; }
-        .day[data-level="1"] { background-color: #0e4429; } .day[data-level="2"] { background-color: #006d32; } .day[data-level="3"] { background-color: #26a641; } .day[data-level="4"] { background-color: #39d353; }
+        .day[data-level="4"] { background-color: #39d353; } /* Vert brillant = Présence */
         .serie-num { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; border: 1px solid #444; color: #666; font-size: 11px; margin-right: 10px; }
         .nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #1a1a1a; display: flex; border-top: 1px solid #333; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: var(--text-muted); }
-        .muscle-avatar { width: 200px; margin: 20px auto; display: block; }
-/* Les classes qui changeront la couleur du muscle via JS */
-.muscle-path { fill: #333; transition: fill 0.5s ease; }
-.muscle-low { fill: #0e4429; }
-.muscle-med { fill: #26a641; }
-.muscle-high { fill: #39d353; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #8E8E93; }
+        .nav-item.active { color: var(--accent); }
     </style>
 </head>
 <body>
@@ -31,29 +27,7 @@
     <div id="v-home" class="view active">
         <h1>B-STRONG</h1>
         <button class="btn-big" onclick="startWorkout()">GO</button>
-        <div class="card" style="margin-top:20px;">
-            <select id="muscle-filter" onchange="renderHeatmap()" style="width:100%; padding:10px; border-radius:8px;">
-                <option value="all">Tout le corps</option>
-                <option value="pectoraux">Pectoraux</option>
-                <option value="dos">Dos</option>
-                <option value="bras">Bras</option>
-                <option value="jambes">Jambes</option>
-            </select>
-            <div id="heatmap" class="heatmap"></div>
-        </div>
-        <div class="card" style="text-align:center;">
-    <h3>État musculaire</h3>
-    <svg class="muscle-avatar" viewBox="0 0 100 150">
-        <!-- Pectoraux -->
-        <path id="pectoraux" class="muscle-path" d="M30 40 Q50 35 70 40 L65 60 L35 60 Z"/>
-        <!-- Dos -->
-        <path id="dos" class="muscle-path" d="M30 45 L70 45 L65 80 L35 80 Z"/>
-        <!-- Bras -->
-        <path id="bras" class="muscle-path" d="M20 40 L28 40 L25 70 Z M72 40 L80 40 L75 70 Z"/>
-        <!-- Jambes -->
-        <path id="jambes" class="muscle-path" d="M35 85 L48 85 L45 130 L35 130 Z M52 85 L65 85 L68 130 L55 130 Z"/>
-    </svg>
-</div>
+        <div id="heatmap" class="heatmap"></div>
     </div>
 
     <div id="v-history" class="view"><h2>Historique</h2><div id="hist-list"></div></div>
@@ -71,78 +45,32 @@
     </div>
 
     <div class="nav">
-        <div class="nav-item" onclick="showTab('home')">🏠 Accueil</div>
-        <div class="nav-item" onclick="showTab('history')">📅 Historique</div>
+        <div class="nav-item active" onclick="showTab('home', this)">🏠 Accueil</div>
+        <div class="nav-item" onclick="showTab('history', this)">📅 Historique</div>
         <div class="nav-item" onclick="startWorkout()">➕ Séance</div>
     </div>
 
     <script>
         var currentSession = [], allData = [], db = null;
-        const muscleMap = { "developpe": "pectoraux", "curl": "bras", "tractions": "dos", "rowing": "dos", "squat": "jambes", "presse": "jambes", "extension": "bras", "oiseau": "dos" };
-        
-        function getMuscle(name) {
-            name = name.toLowerCase();
-            for(let key in muscleMap) if(name.includes(key)) return muscleMap[key];
-            return "autre";
-        }
-
-        // Initialisation Firebase
         firebase.initializeApp({ apiKey: "AIzaSyBuzNrrB-rK_xcjSeGtFc3I9yUKHhRUcIY", authDomain: "b-strong-4c3d1.firebaseapp.com", projectId: "b-strong-4c3d1", storageBucket: "b-strong-4c3d1.firebasestorage.app", messagingSenderId: "746501272062", appId: "1:746501272062:web:b2181766fd23ce8a3f10af" });
         db = firebase.firestore();
 
-        window.showTab = (n) => {
+        window.showTab = (n, el) => {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById('v-'+n).classList.add('active');
+            if(el) { document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
             if(n==='history') renderHistory();
         };
 
         function renderHeatmap() {
             var heatmap = document.getElementById('heatmap'); heatmap.innerHTML = '';
-            var filter = document.getElementById('muscle-filter').value;
-            var bests = {}, weeklyScores = {};
-
-            allData.forEach(i => i.data.exercises.forEach(e => {
-                var v = e.poids * e.reps, n = e.nom.toLowerCase();
-                if(!bests[n] || v > bests[n]) bests[n] = v;
-            }));
-
-            allData.forEach(i => {
-                i.data.exercises.forEach(e => {
-                    if(filter !== 'all' && getMuscle(e.nom) !== filter) return;
-                    var weekKey = getISOWeekYear(i.date);
-                    var score = (e.poids * e.reps) / bests[e.nom.toLowerCase()];
-                    if(!weeklyScores[weekKey]) weeklyScores[weekKey] = [];
-                    weeklyScores[weekKey].push(score);
-                });
-            });
-
-            // Affiche les 52 dernières semaines
- for (var j = 0; j < 365; j++) {
-                var d = new Date(); 
-                d.setDate(d.getDate() - 364 + j);
+            for(var j=0; j<365; j++) {
+                var d = new Date(); d.setDate(d.getDate() - 364 + j);
                 var dStr = d.toISOString().split('T')[0];
-                
-                var cell = document.createElement('div');
-                cell.className = 'day';
-                
-                // --- MODIFICATION ICI ---
-                // Si allData contient une séance à cette dateStr, on met le niveau 4 (vert brillant)
-                var hasWorkout = allData.some(item => item.date.toISOString().split('T')[0] === dStr);
-                
-                if (hasWorkout) {
-                    cell.dataset.level = "4"; // Vert fixe pour présence
-                    cell.title = dStr + " : Séance effectuée";
-                } else {
-                    cell.dataset.level = "0"; // Gris pour absence
-                }
-                
-                heatmapEl.appendChild(cell);
+                var c = document.createElement('div'); c.className = 'day';
+                if(allData.some(i => i.date.toISOString().split('T')[0] === dStr)) c.dataset.level = "4";
+                heatmap.appendChild(c);
             }
-        }
-
-        function getISOWeekYear(date) {
-            var d = new Date(date); d.setHours(0,0,0); d.setDate(d.getDate()+4-(d.getDay()||7));
-            return Math.ceil((((d-new Date(d.getFullYear(),0,1))/8.64e7)+1)/7);
         }
 
         function renderHistory() {
@@ -167,56 +95,21 @@
             }
         }
 
-        function loadData() { 
-            db.collection("workouts").orderBy("date", "desc").get().then(snap => { 
-                allData = []; 
-                snap.forEach(doc => allData.push({data: doc.data(), date: doc.data().date.toDate()})); 
-                renderHeatmap();
-                updateAvatar();
-            }); 
-        }
-
-        window.startWorkout = () => showTab('workout');
         window.addSet = () => {
             var name = document.getElementById('w-name').value;
             currentSession.push({nom: name, poids: parseFloat(document.getElementById('w-kg').value), reps: parseInt(document.getElementById('w-reps').value)});
             document.getElementById('w-list').prepend(Object.assign(document.createElement('li'), {innerHTML: `<div class="card">${name} validé</div>`}));
         };
+
         window.saveWorkout = () => {
             db.collection("workouts").add({date: firebase.firestore.FieldValue.serverTimestamp(), exercises: currentSession}).then(() => {
-                currentSession = []; loadData(); showTab('home');
+                currentSession = []; loadData(); showTab('history');
             });
         };
+
+        function loadData() { db.collection("workouts").orderBy("date", "desc").get().then(snap => { allData = []; snap.forEach(doc => allData.push({data: doc.data(), date: doc.data().date.toDate()})); renderHeatmap(); }); }
+        window.startWorkout = () => showTab('workout');
         loadData();
-        function updateAvatar() {
-    var weeklyVolume = { pectoraux: 0, dos: 0, bras: 0, jambes: 0 };
-    var now = new Date();
-    var lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    // Calculer le volume de la semaine passée
-    allData.forEach(item => {
-        if (item.date > lastWeek) {
-            item.data.exercises.forEach(ex => {
-                var muscle = getMuscle(ex.nom);
-                if (weeklyVolume.hasOwnProperty(muscle)) {
-                    weeklyVolume[muscle] += (ex.poids * ex.reps);
-                }
-            });
-        }
-    });
-
-    // Appliquer les couleurs
-    for (var muscle in weeklyVolume) {
-        var vol = weeklyVolume[muscle];
-        var el = document.getElementById(muscle);
-        if(!el) continue;
-        
-        el.className = "muscle-path"; // Reset
-        if (vol > 5000) el.classList.add('muscle-high');
-        else if (vol > 2000) el.classList.add('muscle-med');
-        else if (vol > 0) el.classList.add('muscle-low');
-    }
-}
     </script>
 </body>
 </html>
