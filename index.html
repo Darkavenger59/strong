@@ -117,12 +117,26 @@
             });
 
             // Affiche les 52 dernières semaines
-            for(var j=0; j<52; j++) {
-                var s = weeklyScores[j+1] ? (weeklyScores[j+1].reduce((a,b)=>a+b,0)/weeklyScores[j+1].length) : 0;
-                var c = document.createElement('div');
-                c.className = 'day';
-                if(s > 0) c.dataset.level = s >= 1 ? "4" : s >= 0.6 ? "3" : s >= 0.3 ? "2" : "1";
-                heatmap.appendChild(c);
+ for (var j = 0; j < 365; j++) {
+                var d = new Date(); 
+                d.setDate(d.getDate() - 364 + j);
+                var dStr = d.toISOString().split('T')[0];
+                
+                var cell = document.createElement('div');
+                cell.className = 'day';
+                
+                // --- MODIFICATION ICI ---
+                // Si allData contient une séance à cette dateStr, on met le niveau 4 (vert brillant)
+                var hasWorkout = allData.some(item => item.date.toISOString().split('T')[0] === dStr);
+                
+                if (hasWorkout) {
+                    cell.dataset.level = "4"; // Vert fixe pour présence
+                    cell.title = dStr + " : Séance effectuée";
+                } else {
+                    cell.dataset.level = "0"; // Gris pour absence
+                }
+                
+                heatmapEl.appendChild(cell);
             }
         }
 
