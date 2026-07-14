@@ -56,7 +56,7 @@
         <div class="nav-item" onclick="startWorkout()">➕ Séance</div>
     </div>
 
-    <script>
+<script>
         var currentSession = [], allData = [], stats = {}, myChart = null;
         firebase.initializeApp({ apiKey: "AIzaSyBuzNrrB-rK_xcjSeGtFc3I9yUKHhRUcIY", authDomain: "b-strong-4c3d1.firebaseapp.com", projectId: "b-strong-4c3d1", storageBucket: "b-strong-4c3d1.firebasestorage.app", messagingSenderId: "746501272062", appId: "1:746501272062:web:b2181766fd23ce8a3f10af" });
         var db = firebase.firestore();
@@ -69,17 +69,43 @@
             if(n==='charts') renderCharts();
         };
 
-        function renderHeatmap() {
-            var heatmap = document.getElementById('heatmap'); heatmap.innerHTML = '';
-            for(var j=0; j<365; j++) {
-                var d = new Date(); d.setDate(d.getDate() - 364 + j);
-                var dStr = d.toISOString().split('T')[0];
-                var c = document.createElement('div'); c.className = 'day';
-                if(allData.some(i => i.date.toISOString().split('T')[0] === dStr)) c.dataset.level = "4";
-                heatmap.appendChild(c);
+        // --- GRAPHES LOGIQUE ---
+        function renderCharts() {
+            var div = document.getElementById('chart-list'); div.innerHTML = "";
+            for(var k in stats) {
+                var btn = document.createElement('div'); btn.className = 'card';
+                btn.innerHTML = k.toUpperCase() + " ➔";
+                btn.onclick = () => openChart(k);
+                div.appendChild(btn);
             }
         }
 
+        function openChart(key) {
+            document.getElementById('modal').style.display='flex';
+            var raw = stats[key] || [];
+            raw.sort((a,b) => a.date - b.date);
+            
+            var ctx = document.getElementById('myChart').getContext('2d');
+            if(myChart) myChart.destroy();
+            
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: raw.map(x => x.date.toLocaleDateString()),
+                    datasets: [{
+                        label: 'Volume (kg)',
+                        data: raw.map(x => x.vol),
+                        borderColor: '#0A84FF',
+                        tension: 0.3,
+                        fill: true,
+                        backgroundColor: 'rgba(10, 132, 255, 0.1)'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // --- RESTE DES FONCTIONS ---
         function renderHistory() {
             var div = document.getElementById('hist-list'); div.innerHTML = "";
             var groups = {};
@@ -102,19 +128,15 @@
             }
         }
 
-        function renderCharts() {
-            var div = document.getElementById('chart-list'); div.innerHTML = "";
-            for(var k in stats) {
-                var btn = document.createElement('div'); btn.className = 'card';
-                btn.innerHTML = k.toUpperCase() + " ➔";
-                btn.onclick = () => openChart(k);
-                div.appendChild(btn);
+        function renderHeatmap() {
+            var heatmap = document.getElementById('heatmap'); heatmap.innerHTML = '';
+            for(var j=0; j<365; j++) {
+                var d = new Date(); d.setDate(d.getDate() - 364 + j);
+                var dStr = d.toISOString().split('T')[0];
+                var c = document.createElement('div'); c.className = 'day';
+                if(allData.some(i => i.date.toISOString().split('T')[0] === dStr)) c.dataset.level = "4";
+                heatmap.appendChild(c);
             }
-        }
-
-        function openChart(key) {
-            document.getElementById('modal') ? document.getElementById('modal').style.display='flex' : null;
-            // (Logique Chart.js identique à ta version précédente)
         }
 
         function loadData() { 
@@ -142,7 +164,7 @@
         };
         window.saveWorkout = () => {
             db.collection("workouts").add({date: firebase.firestore.FieldValue.serverTimestamp(), exercises: currentSession}).then(() => {
-                currentSession = []; loadData(); showTab('history');
+                currentSession = []; loadData(); showTab('home');
             });
         };
         loadData();
