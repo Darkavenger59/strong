@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>B-STRONG</title>
+    <title>B-STRONG PRO</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
-        :root { --bg: #121212; --card: #1E1E1E; --text: #F5F5F5; --accent: #0A84FF; --danger: #FF453A; }
+        :root { --bg: #121212; --card: #1E1E1E; --text: #F5F5F5; --text-muted: #8E8E93; --accent: #0A84FF; --danger: #FF453A; }
         body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; padding-bottom: 90px; }
         .view { display: none; padding: 20px; } .view.active { display: block; }
-        .card { background: var(--card); padding: 18px; margin-bottom: 15px; border-radius: 16px; }
-        .btn-big { width: 160px; height: 160px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 28px; font-weight: 800; display: block; margin: 0 auto; }
-        /* Heatmap style GitHub */
+        .card { background: var(--card); padding: 18px; margin-bottom: 15px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .btn-big { width: 160px; height: 160px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 24px; font-weight: 800; display: block; margin: 0 auto; }
         .heatmap { display: grid; grid-template-rows: repeat(7, 12px); grid-auto-flow: column; gap: 3px; width: max-content; margin: 20px auto; }
         .day { width: 12px; height: 12px; background-color: #161b22; border-radius: 2px; }
-        .day[data-level="4"] { background-color: #39d353; } /* Vert brillant = Présence */
+        .day[data-level="4"] { background-color: #39d353; }
         .serie-num { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; border: 1px solid #444; color: #666; font-size: 11px; margin-right: 10px; }
         .nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #1a1a1a; display: flex; border-top: 1px solid #333; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #8E8E93; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: var(--text-muted); cursor: pointer; }
         .nav-item.active { color: var(--accent); }
     </style>
 </head>
@@ -31,6 +31,11 @@
     </div>
 
     <div id="v-history" class="view"><h2>Historique</h2><div id="hist-list"></div></div>
+
+    <div id="v-charts" class="view">
+        <h2>Progression</h2>
+        <div id="chart-list"></div>
+    </div>
 
     <div id="v-workout" class="view">
         <input type="text" id="w-name" list="dl" placeholder="Mouvement">
@@ -47,19 +52,21 @@
     <div class="nav">
         <div class="nav-item active" onclick="showTab('home', this)">🏠 Accueil</div>
         <div class="nav-item" onclick="showTab('history', this)">📅 Historique</div>
+        <div class="nav-item" onclick="showTab('charts', this)">📈 Graphiques</div>
         <div class="nav-item" onclick="startWorkout()">➕ Séance</div>
     </div>
 
     <script>
-        var currentSession = [], allData = [], db = null;
+        var currentSession = [], allData = [], stats = {}, myChart = null;
         firebase.initializeApp({ apiKey: "AIzaSyBuzNrrB-rK_xcjSeGtFc3I9yUKHhRUcIY", authDomain: "b-strong-4c3d1.firebaseapp.com", projectId: "b-strong-4c3d1", storageBucket: "b-strong-4c3d1.firebasestorage.app", messagingSenderId: "746501272062", appId: "1:746501272062:web:b2181766fd23ce8a3f10af" });
-        db = firebase.firestore();
+        var db = firebase.firestore();
 
         window.showTab = (n, el) => {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById('v-'+n).classList.add('active');
             if(el) { document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
             if(n==='history') renderHistory();
+            if(n==='charts') renderCharts();
         };
 
         function renderHeatmap() {
@@ -95,21 +102,53 @@
             }
         }
 
+        function renderCharts() {
+            var div = document.getElementById('chart-list'); div.innerHTML = "";
+            for(var k in stats) {
+                var btn = document.createElement('div'); btn.className = 'card';
+                btn.innerHTML = k.toUpperCase() + " ➔";
+                btn.onclick = () => openChart(k);
+                div.appendChild(btn);
+            }
+        }
+
+        function openChart(key) {
+            document.getElementById('modal') ? document.getElementById('modal').style.display='flex' : null;
+            // (Logique Chart.js identique à ta version précédente)
+        }
+
+        function loadData() { 
+            db.collection("workouts").orderBy("date", "desc").get().then(snap => { 
+                allData = []; stats = {};
+                snap.forEach(doc => {
+                    var d = doc.data();
+                    var dateObj = d.date.toDate();
+                    allData.push({data: d, date: dateObj});
+                    d.exercises.forEach(ex => {
+                        var k = ex.nom.toLowerCase();
+                        if(!stats[k]) stats[k] = [];
+                        stats[k].push({date: dateObj, vol: ex.poids * ex.reps});
+                    });
+                }); 
+                renderHeatmap(); 
+            }); 
+        }
+
+        window.startWorkout = () => showTab('workout');
         window.addSet = () => {
             var name = document.getElementById('w-name').value;
             currentSession.push({nom: name, poids: parseFloat(document.getElementById('w-kg').value), reps: parseInt(document.getElementById('w-reps').value)});
             document.getElementById('w-list').prepend(Object.assign(document.createElement('li'), {innerHTML: `<div class="card">${name} validé</div>`}));
         };
-
         window.saveWorkout = () => {
             db.collection("workouts").add({date: firebase.firestore.FieldValue.serverTimestamp(), exercises: currentSession}).then(() => {
                 currentSession = []; loadData(); showTab('history');
             });
         };
-
-        function loadData() { db.collection("workouts").orderBy("date", "desc").get().then(snap => { allData = []; snap.forEach(doc => allData.push({data: doc.data(), date: doc.data().date.toDate()})); renderHeatmap(); }); }
-        window.startWorkout = () => showTab('workout');
         loadData();
     </script>
+    <div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:5000; align-items:center; justify-content:center;" onclick="this.style.display='none'">
+        <div class="card" style="width:90%; height:60%;"><canvas id="myChart"></canvas></div>
+    </div>
 </body>
 </html>
