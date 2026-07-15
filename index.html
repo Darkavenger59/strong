@@ -39,6 +39,13 @@
 
     <div id="v-workout" class="view">
         <input type="text" id="w-name" list="dl" placeholder="Mouvement">
+        <div id="stats-apercu" style="margin: 10px 0; padding: 10px; background: #2C2C2E; border-radius: 10px; display: none; text-align: center;">
+    <span style="font-size: 12px; color: var(--text-muted);">Progression aujourd'hui :</span><br>
+    <b id="last-session-vol" style="color: var(--text-muted);">0</b> 
+    <span style="color: var(--text-muted);">kg vs </span>
+    <b id="current-session-vol" style="color: var(--accent);">0</b> 
+    <span style="color: var(--text-muted);">kg</span>
+</div>
         <datalist id="dl"></datalist>
         <div style="display:flex; gap:10px; margin: 10px 0;">
             <input type="number" id="w-kg" placeholder="kg">
@@ -68,7 +75,53 @@
             if(n==='history') renderHistory();
             if(n==='charts') renderCharts();
         };
+window.updateExerciseStats = function() {
+    var name = document.getElementById('w-name').value.trim().toLowerCase();
+    var container = document.getElementById('stats-apercu');
+    
+    if(!name) {
+        container.style.display = 'none';
+        return;
+    }
 
+    // 1. Calcul du volume total de la session EN COURS pour cet exercice
+    var curVol = 0;
+    currentSession.forEach(s => {
+        if(s.nom.toLowerCase() === name) curVol += (s.poids * s.reps);
+    });
+
+    // 2. Trouver le volume total de la DERNIÈRE séance (regroupée par jour)
+    // On trie par date décroissante pour trouver la séance la plus récente
+    var sortedData = allData.sort((a, b) => b.date - a.date);
+    var lastVol = 0;
+    var lastDate = null;
+
+    for (var item of sortedData) {
+        var dayVol = 0;
+        item.data.exercises.forEach(ex => {
+            if(ex.nom.toLowerCase() === name) dayVol += (ex.poids * ex.reps);
+        });
+
+        // Si on trouve du volume sur un jour précédent
+        if (dayVol > 0) {
+            if (!lastDate) {
+                lastDate = item.date.toDateString(); // On fixe la date de la séance trouvée
+                lastVol = dayVol;
+            } else if (item.date.toDateString() === lastDate) {
+                // On additionne si c'est la même séance (regroupée par jour)
+                lastVol += dayVol;
+            } else {
+                // On a trouvé une date antérieure, on s'arrête
+                break;
+            }
+        }
+    }
+
+    // 3. Mise à jour de l'affichage
+    document.getElementById('last-session-vol').innerText = lastVol + " kg";
+    document.getElementById('current-session-vol').innerText = curVol + " kg";
+    container.style.display = 'block';
+};
         // --- GRAPHES LOGIQUE ---
         function renderCharts() {
             var div = document.getElementById('chart-list'); div.innerHTML = "";
@@ -82,29 +135,44 @@
 
         function openChart(key) {
             document.getElementById('modal').style.display='flex';
-            var raw = stats[key] || [];
-            raw.sort((a,b) => a.date - b.date);
             
+            // 1. Récupérer les données brutes
+            var raw = stats[key] || [];
+            
+            // 2. Agréger par jour (Somme des volumes si plusieurs séries le même jour)
+            var dailyVolumes = {};
+            raw.forEach(item => {
+                var dStr = item.date.toISOString().split('T')[0];
+                if (!dailyVolumes[dStr]) dailyVolumes[dStr] = { date: item.date, vol: 0 };
+                dailyVolumes[dStr].vol += item.vol;
+            });
+
+            // 3. Convertir en tableau trié
+            var chartData = Object.values(dailyVolumes).sort((a,b) => a.date - b.date);
+
             var ctx = document.getElementById('myChart').getContext('2d');
             if(myChart) myChart.destroy();
             
             myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: raw.map(x => x.date.toLocaleDateString()),
+                    labels: chartData.map(x => x.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'})),
                     datasets: [{
-                        label: 'Volume (kg)',
-                        data: raw.map(x => x.vol),
+                        label: 'Volume total journalier (kg)',
+                        data: chartData.map(x => x.vol),
                         borderColor: '#0A84FF',
                         tension: 0.3,
                         fill: true,
                         backgroundColor: 'rgba(10, 132, 255, 0.1)'
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } }
+                }
             });
         }
-
         // --- RESTE DES FONCTIONS ---
         function renderHistory() {
             var div = document.getElementById('hist-list'); div.innerHTML = "";
