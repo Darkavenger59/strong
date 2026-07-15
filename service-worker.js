@@ -1,4 +1,4 @@
-const CACHE_NAME = 'b-strong-v8.9'; // J'ai changé le nom pour forcer la mise à jour
+const CACHE_NAME = 'b-strong-v9'; // J'ai changé le nom pour forcer la mise à jour
 const ASSETS = [
   './',
   './index.html',
