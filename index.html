@@ -13,9 +13,16 @@
         .view { display: none; padding: 20px; } .view.active { display: block; }
         .card { background: var(--card); padding: 18px; margin-bottom: 15px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .btn-big { width: 160px; height: 160px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 24px; font-weight: 800; display: block; margin: 0 auto; }
-        .heatmap { display: grid; grid-template-rows: repeat(7, 12px); grid-auto-flow: column; gap: 3px; width: max-content; margin: 20px auto; }
-        .day { width: 12px; height: 12px; background-color: #161b22; border-radius: 2px; }
-        .day[data-level="4"] { background-color: #39d353; }
+     
+    .heatmap-wrapper { display: flex; overflow-x: auto; padding: 10px; gap: 20px; }
+    .muscle-row { display: flex; flex-direction: column; gap: 4px; }
+    .muscle-label { font-size: 10px; color: var(--text-muted); margin-bottom: 2px; }
+    .heatmap { display: grid; grid-template-rows: repeat(4, 15px); grid-auto-flow: column; gap: 3px; }
+    .day { width: 15px; height: 15px; background-color: #161b22; border-radius: 2px; }
+    .day[data-level="1"] { background-color: #0e4429; }
+    .day[data-level="2"] { background-color: #006d32; }
+    .day[data-level="3"] { background-color: #26a641; }
+    .day[data-level="4"] { background-color: #39d353; }
         .serie-num { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; border: 1px solid #444; color: #666; font-size: 11px; margin-right: 10px; }
         .nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #1a1a1a; display: flex; border-top: 1px solid #333; }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: var(--text-muted); cursor: pointer; }
@@ -24,11 +31,11 @@
 </head>
 <body>
 
-    <div id="v-home" class="view active">
-        <h1>B-STRONG</h1>
-        <button class="btn-big" onclick="startWorkout()">GO</button>
-        <div id="heatmap" class="heatmap"></div>
-    </div>
+  <div id="v-home" class="view active">
+    <h1>B-STRONG</h1>
+    <button class="btn-big" onclick="startWorkout()">GO</button>
+    <div class="heatmap-wrapper" id="heatmap-container"></div>
+</div>
 
     <div id="v-history" class="view"><h2>Historique</h2><div id="hist-list"></div></div>
 
@@ -215,16 +222,55 @@ window.updateExerciseStats = function() {
             }
         }
 
-        function renderHeatmap() {
-            var heatmap = document.getElementById('heatmap'); heatmap.innerHTML = '';
-            for(var j=0; j<365; j++) {
-                var d = new Date(); d.setDate(d.getDate() - 364 + j);
-                var dStr = d.toISOString().split('T')[0];
-                var c = document.createElement('div'); c.className = 'day';
-                if(allData.some(i => i.date.toISOString().split('T')[0] === dStr)) c.dataset.level = "4";
-                heatmap.appendChild(c);
+<script>
+    // 1. Ajouter la map des muscles
+    const EXERCICE_MAP = {
+        "curl barre": "biceps", "curl haltère": "biceps",
+        "extension triceps": "triceps", "barre au front": "triceps",
+        "développé couché": "pectoraux", "écarté": "pectoraux",
+        "tirage dos": "dorsaux", "rowing": "dorsaux"
+    };
+
+    // 2. Modifier renderHeatmap
+    function renderHeatmap() {
+        const container = document.getElementById('heatmap-container');
+        container.innerHTML = '';
+        const muscles = ['biceps', 'triceps', 'pectoraux', 'dorsaux'];
+        
+        muscles.forEach(m => {
+            const rowWrapper = document.createElement('div');
+            rowWrapper.className = 'muscle-row';
+            rowWrapper.innerHTML = `<div class="muscle-label">${m.toUpperCase()}</div>`;
+            const grid = document.createElement('div');
+            grid.className = 'heatmap';
+            
+            // Calculer les 20 dernières semaines
+            for(let w=20; w>=0; w--) {
+                const d = new Date(); d.setDate(d.getDate() - (w * 7));
+                const weekVol = getVolumeForWeek(d, m);
+                const cell = document.createElement('div');
+                cell.className = 'day';
+                if(weekVol > 0) cell.dataset.level = Math.min(Math.floor(weekVol/1000) + 1, 4);
+                grid.appendChild(cell);
             }
-        }
+            rowWrapper.appendChild(grid);
+            container.appendChild(rowWrapper);
+        });
+    }
+
+    function getVolumeForWeek(date, muscle) {
+        // Logique : somme des volumes de l'exercice si EXERCICE_MAP[nom] === muscle
+        return allData.reduce((acc, item) => {
+            const itemDate = item.date;
+            const isSameWeek = Math.floor((itemDate - date) / (7 * 24 * 60 * 60 * 1000)) === 0;
+            if(isSameWeek) {
+                item.data.exercises.forEach(ex => {
+                    if(EXERCICE_MAP[ex.nom.toLowerCase()] === muscle) acc += (ex.poids * ex.reps);
+                });
+            }
+            return acc;
+        }, 0);
+    }
 
         function loadData() { 
             db.collection("workouts").orderBy("date", "desc").get().then(snap => { 
@@ -255,6 +301,7 @@ window.updateExerciseStats = function() {
             });
         };
         loadData();
+        
     </script>
     <div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:5000; align-items:center; justify-content:center;" onclick="this.style.display='none'">
         <div class="card" style="width:90%; height:60%;"><canvas id="myChart"></canvas></div>
