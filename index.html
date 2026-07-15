@@ -39,12 +39,13 @@
 
     <div id="v-workout" class="view">
         <input type="text" id="w-name" list="dl" placeholder="Mouvement">
-        <div id="stats-apercu" style="margin: 10px 0; padding: 10px; background: #2C2C2E; border-radius: 10px; display: none; text-align: center;">
-    <span style="font-size: 12px; color: var(--text-muted);">Progression aujourd'hui :</span><br>
-    <b id="last-session-vol" style="color: var(--text-muted);">0</b> 
-    <span style="color: var(--text-muted);">kg vs </span>
-    <b id="current-session-vol" style="color: var(--accent);">0</b> 
-    <span style="color: var(--text-muted);">kg</span>
+    <div id="stats-apercu" style="margin: 10px 0; padding: 12px; background: #2C2C2E; border-radius: 12px; display: none; text-align: center;">
+    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">Progression aujourd'hui</div>
+    <div style="display: flex; justify-content: space-around;">
+        <span>Dernière fois: <b id="last-session-vol" style="color: var(--text-muted);">0</b>kg</span>
+        <span>Actuel: <b id="current-session-vol" style="color: var(--accent);">0</b>kg</span>
+    </div>
+</div>
 </div>
         <datalist id="dl"></datalist>
         <div style="display:flex; gap:10px; margin: 10px 0;">
@@ -75,51 +76,59 @@
             if(n==='history') renderHistory();
             if(n==='charts') renderCharts();
         };
+    window.addSet = function() {
+    var name = document.getElementById('w-name').value;
+    var k = parseFloat(document.getElementById('w-kg').value);
+    var r = parseInt(document.getElementById('w-reps').value);
+    
+    currentSession.push({nom: name, poids: k, reps: r});
+    
+    // Rendu visuel
+    var list = document.getElementById('w-list');
+    var li = document.createElement('li');
+    li.innerHTML = `<div class="card"><span class="serie-num">${currentSession.length}</span> ${name} : ${k}kg x ${r}</div>`;
+    list.prepend(li);
+    
+    // IMPORTANT : Appel de la mise à jour des stats après ajout
 window.updateExerciseStats = function() {
     var name = document.getElementById('w-name').value.trim().toLowerCase();
     var container = document.getElementById('stats-apercu');
     
-    if(!name) {
-        container.style.display = 'none';
-        return;
-    }
+    if(!name) { container.style.display = 'none'; return; }
 
-    // 1. Calcul du volume total de la session EN COURS pour cet exercice
+    // 1. Calcul du volume de la session EN COURS
     var curVol = 0;
     currentSession.forEach(s => {
-        if(s.nom.toLowerCase() === name) curVol += (s.poids * s.reps);
+        if(s.nom.toLowerCase() === name) curVol += (parseFloat(s.poids) * parseFloat(s.reps));
     });
 
-    // 2. Trouver le volume total de la DERNIÈRE séance (regroupée par jour)
-    // On trie par date décroissante pour trouver la séance la plus récente
-    var sortedData = allData.sort((a, b) => b.date - a.date);
+    // 2. Recherche du volume de la DERNIÈRE JOURNÉE effectuée
+    // On trie les séances pour trouver la dernière date différente d'aujourd'hui
+    var sorted = allData.sort((a,b) => b.date - a.date);
     var lastVol = 0;
     var lastDate = null;
 
-    for (var item of sortedData) {
+    for (var item of sorted) {
         var dayVol = 0;
         item.data.exercises.forEach(ex => {
-            if(ex.nom.toLowerCase() === name) dayVol += (ex.poids * ex.reps);
+            if(ex.nom.toLowerCase() === name) dayVol += (parseFloat(ex.poids) * parseFloat(ex.reps));
         });
 
-        // Si on trouve du volume sur un jour précédent
         if (dayVol > 0) {
             if (!lastDate) {
-                lastDate = item.date.toDateString(); // On fixe la date de la séance trouvée
+                lastDate = item.date.toDateString();
                 lastVol = dayVol;
             } else if (item.date.toDateString() === lastDate) {
-                // On additionne si c'est la même séance (regroupée par jour)
                 lastVol += dayVol;
             } else {
-                // On a trouvé une date antérieure, on s'arrête
-                break;
+                break; // On a trouvé la date précédente, on arrête
             }
         }
     }
 
-    // 3. Mise à jour de l'affichage
-    document.getElementById('last-session-vol').innerText = lastVol + " kg";
-    document.getElementById('current-session-vol').innerText = curVol + " kg";
+    // 3. Affichage
+    document.getElementById('last-session-vol').innerText = lastVol.toFixed(0);
+    document.getElementById('current-session-vol').innerText = curVol.toFixed(0);
     container.style.display = 'block';
 };
         // --- GRAPHES LOGIQUE ---
