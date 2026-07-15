@@ -134,45 +134,55 @@ window.updateExerciseStats = function() {
         }
 
         function openChart(key) {
-            document.getElementById('modal').style.display='flex';
-            
-            // 1. Récupérer les données brutes
-            var raw = stats[key] || [];
-            
-            // 2. Agréger par jour (Somme des volumes si plusieurs séries le même jour)
-            var dailyVolumes = {};
-            raw.forEach(item => {
+    document.getElementById('modal').style.display = 'flex';
+    
+    // 1. Filtrer et agréger les données à la volée depuis allData
+    var dailyVolumes = {};
+    
+    allData.forEach(item => {
+        // On cherche cet exercice dans cette séance
+        item.data.exercises.forEach(ex => {
+            if (ex.nom.toLowerCase() === key.toLowerCase()) {
                 var dStr = item.date.toISOString().split('T')[0];
                 if (!dailyVolumes[dStr]) dailyVolumes[dStr] = { date: item.date, vol: 0 };
-                dailyVolumes[dStr].vol += item.vol;
-            });
+                dailyVolumes[dStr].vol += (parseFloat(ex.poids) || 0) * (parseFloat(ex.reps) || 0);
+            }
+        });
+    });
 
-            // 3. Convertir en tableau trié
-            var chartData = Object.values(dailyVolumes).sort((a,b) => a.date - b.date);
+    // 2. Transformer en tableau trié
+    var chartData = Object.values(dailyVolumes).sort((a,b) => a.date - b.date);
 
-            var ctx = document.getElementById('myChart').getContext('2d');
-            if(myChart) myChart.destroy();
-            
-            myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: chartData.map(x => x.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'})),
-                    datasets: [{
-                        label: 'Volume total journalier (kg)',
-                        data: chartData.map(x => x.vol),
-                        borderColor: '#0A84FF',
-                        tension: 0.3,
-                        fill: true,
-                        backgroundColor: 'rgba(10, 132, 255, 0.1)'
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
+    // 3. Vérifier qu'on a bien des données
+    if (chartData.length === 0) {
+        console.log("Aucune donnée pour", key);
+        return;
+    }
+
+    // 4. Rendu Chart.js
+    var ctx = document.getElementById('myChart').getContext('2d');
+    if (myChart) myChart.destroy();
+    
+    myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.map(x => x.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'})),
+            datasets: [{
+                label: 'Volume total journalier (kg)',
+                data: chartData.map(x => x.vol),
+                borderColor: '#0A84FF',
+                backgroundColor: 'rgba(10, 132, 255, 0.2)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { color: '#8E8E93' } }, x: { ticks: { color: '#8E8E93' } } }
         }
+    });
+}
         // --- RESTE DES FONCTIONS ---
         function renderHistory() {
             var div = document.getElementById('hist-list'); div.innerHTML = "";
