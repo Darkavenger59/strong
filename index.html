@@ -2,309 +2,36 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>B-STRONG PRO</title>
-    <script src="[https://cdn.jsdelivr.net/npm/chart.js](https://cdn.jsdelivr.net/npm/chart.js)"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <style>
-        :root { --bg: #121212; --card: #1E1E1E; --text: #F5F5F5; --text-muted: #8E8E93; --accent: #0A84FF; --danger: #FF453A; }
-        body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; padding-bottom: 90px; }
-        .view { display: none; padding: 20px; } .view.active { display: block; }
-        .card { background: var(--card); padding: 18px; margin-bottom: 15px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .btn-big { width: 160px; height: 160px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 24px; font-weight: 800; display: block; margin: 0 auto; }
-     
-    .heatmap-wrapper { display: flex; overflow-x: auto; padding: 10px; gap: 20px; }
-    .muscle-row { display: flex; flex-direction: column; gap: 4px; }
-    .muscle-label { font-size: 10px; color: var(--text-muted); margin-bottom: 2px; }
-    .heatmap { display: grid; grid-template-rows: repeat(4, 15px); grid-auto-flow: column; gap: 3px; }
-    .day { width: 15px; height: 15px; background-color: #161b22; border-radius: 2px; }
-    .day[data-level="1"] { background-color: #0e4429; }
-    .day[data-level="2"] { background-color: #006d32; }
-    .day[data-level="3"] { background-color: #26a641; }
-    .day[data-level="4"] { background-color: #39d353; }
-        .serie-num { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; border: 1px solid #444; color: #666; font-size: 11px; margin-right: 10px; }
-        .nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #1a1a1a; display: flex; border-top: 1px solid #333; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: var(--text-muted); cursor: pointer; }
-        .nav-item.active { color: var(--accent); }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
+    <header>
+        <h1>Fitness Tracker</h1>
+    </header>
+    <main id="app">
+        <section id="workout-section">
+            <h2>Séance du jour</h2>
+            <div id="exercise-list">
+                <!-- Exercices injectés par JS -->
+            </div>
+            <button id="add-exercise">Ajouter un exercice</button>
+        </section>
+    </main>
 
-  <div id="v-home" class="view active">
-    <h1>B-STRONG</h1>
-    <button class="btn-big" onclick="startWorkout()">GO</button>
-    <div class="heatmap-wrapper" id="heatmap-container"></div>
-</div>
-
-    <div id="v-history" class="view"><h2>Historique</h2><div id="hist-list"></div></div>
-
-    <div id="v-charts" class="view">
-        <h2>Progression</h2>
-        <div id="chart-list"></div>
-    </div>
-
-    <div id="v-workout" class="view">
-        <input type="text" id="w-name" list="dl" placeholder="Mouvement">
-    <div id="stats-apercu" style="margin: 10px 0; padding: 12px; background: #2C2C2E; border-radius: 12px; display: none; text-align: center;">
-    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">Progression aujourd'hui</div>
-    <div style="display: flex; justify-content: space-around;">
-        <span>Dernière fois: <b id="last-session-vol" style="color: var(--text-muted);">0</b>kg</span>
-        <span>Actuel: <b id="current-session-vol" style="color: var(--accent);">0</b>kg</span>
-    </div>
-</div>
-</div>
-        <datalist id="dl"></datalist>
-        <div style="display:flex; gap:10px; margin: 10px 0;">
-            <input type="number" id="w-kg" placeholder="kg">
-            <input type="number" id="w-reps" placeholder="reps">
-        </div>
-        <button class="btn-action" style="width:100%; padding:15px; background:var(--accent); color:white; border:none; border-radius:10px;" onclick="addSet()">Valider série</button>
-        <ul id="w-list" style="list-style:none; padding:0;"></ul>
-        <button class="btn-action" style="width:100%; padding:15px; background:var(--danger); color:white; border:none; border-radius:10px;" onclick="saveWorkout()">Terminer</button>
-    </div>
-
-    <div class="nav">
-        <div class="nav-item active" onclick="showTab('home', this)">🏠 Accueil</div>
-        <div class="nav-item" onclick="showTab('history', this)">📅 Historique</div>
-        <div class="nav-item" onclick="showTab('charts', this)">📈 Graphiques</div>
-        <div class="nav-item" onclick="startWorkout()">➕ Séance</div>
-    </div>
-
-<script>
-        var currentSession = [], allData = [], stats = {}, myChart = null;
-        firebase.initializeApp({ apiKey: "AIzaSyBuzNrrB-rK_xcjSeGtFc3I9yUKHhRUcIY", authDomain: "b-strong-4c3d1.firebaseapp.com", projectId: "b-strong-4c3d1", storageBucket: "b-strong-4c3d1.firebasestorage.app", messagingSenderId: "746501272062", appId: "1:746501272062:web:b2181766fd23ce8a3f10af" });
-        var db = firebase.firestore();
-
-        window.showTab = (n, el) => {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('v-'+n).classList.add('active');
-            if(el) { document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
-            if(n==='history') renderHistory();
-            if(n==='charts') renderCharts();
-        };
-    window.addSet = function() {
-    var name = document.getElementById('w-name').value;
-    var k = parseFloat(document.getElementById('w-kg').value);
-    var r = parseInt(document.getElementById('w-reps').value);
-    
-    currentSession.push({nom: name, poids: k, reps: r});
-    
-    // Rendu visuel
-    var list = document.getElementById('w-list');
-    var li = document.createElement('li');
-    li.innerHTML = `<div class="card"><span class="serie-num">${currentSession.length}</span> ${name} : ${k}kg x ${r}</div>`;
-    list.prepend(li);
-    
-    // IMPORTANT : Appel de la mise à jour des stats après ajout
-window.updateExerciseStats = function() {
-    var name = document.getElementById('w-name').value.trim().toLowerCase();
-    var container = document.getElementById('stats-apercu');
-    
-    if(!name) { container.style.display = 'none'; return; }
-
-    // 1. Calcul du volume de la session EN COURS
-    var curVol = 0;
-    currentSession.forEach(s => {
-        if(s.nom.toLowerCase() === name) curVol += (parseFloat(s.poids) * parseFloat(s.reps));
-    });
-
-    // 2. Recherche du volume de la DERNIÈRE JOURNÉE effectuée
-    // On trie les séances pour trouver la dernière date différente d'aujourd'hui
-    var sorted = allData.sort((a,b) => b.date - a.date);
-    var lastVol = 0;
-    var lastDate = null;
-
-    for (var item of sorted) {
-        var dayVol = 0;
-        item.data.exercises.forEach(ex => {
-            if(ex.nom.toLowerCase() === name) dayVol += (parseFloat(ex.poids) * parseFloat(ex.reps));
-        });
-
-        if (dayVol > 0) {
-            if (!lastDate) {
-                lastDate = item.date.toDateString();
-                lastVol = dayVol;
-            } else if (item.date.toDateString() === lastDate) {
-                lastVol += dayVol;
-            } else {
-                break; // On a trouvé la date précédente, on arrête
-            }
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('SW enregistré', reg))
+                .catch(err => console.log('SW erreur', err));
         }
-    }
-
-    // 3. Affichage
-    document.getElementById('last-session-vol').innerText = lastVol.toFixed(0);
-    document.getElementById('current-session-vol').innerText = curVol.toFixed(0);
-    container.style.display = 'block';
-};
-        // --- GRAPHES LOGIQUE ---
-        function renderCharts() {
-            var div = document.getElementById('chart-list'); div.innerHTML = "";
-            for(var k in stats) {
-                var btn = document.createElement('div'); btn.className = 'card';
-                btn.innerHTML = k.toUpperCase() + " ➔";
-                btn.onclick = () => openChart(k);
-                div.appendChild(btn);
-            }
-        }
-
-        function openChart(key) {
-    document.getElementById('modal').style.display = 'flex';
-    
-    // 1. Filtrer et agréger les données à la volée depuis allData
-    var dailyVolumes = {};
-    
-    allData.forEach(item => {
-        // On cherche cet exercice dans cette séance
-        item.data.exercises.forEach(ex => {
-            if (ex.nom.toLowerCase() === key.toLowerCase()) {
-                var dStr = item.date.toISOString().split('T')[0];
-                if (!dailyVolumes[dStr]) dailyVolumes[dStr] = { date: item.date, vol: 0 };
-                dailyVolumes[dStr].vol += (parseFloat(ex.poids) || 0) * (parseFloat(ex.reps) || 0);
-            }
-        });
-    });
-
-    // 2. Transformer en tableau trié
-    var chartData = Object.values(dailyVolumes).sort((a,b) => a.date - b.date);
-
-    // 3. Vérifier qu'on a bien des données
-    if (chartData.length === 0) {
-        console.log("Aucune donnée pour", key);
-        return;
-    }
-
-    // 4. Rendu Chart.js
-    var ctx = document.getElementById('myChart').getContext('2d');
-    if (myChart) myChart.destroy();
-    
-    myChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartData.map(x => x.date.toLocaleDateString('fr-FR', {day:'numeric', month:'short'})),
-            datasets: [{
-                label: 'Volume total journalier (kg)',
-                data: chartData.map(x => x.vol),
-                borderColor: '#0A84FF',
-                backgroundColor: 'rgba(10, 132, 255, 0.2)',
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true, ticks: { color: '#8E8E93' } }, x: { ticks: { color: '#8E8E93' } } }
-        }
-    });
-}
-        // --- RESTE DES FONCTIONS ---
-        function renderHistory() {
-            var div = document.getElementById('hist-list'); div.innerHTML = "";
-            var groups = {};
-            allData.forEach(item => {
-                var dKey = item.date.toDateString();
-                if(!groups[dKey]) groups[dKey] = {};
-                item.data.exercises.forEach(ex => {
-                    if(!groups[dKey][ex.nom]) groups[dKey][ex.nom] = [];
-                    groups[dKey][ex.nom].push(ex);
-                });
-            });
-            for(var date in groups) {
-                var card = document.createElement('div'); card.className = 'card';
-                card.innerHTML = `<h3>${date}</h3>`;
-                for(var exName in groups[date]) {
-                    card.innerHTML += `<div style="font-weight:bold; margin-top:10px;">${exName}</div>`;
-                    groups[date][exName].forEach((s, i) => card.innerHTML += `<div><span class="serie-num">${i+1}</span> ${s.poids}kg x ${s.reps}</div>`);
-                }
-                div.appendChild(card);
-            }
-        }
-
-<script>
-    // 1. Ajouter la map des muscles
-    const EXERCICE_MAP = {
-        "curl barre": "biceps", "curl haltère": "biceps",
-        "extension triceps": "triceps", "barre au front": "triceps",
-        "développé couché": "pectoraux", "écarté": "pectoraux",
-        "tirage dos": "dorsaux", "rowing": "dorsaux"
-    };
-
-    // 2. Modifier renderHeatmap
-    function renderHeatmap() {
-        const container = document.getElementById('heatmap-container');
-        container.innerHTML = '';
-        const muscles = ['biceps', 'triceps', 'pectoraux', 'dorsaux'];
-        
-        muscles.forEach(m => {
-            const rowWrapper = document.createElement('div');
-            rowWrapper.className = 'muscle-row';
-            rowWrapper.innerHTML = `<div class="muscle-label">${m.toUpperCase()}</div>`;
-            const grid = document.createElement('div');
-            grid.className = 'heatmap';
-            
-            // Calculer les 20 dernières semaines
-            for(let w=20; w>=0; w--) {
-                const d = new Date(); d.setDate(d.getDate() - (w * 7));
-                const weekVol = getVolumeForWeek(d, m);
-                const cell = document.createElement('div');
-                cell.className = 'day';
-                if(weekVol > 0) cell.dataset.level = Math.min(Math.floor(weekVol/1000) + 1, 4);
-                grid.appendChild(cell);
-            }
-            rowWrapper.appendChild(grid);
-            container.appendChild(rowWrapper);
-        });
-    }
-
-    function getVolumeForWeek(date, muscle) {
-        // Logique : somme des volumes de l'exercice si EXERCICE_MAP[nom] === muscle
-        return allData.reduce((acc, item) => {
-            const itemDate = item.date;
-            const isSameWeek = Math.floor((itemDate - date) / (7 * 24 * 60 * 60 * 1000)) === 0;
-            if(isSameWeek) {
-                item.data.exercises.forEach(ex => {
-                    if(EXERCICE_MAP[ex.nom.toLowerCase()] === muscle) acc += (ex.poids * ex.reps);
-                });
-            }
-            return acc;
-        }, 0);
-    }
-
-        function loadData() { 
-            db.collection("workouts").orderBy("date", "desc").get().then(snap => { 
-                allData = []; stats = {};
-                snap.forEach(doc => {
-                    var d = doc.data();
-                    var dateObj = d.date.toDate();
-                    allData.push({data: d, date: dateObj});
-                    d.exercises.forEach(ex => {
-                        var k = ex.nom.toLowerCase();
-                        if(!stats[k]) stats[k] = [];
-                        stats[k].push({date: dateObj, vol: ex.poids * ex.reps});
-                    });
-                }); 
-                renderHeatmap(); 
-            }); 
-        }
-
-        window.startWorkout = () => showTab('workout');
-        window.addSet = () => {
-            var name = document.getElementById('w-name').value;
-            currentSession.push({nom: name, poids: parseFloat(document.getElementById('w-kg').value), reps: parseInt(document.getElementById('w-reps').value)});
-            document.getElementById('w-list').prepend(Object.assign(document.createElement('li'), {innerHTML: `<div class="card">${name} validé</div>`}));
-        };
-        window.saveWorkout = () => {
-            db.collection("workouts").add({date: firebase.firestore.FieldValue.serverTimestamp(), exercises: currentSession}).then(() => {
-                currentSession = []; loadData(); showTab('home');
-            });
-        };
-        loadData();
-        
     </script>
-    <div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:5000; align-items:center; justify-content:center;" onclick="this.style.display='none'">
-        <div class="card" style="width:90%; height:60%;"><canvas id="myChart"></canvas></div>
-    </div>
 </body>
 </html>
