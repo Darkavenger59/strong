@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baby Reveal - Mini-Jeu Rétro</title>
-    <!-- Import d'une police pixel art depuis Google Fonts -->
+    <title>Baby Reveal - L'Odyssée Hardcore</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
@@ -25,9 +24,9 @@
             position: relative;
             width: 400px;
             height: 500px;
-            background: linear-gradient(to bottom, #2c3e50, #f1c40f);
+            background: linear-gradient(to bottom, #111e38, #2c3e50);
             border: 4px solid #fff;
-            box-shadow: 0 0 20px rgba(241, 196, 15, 0.4);
+            box-shadow: 0 0 20px rgba(84, 160, 255, 0.4);
             overflow: hidden;
         }
 
@@ -48,7 +47,6 @@
             pointer-events: none;
         }
 
-        /* Style de l'écran de fin / Reveal */
         #reveal-screen {
             position: absolute;
             top: 0;
@@ -68,9 +66,9 @@
         }
 
         #reveal-screen h2 {
-            font-size: 20px;
+            font-size: 18px;
             margin-bottom: 20px;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .btn {
@@ -81,7 +79,6 @@
             font-family: 'Press Start 2P', monospace;
             font-size: 10px;
             cursor: pointer;
-            border-radius: 0;
             box-shadow: 0 4px 0 #27ae60;
             margin-top: 15px;
         }
@@ -95,10 +92,9 @@
 <body>
 
     <div id="game-container">
-        <div id="ui-overlay">Clique pour voler !</div>
+        <div id="ui-overlay">Colis : <span id="scoreVal">0</span>/5</div>
         <canvas id="gameCanvas" width="400" height="500"></canvas>
         
-        <!-- Écran du Reveal -->
         <div id="reveal-screen">
             <h2 id="reveal-text"></h2>
             <button class="btn" onclick="resetGame()">Rejouer</button>
@@ -110,114 +106,131 @@
         const ctx = canvas.getContext("2d");
         const revealScreen = document.getElementById("reveal-screen");
         const revealText = document.getElementById("reveal-text");
+        const scoreVal = document.getElementById("scoreVal");
 
-        // Configuration du jeu
         let isPlaying = true;
         let score = 0;
-        
-        // Paramètres de la Cigogne (Joueur)
+        const winningScore = 5; // Nombre de colis à attraper pour gagner
+
         let bird = {
             x: 80,
             y: 250,
-            radius: 14,
-            gravity: 0.35,
-            lift: -6.5,
+            radius: 12,
+            gravity: 0.4,
+            lift: -6,
             velocity: 0
         };
 
-        // Paramètres du Colis (Cible à attraper)
-        let packageObj = {
-            x: 350,
-            y: 250,
-            size: 24,
-            speed: 2.5
-        };
+        // Obstacles (Piliers haut et bas)
+        let pipes = [];
+        let pipeWidth = 50;
+        let pipeGap = 140; // Espace serré pour la difficulté
+        let pipeSpeed = 3;
+        let frameCount = 0;
 
-        // Écouteurs d'événements pour faire voler la cigogne
-        window.addEventListener("keydown", function(e) {
-            if (e.code === "Space" || e.code === "ArrowUp") {
-                makeBirdFly();
-            }
-        });
-
-        canvas.addEventListener("click", function() {
-            makeBirdFly();
-        });
-
-        canvas.addEventListener("touchstart", function(e) {
-            e.preventDefault();
-            makeBirdFly();
-        });
+        window.addEventListener("keydown", (e) => { if (e.code === "Space") makeBirdFly(); });
+        canvas.addEventListener("click", makeBirdFly);
+        canvas.addEventListener("touchstart", (e) => { e.preventDefault(); makeBirdFly(); });
 
         function makeBirdFly() {
             if (!isPlaying) return;
             bird.velocity = bird.lift;
         }
 
-        // Boucle principale du jeu
+        function spawnPipe() {
+            let minHeight = 50;
+            let maxHeight = canvas.height - pipeGap - 80;
+            let topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
+
+            pipes.push({
+                x: canvas.width,
+                top: topHeight,
+                bottom: canvas.height - topHeight - pipeGap,
+                passed: false
+            });
+        }
+
         function update() {
             if (!isPlaying) return;
 
-            // Physique de la cigogne
+            // Gravité
             bird.velocity += bird.gravity;
             bird.y += bird.velocity;
 
-            // Limites de l'écran (sol et plafond)
-            if (bird.y + bird.radius > canvas.height) {
-                bird.y = canvas.height - bird.radius;
-                bird.velocity = 0;
-            }
-            if (bird.y - bird.radius < 0) {
-                bird.y = bird.radius;
-                bird.velocity = 0;
+            // Limites sol/plafond (mortels si on touche)
+            if (bird.y + bird.radius >= canvas.height - 20 || bird.y - bird.radius <= 0) {
+                gameOver();
             }
 
-            // Déplacement du colis vers la gauche
-            packageObj.x -= packageObj.speed;
-
-            // Si le colis sort de l'écran, on le remet à droite avec une position aléatoire
-            if (packageObj.x < -30) {
-                packageObj.x = canvas.width + 40;
-                packageObj.y = Math.random() * (canvas.height - 150) + 75;
-                score++;
+            // Génération des obstacles toutes les 90 frames
+            frameCount++;
+            if (frameCount % 90 === 0) {
+                spawnPipe();
             }
 
-            // Condition de victoire : Attraper le colis (après 3 passages ou score cible)
-            // Pour le test, on déclenche le reveal dès le premier colis attrapé (score >= 1)
-            let distX = bird.x - packageObj.x;
-            let distY = bird.y - packageObj.y;
-            let distance = Math.sqrt(distX * distX + distY * distY);
+            // Déplacement et gestion des obstacles
+            for (let i = pipes.length - 1; i >= 0; i--) {
+                pipes[i].x -= pipeSpeed;
 
-            if (distance < bird.radius + packageObj.size / 2 || score >= 3) {
-                triggerReveal();
+                // Collision avec la cigogne
+                if (
+                    bird.x + bird.radius > pipes[i].x &&
+                    bird.x - bird.radius < pipes[i].x + pipeWidth &&
+                    (bird.y - bird.radius < pipes[i].top || bird.y + bird.radius > canvas.height - pipes[i].bottom)
+                ) {
+                    gameOver();
+                }
+
+                // Compteur de score (quand on passe un tuyau)
+                if (!pipes[i].passed && pipes[i].x < bird.x) {
+                    pipes[i].passed = true;
+                    score++;
+                    scoreVal.innerText = score;
+
+                    // Condition de victoire finale
+                    if (score >= winningScore) {
+                        triggerReveal();
+                    }
+                }
+
+                // Supprimer les tuyaux sortis de l'écran
+                if (pipes[i].x + pipeWidth < 0) {
+                    pipes.splice(i, 1);
+                }
             }
         }
 
-        // Rendu graphique rétro (Pixel art simplifié)
         function draw() {
-            // Fond dégradé du ciel
-            ctx.fillStyle = "#2c3e50";
+            // Fond
+            ctx.fillStyle = "#111e38";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Dessin d'un sol pixelisé
+            // Dessin des obstacles (Style briques rétro)
+            ctx.fillStyle = "#e67e22";
+            pipes.forEach(pipe => {
+                // Tuyau du Haut
+                ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+                ctx.strokeStyle = "#d35400";
+                ctx.lineWidth = 3;
+                ctx.strokeRect(pipe.x, 0, pipeWidth, pipe.top);
+
+                // Tuyau du Bas
+                ctx.fillRect(pipe.x, canvas.height - pipe.bottom, pipeWidth, pipe.bottom);
+                ctx.strokeRect(pipe.x, canvas.height - pipe.bottom, pipeWidth, pipe.bottom);
+            });
+
+            // Sol
             ctx.fillStyle = "#27ae60";
             ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
 
-            // Dessin de la Cigogne (Remplacement visuel par un rond blanc/orange stylisé)
+            // Dessin de la Cigogne
             ctx.fillStyle = "#ffffff";
             ctx.beginPath();
             ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
             ctx.fill();
             // Bec
-            ctx.fillStyle = "#e67e22";
-            ctx.fillRect(bird.x + bird.radius - 2, bird.y - 4, 10, 6);
-
-            // Dessin du Colis Mystère (Cadeau rouge et ruban jaune)
-            ctx.fillStyle = "#e74c3c";
-            ctx.fillRect(packageObj.x - 12, packageObj.y - 12, 24, 24);
             ctx.fillStyle = "#f1c40f";
-            ctx.fillRect(packageObj.x - 3, packageObj.y - 12, 6, 24);
-            ctx.fillRect(packageObj.x - 12, packageObj.y - 3, 24, 6);
+            ctx.fillRect(bird.x + bird.radius - 2, bird.y - 3, 8, 5);
         }
 
         function gameLoop() {
@@ -228,34 +241,40 @@
             }
         }
 
+        function gameOver() {
+            isPlaying = false;
+            revealText.innerHTML = "OUPS ! CRASH...<br><br><span style='font-size: 12px; color: #e74c3c;'>La cigogne a lâché le colis.</span>";
+            revealScreen.style.background = "rgba(0, 0, 0, 0.9)";
+            revealScreen.style.display = "flex";
+        }
+
         function triggerReveal() {
             isPlaying = false;
-            // Choix du résultat (À configurer selon le sexe du bébé)
-            // Exemple : "C'est une FILLE ! 💖" ou "C'est un GARÇON ! 💙"
-            const babyGender = "GARÇON"; // Modifie ici par "FILLE" ou "GARÇON"
+            // Modifie ici selon le sexe du bébé
+            const babyGender = "GARÇON"; 
             
             if (babyGender === "FILLE") {
-                revealText.innerHTML = "COLIS LIVRÉ !<br><br>C'est une <span style='color: #ff6b81;'>FILLE</span> ! 🌸";
-                revealScreen.style.background = "rgba(255, 107, 129, 0.9)";
+                revealText.innerHTML = "MISSION ACCOMPLIE !<br><br>C'est une <span style='color: #ff6b81;'>FILLE</span> ! 🌸";
+                revealScreen.style.background = "rgba(255, 107, 129, 0.92)";
             } else {
-                revealText.innerHTML = "COLIS LIVRÉ !<br><br>C'est un <span style='color: #54a0ff;'>GARÇON</span> ! 🚀";
-                revealScreen.style.background = "rgba(84, 160, 255, 0.9)";
+                revealText.innerHTML = "MISSION ACCOMPLIE !<br><br>C'est un <span style='color: #54a0ff;'>GARÇON</span> ! 🚀";
+                revealScreen.style.background = "rgba(84, 160, 255, 0.92)";
             }
-            
             revealScreen.style.display = "flex";
         }
 
         function resetGame() {
             bird.y = 250;
             bird.velocity = 0;
-            packageObj.x = 450;
+            pipes = [];
             score = 0;
+            scoreVal.innerText = score;
+            frameCount = 0;
             revealScreen.style.display = "none";
             isPlaying = true;
             gameLoop();
         }
 
-        // Lancement du jeu au chargement
         gameLoop();
     </script>
 </body>
