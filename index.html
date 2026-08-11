@@ -3,15 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baby Reveal - Chasse aux Cadeaux</title>
+    <title>Baby Reveal - L'Odyssée de la Cigogne</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #1a1a24; color: #ffffff; font-family: 'Press Start 2P', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; touch-action: manipulation; }
-        #game-container { position: relative; width: 400px; height: 500px; background: #2c3e50; border: 4px solid #fff; overflow: hidden; }
+        body { 
+            background-color: #1a1a24; 
+            color: #ffffff; 
+            font-family: 'Press Start 2P', monospace; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden; 
+            touch-action: manipulation; 
+        }
+        #game-container { 
+            position: relative; 
+            width: 400px; 
+            height: 500px; 
+            background: #2c3e50; 
+            border: 4px solid #fff; 
+            overflow: hidden; 
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
         canvas { display: block; width: 100%; height: 100%; }
-        #ui { position: absolute; top: 10px; width: 100%; text-align: center; font-size: 12px; pointer-events: none; }
-        #reveal-screen { position: absolute; top:0; left:0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .btn { background: #2ecc71; color: white; border: none; padding: 15px; font-family: 'Press Start 2P'; cursor: pointer; margin-top: 20px; }
+        #ui { 
+            position: absolute; 
+            top: 10px; 
+            width: 100%; 
+            text-align: center; 
+            font-size: 12px; 
+            pointer-events: none; 
+            text-shadow: 2px 2px #000;
+        }
+        /* Écrans superposés (Accueil, Fin, Victoire) */
+        .screen { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.85); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+        .screen h2 { font-size: 16px; line-height: 1.6; margin-bottom: 20px; }
+        .screen p { font-size: 10px; line-height: 1.8; margin-bottom: 25px; color: #f1c40f; }
+        .btn { 
+            background: #2ecc71; 
+            color: white; 
+            border: none; 
+            padding: 14px 20px; 
+            font-family: 'Press Start 2P'; 
+            font-size: 10px;
+            cursor: pointer; 
+            box-shadow: 0 4px 0 #27ae60;
+        }
+        .btn:active { transform: translateY(4px); box-shadow: none; }
     </style>
 </head>
 <body>
@@ -19,9 +73,18 @@
     <div id="game-container">
         <div id="ui">Cadeaux : <span id="scoreVal">0</span>/5</div>
         <canvas id="gameCanvas" width="400" height="500"></canvas>
-        <div id="reveal-screen">
+        
+        <!-- Écran d'accueil -->
+        <div id="start-screen" class="screen">
+            <h2>L'ODYSSÉE<br>DE LA CIGOGNE</h2>
+            <p>Attrape 5 cadeaux<br>en esquivant les obstacles !</p>
+            <button class="btn" onclick="startGame()">JOUER</button>
+        </div>
+
+        <!-- Écran de Fin / Reveal -->
+        <div id="reveal-screen" class="screen" style="display: none;">
             <h2 id="reveal-text"></h2>
-            <button class="btn" onclick="resetGame()">Rejouer</button>
+            <button class="btn" onclick="resetGame()">REJOUER</button>
         </div>
     </div>
 
@@ -29,26 +92,41 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreVal = document.getElementById("scoreVal");
+        const startScreen = document.getElementById("start-screen");
         const revealScreen = document.getElementById("reveal-screen");
         const revealText = document.getElementById("reveal-text");
 
-        let isPlaying = true;
+        let gameStarted = false;
+        let isPlaying = false;
         let score = 0;
         let bird = { x: 80, y: 250, r: 12, vel: 0, gravity: 0.35, lift: -5.5 };
         let pipes = [];
         let gifts = [];
         let frameCount = 0;
 
-        function makeFly() { if(isPlaying) bird.vel = bird.lift; }
+        function makeFly() { 
+            if(isPlaying) bird.vel = bird.lift; 
+        }
         window.addEventListener("keydown", (e) => { if(e.code === "Space") makeFly(); });
         canvas.addEventListener("click", makeFly);
+        canvas.addEventListener("touchstart", (e) => { e.preventDefault(); makeFly(); });
+
+        function startGame() {
+            startScreen.style.display = "none";
+            gameStarted = true;
+            isPlaying = true;
+            resetVariables();
+            loop();
+        }
 
         function spawnPipeAndGift() {
             let gap = 160;
             let topHeight = Math.random() * (canvas.height - gap - 100) + 50;
             pipes.push({ x: 400, top: topHeight, bottom: canvas.height - topHeight - gap });
-            // Cadeau placé au milieu de l'ouverture
-            gifts.push({ x: 415, y: topHeight + gap/2, collected: false });
+
+            // Cadeau positionné de façon aléatoire dans la hauteur du passage (entre le haut et le bas du gap)
+            let giftY = topHeight + 20 + Math.random() * (gap - 40);
+            gifts.push({ x: 415, y: giftY, collected: false });
         }
 
         function update() {
@@ -56,14 +134,16 @@
             bird.vel += bird.gravity;
             bird.y += bird.vel;
 
-            if(bird.y > canvas.height || bird.y < 0) gameOver("CRASH !");
+            if(bird.y > canvas.height || bird.y < 0) gameOver("CRASH !<br><br>La cigogne a piqué du nez.");
 
             frameCount++;
             if(frameCount % 100 === 0) spawnPipeAndGift();
 
             pipes.forEach((p, i) => {
                 p.x -= 3;
-                if(bird.x + bird.r > p.x && bird.x - bird.r < p.x + 50 && (bird.y - bird.r < p.top || bird.y + bird.r > canvas.height - p.bottom)) gameOver("TOUCHÉ !");
+                if(bird.x + bird.r > p.x && bird.x - bird.r < p.x + 50 && (bird.y - bird.r < p.top || bird.y + bird.r > canvas.height - p.bottom)) {
+                    gameOver("AÏE !<br><br>Obstacle touché.");
+                }
                 if(p.x < -50) pipes.splice(i, 1);
             });
 
@@ -81,35 +161,78 @@
 
         function draw() {
             ctx.fillStyle = "#1a1a24";
-            ctx.fillRect(0,0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             
+            // Tuyaux / Obstacles
             ctx.fillStyle = "#e67e22";
             pipes.forEach(p => {
                 ctx.fillRect(p.x, 0, 50, p.top);
                 ctx.fillRect(p.x, canvas.height - p.bottom, 50, p.bottom);
             });
 
-            ctx.fillStyle = "#f1c40f";
-            gifts.forEach(g => { if(!g.collected) ctx.fillRect(g.x-10, g.y-10, 20, 20); });
+            // Cadeaux (Petits carrés dorés avec un ruban)
+            gifts.forEach(g => { 
+                if(!g.collected) {
+                    ctx.fillStyle = "#e74c3c";
+                    ctx.fillRect(g.x - 10, g.y - 10, 20, 20);
+                    ctx.fillStyle = "#f1c40f";
+                    ctx.fillRect(g.x - 3, g.y - 10, 6, 20);
+                } 
+            });
 
+            // Cigogne
             ctx.fillStyle = "#fff";
             ctx.beginPath();
             ctx.arc(bird.x, bird.y, bird.r, 0, Math.PI*2);
             ctx.fill();
+            // Bec
+            ctx.fillStyle = "#f1c40f";
+            ctx.fillRect(bird.x + bird.r - 2, bird.y - 3, 8, 5);
         }
 
-        function gameOver(msg) { isPlaying = false; revealText.innerHTML = msg; revealScreen.style.display = "flex"; }
+        function gameOver(msg) { 
+            isPlaying = false; 
+            revealText.innerHTML = msg; 
+            revealScreen.style.display = "flex"; 
+        }
+
         function win() { 
             isPlaying = false;
-            const gender = "GARÇON"; // À changer par FILLE ou GARÇON
-            revealText.innerHTML = "GAGNÉ !<br><br>C'est un " + gender + " !";
-            revealScreen.style.background = gender === "FILLE" ? "rgba(255,107,129,0.9)" : "rgba(84,160,255,0.9)";
+            const gender = "GARÇON"; // Change ici par "FILLE" ou "GARÇON" selon ton choix
+            
+            if (gender === "FILLE") {
+                revealText.innerHTML = "MISSION ACCOMPLIE !<br><br>C'est une <span style='color: #ff6b81;'>FILLE</span> ! 🌸";
+                revealScreen.style.background = "rgba(255, 107, 129, 0.92)";
+            } else {
+                revealText.innerHTML = "MISSION ACCOMPLIE !<br><br>C'est un <span style='color: #54a0ff;'>GARÇON</span> ! 🚀";
+                revealScreen.style.background = "rgba(84, 160, 255, 0.92)";
+            }
             revealScreen.style.display = "flex";
         }
-        function resetGame() { bird.y=250; score=0; scoreVal.innerText=0; pipes=[]; gifts=[]; isPlaying=true; revealScreen.style.display="none"; }
+
+        function resetVariables() {
+            bird.y = 250;
+            bird.vel = 0;
+            score = 0;
+            scoreVal.innerText = 0;
+            pipes = [];
+            gifts = [];
+            frameCount = 0;
+            revealScreen.style.display = "none";
+        }
+
+        function resetGame() {
+            resetVariables();
+            isPlaying = true;
+        }
         
-        function loop() { update(); draw(); requestAnimationFrame(loop); }
-        loop();
+        function loop() { 
+            if (gameStarted) {
+                update(); 
+                draw(); 
+                requestAnimationFrame(loop); 
+            }
+        }
     </script>
 </body>
 </html>
