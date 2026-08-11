@@ -123,7 +123,6 @@
             let topHeight = Math.random() * (canvas.height - gap - 100) + 50;
             pipes.push({ x: 400, top: topHeight, bottom: canvas.height - topHeight - gap });
 
-            // Les cadeaux n'apparaissent qu'aléatoirement (environ 1 chance sur 2 par obstacle) pour faire durer le jeu
             if (Math.random() < 0.5) {
                 let giftY = topHeight + 20 + Math.random() * (gap - 40);
                 gifts.push({ x: 415, y: giftY, collected: false });
@@ -165,14 +164,12 @@
             ctx.fillStyle = "#1a1a24";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Tuyaux / Obstacles
             ctx.fillStyle = "#e67e22";
             pipes.forEach(p => {
                 ctx.fillRect(p.x, 0, 50, p.top);
                 ctx.fillRect(p.x, canvas.height - p.bottom, 50, p.bottom);
             });
 
-            // Cadeaux
             gifts.forEach(g => { 
                 if(!g.collected) {
                     ctx.fillStyle = "#ff6b81";
@@ -182,12 +179,10 @@
                 } 
             });
 
-            // Cigogne
             ctx.fillStyle = "#fff";
             ctx.beginPath();
             ctx.arc(bird.x, bird.y, bird.r, 0, Math.PI*2);
             ctx.fill();
-            // Bec
             ctx.fillStyle = "#f1c40f";
             ctx.fillRect(bird.x + bird.r - 2, bird.y - 3, 8, 5);
         }
@@ -195,6 +190,8 @@
         function gameOver(msg) { 
             isPlaying = false; 
             revealText.innerHTML = msg; 
+            revealScreen.style.background = "rgba(255, 255, 255, 0.95)";
+            revealScreen.style.color = "#1a1a24";
             revealScreen.style.display = "flex"; 
         }
 
@@ -202,6 +199,7 @@
             isPlaying = false;
             revealText.innerHTML = "MISSION ACCOMPLIE !<br><br>C'est une <span style='color: #ff6b81;'>FILLE</span> ! 🌸";
             revealScreen.style.background = "rgba(255, 107, 129, 0.92)";
+            revealScreen.style.color = "#ffffff";
             revealScreen.style.display = "flex";
         }
 
