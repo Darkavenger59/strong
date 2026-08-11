@@ -3,35 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitness Tracker Pro</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
-    <meta name="theme-color" content="#2563eb">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <title>Baby Reveal - Mini-Jeu Rétro</title>
+    <!-- Import d'une police pixel art depuis Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a1a24;
+            color: #ffffff;
+            font-family: 'Press Start 2P', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        #game-container {
+            position: relative;
+            width: 400px;
+            height: 500px;
+            background: linear-gradient(to bottom, #2c3e50, #f1c40f);
+            border: 4px solid #fff;
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.4);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            text-shadow: 2px 2px #000;
+            pointer-events: none;
+        }
+
+        /* Style de l'écran de fin / Reveal */
+        #reveal-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            display: none;
+            z-index: 10;
+        }
+
+        #reveal-screen h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            cursor: pointer;
+            border-radius: 0;
+            box-shadow: 0 4px 0 #27ae60;
+            margin-top: 15px;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Fitness Tracker</h1>
-    </header>
-    <main id="app">
-        <section id="workout-section">
-            <h2>Séance du jour</h2>
-            <div id="exercise-list">
-                <!-- Exercices injectés par JS -->
-            </div>
-            <button id="add-exercise">Ajouter un exercice</button>
-        </section>
-    </main>
 
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-    <script src="app.js"></script>
+    <div id="game-container">
+        <div id="ui-overlay">Clique pour voler !</div>
+        <canvas id="gameCanvas" width="400" height="500"></canvas>
+        
+        <!-- Écran du Reveal -->
+        <div id="reveal-screen">
+            <h2 id="reveal-text"></h2>
+            <button class="btn" onclick="resetGame()">Rejouer</button>
+        </div>
+    </div>
+
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('SW enregistré', reg))
-                .catch(err => console.log('SW erreur', err));
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const revealScreen = document.getElementById("reveal-screen");
+        const revealText = document.getElementById("reveal-text");
+
+        // Configuration du jeu
+        let isPlaying = true;
+        let score = 0;
+        
+        // Paramètres de la Cigogne (Joueur)
+        let bird = {
+            x: 80,
+            y: 250,
+            radius: 14,
+            gravity: 0.35,
+            lift: -6.5,
+            velocity: 0
+        };
+
+        // Paramètres du Colis (Cible à attraper)
+        let packageObj = {
+            x: 350,
+            y: 250,
+            size: 24,
+            speed: 2.5
+        };
+
+        // Écouteurs d'événements pour faire voler la cigogne
+        window.addEventListener("keydown", function(e) {
+            if (e.code === "Space" || e.code === "ArrowUp") {
+                makeBirdFly();
+            }
+        });
+
+        canvas.addEventListener("click", function() {
+            makeBirdFly();
+        });
+
+        canvas.addEventListener("touchstart", function(e) {
+            e.preventDefault();
+            makeBirdFly();
+        });
+
+        function makeBirdFly() {
+            if (!isPlaying) return;
+            bird.velocity = bird.lift;
         }
+
+        // Boucle principale du jeu
+        function update() {
+            if (!isPlaying) return;
+
+            // Physique de la cigogne
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+
+            // Limites de l'écran (sol et plafond)
+            if (bird.y + bird.radius > canvas.height) {
+                bird.y = canvas.height - bird.radius;
+                bird.velocity = 0;
+            }
+            if (bird.y - bird.radius < 0) {
+                bird.y = bird.radius;
+                bird.velocity = 0;
+            }
+
+            // Déplacement du colis vers la gauche
+            packageObj.x -= packageObj.speed;
+
+            // Si le colis sort de l'écran, on le remet à droite avec une position aléatoire
+            if (packageObj.x < -30) {
+                packageObj.x = canvas.width + 40;
+                packageObj.y = Math.random() * (canvas.height - 150) + 75;
+                score++;
+            }
+
+            // Condition de victoire : Attraper le colis (après 3 passages ou score cible)
+            // Pour le test, on déclenche le reveal dès le premier colis attrapé (score >= 1)
+            let distX = bird.x - packageObj.x;
+            let distY = bird.y - packageObj.y;
+            let distance = Math.sqrt(distX * distX + distY * distY);
+
+            if (distance < bird.radius + packageObj.size / 2 || score >= 3) {
+                triggerReveal();
+            }
+        }
+
+        // Rendu graphique rétro (Pixel art simplifié)
+        function draw() {
+            // Fond dégradé du ciel
+            ctx.fillStyle = "#2c3e50";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Dessin d'un sol pixelisé
+            ctx.fillStyle = "#27ae60";
+            ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+
+            // Dessin de la Cigogne (Remplacement visuel par un rond blanc/orange stylisé)
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+            ctx.fill();
+            // Bec
+            ctx.fillStyle = "#e67e22";
+            ctx.fillRect(bird.x + bird.radius - 2, bird.y - 4, 10, 6);
+
+            // Dessin du Colis Mystère (Cadeau rouge et ruban jaune)
+            ctx.fillStyle = "#e74c3c";
+            ctx.fillRect(packageObj.x - 12, packageObj.y - 12, 24, 24);
+            ctx.fillStyle = "#f1c40f";
+            ctx.fillRect(packageObj.x - 3, packageObj.y - 12, 6, 24);
+            ctx.fillRect(packageObj.x - 12, packageObj.y - 3, 24, 6);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            if (isPlaying) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function triggerReveal() {
+            isPlaying = false;
+            // Choix du résultat (À configurer selon le sexe du bébé)
+            // Exemple : "C'est une FILLE ! 💖" ou "C'est un GARÇON ! 💙"
+            const babyGender = "GARÇON"; // Modifie ici par "FILLE" ou "GARÇON"
+            
+            if (babyGender === "FILLE") {
+                revealText.innerHTML = "COLIS LIVRÉ !<br><br>C'est une <span style='color: #ff6b81;'>FILLE</span> ! 🌸";
+                revealScreen.style.background = "rgba(255, 107, 129, 0.9)";
+            } else {
+                revealText.innerHTML = "COLIS LIVRÉ !<br><br>C'est un <span style='color: #54a0ff;'>GARÇON</span> ! 🚀";
+                revealScreen.style.background = "rgba(84, 160, 255, 0.9)";
+            }
+            
+            revealScreen.style.display = "flex";
+        }
+
+        function resetGame() {
+            bird.y = 250;
+            bird.velocity = 0;
+            packageObj.x = 450;
+            score = 0;
+            revealScreen.style.display = "none";
+            isPlaying = true;
+            gameLoop();
+        }
+
+        // Lancement du jeu au chargement
+        gameLoop();
     </script>
 </body>
 </html>
