@@ -1,6 +1,6 @@
 {
-  "name": "Fitness Tracker Pro",
-  "short_name": "Fitness",
+  "name": "Gender reveal",
+  "short_name": "Reveal",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
