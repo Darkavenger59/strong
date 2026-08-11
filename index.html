@@ -38,7 +38,6 @@
             pointer-events: none; 
             text-shadow: 2px 2px #000;
         }
-        /* Écrans superposés (Accueil, Fin, Victoire) */
         .screen { 
             position: absolute; 
             top: 0; left: 0; 
@@ -54,16 +53,16 @@
             z-index: 10;
         }
         .screen h2 { font-size: 16px; line-height: 1.6; margin-bottom: 20px; }
-        .screen p { font-size: 10px; line-height: 1.8; margin-bottom: 25px; color: #f1c40f; }
+        .screen p { font-size: 10px; line-height: 1.8; margin-bottom: 25px; color: #ff6b81; }
         .btn { 
-            background: #2ecc71; 
+            background: #ff6b81; 
             color: white; 
             border: none; 
             padding: 14px 20px; 
             font-family: 'Press Start 2P'; 
             font-size: 10px;
             cursor: pointer; 
-            box-shadow: 0 4px 0 #27ae60;
+            box-shadow: 0 4px 0 #c0392b;
         }
         .btn:active { transform: translateY(4px); box-shadow: none; }
     </style>
@@ -124,9 +123,11 @@
             let topHeight = Math.random() * (canvas.height - gap - 100) + 50;
             pipes.push({ x: 400, top: topHeight, bottom: canvas.height - topHeight - gap });
 
-            // Cadeau positionné de façon aléatoire dans la hauteur du passage (entre le haut et le bas du gap)
-            let giftY = topHeight + 20 + Math.random() * (gap - 40);
-            gifts.push({ x: 415, y: giftY, collected: false });
+            // Les cadeaux n'apparaissent qu'aléatoirement (environ 1 chance sur 2 par obstacle) pour faire durer le jeu
+            if (Math.random() < 0.5) {
+                let giftY = topHeight + 20 + Math.random() * (gap - 40);
+                gifts.push({ x: 415, y: giftY, collected: false });
+            }
         }
 
         function update() {
@@ -156,6 +157,7 @@
                     scoreVal.innerText = score;
                     if(score >= 5) win();
                 }
+                if(g.x < -30) gifts.splice(i, 1);
             });
         }
 
@@ -170,10 +172,10 @@
                 ctx.fillRect(p.x, canvas.height - p.bottom, 50, p.bottom);
             });
 
-            // Cadeaux (Petits carrés dorés avec un ruban)
+            // Cadeaux
             gifts.forEach(g => { 
                 if(!g.collected) {
-                    ctx.fillStyle = "#e74c3c";
+                    ctx.fillStyle = "#ff6b81";
                     ctx.fillRect(g.x - 10, g.y - 10, 20, 20);
                     ctx.fillStyle = "#f1c40f";
                     ctx.fillRect(g.x - 3, g.y - 10, 6, 20);
@@ -198,15 +200,8 @@
 
         function win() { 
             isPlaying = false;
-            const gender = "GARÇON"; // Change ici par "FILLE" ou "GARÇON" selon ton choix
-            
-            if (gender === "FILLE") {
-                revealText.innerHTML = "MISSION ACCOMPLIE !<br><br>C'est une <span style='color: #ff6b81;'>FILLE</span> ! 🌸";
-                revealScreen.style.background = "rgba(255, 107, 129, 0.92)";
-            } else {
-                revealText.innerHTML = "MISSION ACCOMPLIE !<br><br>C'est un <span style='color: #54a0ff;'>GARÇON</span> ! 🚀";
-                revealScreen.style.background = "rgba(84, 160, 255, 0.92)";
-            }
+            revealText.innerHTML = "MISSION ACCOMPLIE !<br><br>C'est une <span style='color: #ff6b81;'>FILLE</span> ! 🌸";
+            revealScreen.style.background = "rgba(255, 107, 129, 0.92)";
             revealScreen.style.display = "flex";
         }
 
