@@ -65,6 +65,17 @@
             box-shadow: 0 4px 0 #c0392b;
         }
         .btn:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Style pour le grand cadeau interactif */
+        #mystery-gift-container {
+            cursor: pointer;
+            animation: bounce 1s infinite alternate;
+            margin: 15px 0;
+        }
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-8px); }
+        }
     </style>
 </head>
 <body>
@@ -80,7 +91,22 @@
             <button class="btn" onclick="startGame()">JOUER</button>
         </div>
 
-        <!-- Écran de Fin / Reveal -->
+        <!-- Écran du Grand Cadeau Mystère -->
+        <div id="gift-screen" class="screen" style="display: none; background: rgba(26, 26, 36, 0.95);">
+            <h2>MISSION ACCOMPLIE !</h2>
+            <p style="color: #f1c40f; font-size: 9px;">5 cadeaux récoltés !<br>Clique sur le colis pour l'ouvrir :</p>
+            <div id="mystery-gift-container" onclick="revealGender()">
+                <svg width="80" height="80" viewBox="0 0 24 24">
+                    <rect x="3" y="8" width="18" height="13" fill="#ff6b81" stroke="#fff" stroke-width="1.5"/>
+                    <rect x="2" y="5" width="20" height="4" fill="#e74c3c" stroke="#fff" stroke-width="1.5"/>
+                    <rect x="10.5" y="5" width="3" height="16" fill="#f1c40f"/>
+                    <rect x="3" y="13" width="18" height="3" fill="#f1c40f"/>
+                </svg>
+            </div>
+            <span style="font-size: 8px; color: #aaa; margin-top: 10px;">(Touche le paquet)</span>
+        </div>
+
+        <!-- Écran de Fin / Reveal (Fille) -->
         <div id="reveal-screen" class="screen" style="display: none;">
             <h2 id="reveal-text"></h2>
             <button class="btn" onclick="resetGame()">REJOUER</button>
@@ -92,6 +118,7 @@
         const ctx = canvas.getContext("2d");
         const scoreVal = document.getElementById("scoreVal");
         const startScreen = document.getElementById("start-screen");
+        const giftScreen = document.getElementById("gift-screen");
         const revealScreen = document.getElementById("reveal-screen");
         const revealText = document.getElementById("reveal-text");
 
@@ -154,7 +181,7 @@
                     g.collected = true;
                     score++;
                     scoreVal.innerText = score;
-                    if(score >= 5) win();
+                    if(score >= 5) showMysteryGift();
                 }
                 if(g.x < -30) gifts.splice(i, 1);
             });
@@ -192,12 +219,18 @@
             revealText.innerHTML = msg; 
             revealScreen.style.background = "rgba(255, 255, 255, 0.95)";
             revealScreen.style.color = "#1a1a24";
+            giftScreen.style.display = "none";
             revealScreen.style.display = "flex"; 
         }
 
-        function win() { 
+        function showMysteryGift() {
             isPlaying = false;
-            revealText.innerHTML = "MISSION ACCOMPLI !<br><br>C'est une <span style='color: #000000;'>FILLE</span> ! 🌸";
+            giftScreen.style.display = "flex";
+        }
+
+        function revealGender() {
+            giftScreen.style.display = "none";
+            revealText.innerHTML = "OUVERTURE DU COLIS !<br><br>C'est une <span style='color: #000000;'>FILLE</span> ! 🌸";
             revealScreen.style.background = "rgba(255, 107, 129, 0.92)";
             revealScreen.style.color = "#ffffff";
             revealScreen.style.display = "flex";
@@ -211,6 +244,7 @@
             pipes = [];
             gifts = [];
             frameCount = 0;
+            giftScreen.style.display = "none";
             revealScreen.style.display = "none";
         }
 
@@ -220,7 +254,7 @@
         }
         
         function loop() { 
-            if (gameStarted) {
+            if (gameStarted && isPlaying) {
                 update(); 
                 draw(); 
                 requestAnimationFrame(loop); 
