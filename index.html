@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centre de Rééduc' - Baby Reveal Ultime</title>
+    <title>Centre de Rééduc' - Baby Reveal Expert</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body { 
@@ -17,7 +17,7 @@
             height: 100vh; 
             margin: 0; 
             overflow: hidden;
-            touch-action: manipulation;
+            touch-action: none;
         }
         #game-container { 
             width: 420px; 
@@ -40,8 +40,8 @@
             padding: 15px;
             box-sizing: border-box;
         }
-        h2 { font-size: 12px; line-height: 1.5; margin-bottom: 10px; }
-        p { font-size: 8px; line-height: 1.5; margin-bottom: 12px; }
+        h2 { font-size: 11px; line-height: 1.5; margin-bottom: 8px; }
+        p { font-size: 8px; line-height: 1.5; margin-bottom: 10px; }
         .btn { 
             background: #e74c3c; 
             color: white; 
@@ -60,18 +60,14 @@
         #progress-fill { width: 0%; height: 100%; background: #2ecc71; transition: width 0.05s; }
 
         .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%; max-width: 360px; }
-        #goniometer-slider { width: 80%; margin: 20px 0; accent-color: #3498db; }
 
-        .cooking-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%; max-width: 360px; margin-bottom: 10px; }
-        .cooking-room { background: #34495e; border: 2px solid #7f8c8d; padding: 10px; min-height: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 7px; position: relative; }
-        .cooking-room.active-patient { border-color: #e74c3c; background: #c0392b; cursor: pointer; }
+        /* Canvas communs */
+        canvas { background: #111; border: 2px solid #fff; display: block; margin: 5px auto; }
 
-        .drag-zone { width: 360px; height: 160px; border: 2px dashed #fff; position: relative; background: #34495e; margin: 10px auto; }
-        .draggable-item { position: absolute; cursor: grab; font-size: 24px; user-select: none; }
-        .draggable-item:active { cursor: grabbing; }
-
-        #eapa-canvas { background: #111; border: 2px solid #fff; display: block; margin: 10px auto; }
-        #chicken-canvas { background: #34495e; border: 2px solid #fff; display: block; margin: 10px auto; }
+        /* Éléments de glisser-déposer réels */
+        .workbench { width: 380px; height: 260px; border: 2px dashed #fff; position: relative; background: #34495e; margin: 10px auto; }
+        .part { position: absolute; cursor: grab; user-select: none; font-size: 28px; padding: 5px; background: rgba(0,0,0,0.3); border: 1px solid #fff; }
+        .part:active { cursor: grabbing; }
 
         #mystery-gift { cursor: pointer; font-size: 50px; margin-top: 15px; animation: bounce 1s infinite alternate; }
         @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
@@ -88,99 +84,92 @@
         <div class="menu-grid">
             <button class="btn" style="background:#3498db; box-shadow:0 4px 0 #2980b9; width:100%;" onclick="startKineMassage()">1. KINÉ</button>
             <button class="btn" style="background:#e67e22; box-shadow:0 4px 0 #d35400; width:100%;" onclick="startErgoRepair()">2. ERGO</button>
-            <button class="btn" style="background:#2ecc71; box-shadow:0 4px 0 #27ae60; width:100%;" onclick="startEapa()">3. EAPA</button>
+            <button class="btn" style="background:#2ecc71; box-shadow:0 4px 0 #27ae60; width:100%;" onclick="startEapaRunner()">3. EAPA</button>
             <button class="btn" style="background:#9b59b6; box-shadow:0 4px 0 #8e44ad; width:100%;" onclick="startBrancardier()">4. BRANCARDIER</button>
         </div>
     </div>
 
-    <!-- 2A-1. KINÉ : Massage express -->
+    <!-- 2A-1. KINÉ : Massage par friction (Swipe aller-retour) -->
     <div id="kine-massage-screen" class="screen" style="display:none;">
-        <h2>MASSAGE EXPRESS</h2>
-        <p>Mamie a mal au dos ! Clique frénétiquement pour la détendre.</p>
-        <div style="font-size: 55px; margin: 10px; cursor:pointer;" onclick="kineMassageClick()">👵</div>
-        <div class="progress-bar-container"><div id="progress-fill"></div></div>
-        <p id="kine-massage-timer" style="font-size: 8px; color:#f1c40f;">Temps : 4.0s</p>
-    </div>
-
-    <!-- 2A-2. KINÉ : Goniomètre -->
-    <div id="kine-gonio-screen" class="screen" style="display:none;">
-        <h2>BILAN ARTICULAIRE</h2>
-        <p>Règle l'angle à 30° (+/- 5°) à l'aide du curseur :</p>
-        <div style="font-size: 18px; margin: 10px; color:#f1c40f;" id="gonio-angle-display">Angle : 0°</div>
-        <input type="range" id="goniometer-slider" min="0" max="90" value="0" oninput="updateGoniometer(this.value)">
-        <button class="btn" onclick="validateGoniometer()">VALIDER L'ANGLE</button>
-    </div>
-
-    <!-- 2A-3. KINÉ : Cooking Madness -->
-    <div id="kine-cooking-screen" class="screen" style="display:none;">
-        <h2>PLATEAU TECHNIQUE KINÉ</h2>
-        <p id="cooking-inst">Gère l'afflux de patients !</p>
-        <div class="cooking-grid">
-            <div class="cooking-room" id="room-wait">Salle d'Attente<br><span id="txt-wait" style="font-size:12px;">👤👤👤</span></div>
-            <div class="cooking-room" id="room-plat" onclick="cookingAction('plat')">Plateau Rééduc<br><span id="txt-plat">Libre</span></div>
-            <div class="cooking-room" id="room-soin1" onclick="cookingAction('soin1')">Salle Soin 1<br><span id="txt-soin1">Libre</span></div>
-            <div class="cooking-room" id="room-soin2" onclick="cookingAction('soin2')">Salle Soin 2<br><span id="txt-soin2">Libre</span></div>
+        <h2>MASSAGE PAR FRICTION</h2>
+        <p>Fais glisser ton doigt de gauche à droite (aller-retour) sur le dos de Mamie !</p>
+        <div id="massage-zone" style="width:340px; height:120px; background:#34495e; border:2px dashed #fff; margin:15px auto; display:flex; align-items:center; justify-content:center; font-size:40px; position:relative; touch-action:none;">
+            👵
         </div>
-        <p style="font-size:7px; color:#bdc3c7;">Score : <span id="cooking-score">0</span>/5</p>
+        <div class="progress-bar-container"><div id="progress-fill"></div></div>
+        <p style="font-size:7px; color:#f1c40f;">Frictions validées : <span id="swipe-count">0</span>/10</p>
     </div>
 
-    <!-- 2B-1. ERGO : Assemblage Fauteuil -->
+    <!-- 2A-2. KINÉ : Goniomètre aveugle (Cible 30°) -->
+    <div id="kine-gonio-screen" class="screen" style="display:none;">
+        <h2>BILAN ARTICULAIRE AVEUGLE</h2>
+        <p>Fais pivoter l'axe du goniomètre pour créer un angle de 30° à l'œil (pas d'affichage !).</p>
+        <canvas id="gonio-canvas" width="220" height="220"></canvas>
+        <p style="font-size:7px; color:#bdc3c7;">Glisse circulairement autour du centre pour tourner l'aiguille.</p>
+        <button class="btn" onclick="validateBlindGoniometer()">VALIDER L'ANGLE</button>
+    </div>
+
+    <!-- 2A-3. KINÉ : Cooking Madness Avancé (Plateau technique) -->
+    <div id="kine-cooking-screen" class="screen" style="display:none;">
+        <h2>PLATEAU TECHNIQUE COMPLEXE</h2>
+        <p id="kine-cook-inst">Gère les flux : Salle d'attente -> Plateau / Soins -> Libération !</p>
+        <canvas id="cooking-canvas" width="380" height="280"></canvas>
+        <p style="font-size:7px; color:#f1c40f;">Patients pris en charge : <span id="cook-score">0</span>/6</p>
+    </div>
+
+    <!-- 2B-1. ERGO : Assemblage réel du fauteuil -->
     <div id="ergo-repair-screen" class="screen" style="display:none;">
         <h2>ASSEMBLAGE FAUTEUIL</h2>
-        <p>Glisse les pièces au bon endroit pour assembler le fauteuil !</p>
-        <div class="drag-zone" id="repair-zone">
-            <div class="draggable-item" id="item-chassis" style="top:100px; left:30px;" onmousedown="startDrag(event, this)">🦽</div>
-            <div class="draggable-item" id="item-roues" style="top:100px; left:130px;" onmousedown="startDrag(event, this)">⚙️</div>
-            <div class="draggable-item" id="item-coussin" style="top:100px; left:230px;" onmousedown="startDrag(event, this)">🛋️</div>
+        <p>Glisse et assemble les 4 pièces du fauteuil sur le châssis central !</p>
+        <div class="workbench" id="workbench">
+            <div id="part-base" class="part" style="top:100px; left:140px; background:#2c3e50; border:2px solid #f1c40f;">🦽 Base</div>
+            <div id="part-wheel1" class="part" style="top:20px; left:20px;" data-x="80" data-y="120">⚙️ Roue G</div>
+            <div id="part-wheel2" class="part" style="top:20px; left:280px;" data-x="240" data-y="120">⚙️ Roue D</div>
+            <div id="part-cushion" class="part" style="top:200px; left:140px;" data-x="150" data-y="90">🛋️ Coussin</div>
         </div>
-        <button class="btn" onclick="checkErgoRepair()">VÉRIFIER</button>
+        <button class="btn" onclick="checkErgoAssembly()">VALIDER L'ASSEMBLAGE</button>
     </div>
 
-    <!-- 2B-2. ERGO : Positionnement Patient -->
-    <div id="ergo-posture-screen" class="screen" style="display:none;">
-        <h2>INSTALLATION POSTURALE</h2>
-        <p>Glisse la tête, les bras et les pieds aux emplacements corrects !</p>
-        <div class="drag-zone" id="posture-zone" style="height:180px;">
-            <div class="draggable-item" id="item-tete" style="top:100px; left:20px;" onmousedown="startDrag(event, this)">🗣️</div>
-            <div class="draggable-item" id="item-bras" style="top:100px; left:120px;" onmousedown="startDrag(event, this)">💪</div>
-            <div class="draggable-item" id="item-pieds" style="top:100px; left:220px;" onmousedown="startDrag(event, this)">🦶</div>
-        </div>
-        <button class="btn" onclick="checkErgoPosture()">VALIDER</button>
+    <!-- 2B-2. ERGO : Jeu de Dextérité (Ne pas toucher les bords) -->
+    <div id="ergo-steady-screen" class="screen" style="display:none;">
+        <h2>TEST DE DEXTÉRITÉ</h2>
+        <p>Maintiens le curseur dans le labyrinthe sans toucher les murs noirs !</p>
+        <canvas id="steady-canvas" width="380" height="300"></canvas>
+        <p style="font-size:7px; color:#f1c40f;" id="steady-timer">Temps de stabilité : 0.0s / 5.0s</p>
     </div>
 
-    <!-- 2C. EAPA -->
-    <div id="eapa-screen" class="screen" style="display:none;">
-        <h2>PARCOURS EAPA</h2>
-        <p>Appuie sur ESPACE ou clique pour sauter !</p>
-        <canvas id="eapa-canvas" width="380" height="200"></canvas>
-        <div id="eapa-balance-overlay" style="display:none; background:rgba(0,0,0,0.9); position:absolute; width:100%; height:100%; top:0; left:0; flex-direction:column; align-items:center; justify-content:center;">
-            <h3>PLATEFORME D'ÉQUILIBRE !</h3>
-            <p>Maintiens le curseur au centre !</p>
-            <div style="width:250px; height:20px; border:2px solid #fff; position:relative; background:#222; margin:15px 0;">
-                <div id="balance-indicator" style="width:30px; height:16px; background:#e74c3c; position:absolute; left:110px; top:2px;"></div>
-            </div>
-            <button class="btn" onmousedown="balancePush()">ÉQUILIBRER (+)</button>
-        </div>
-        <p style="font-size:7px; color:#f1c40f;" id="eapa-score-txt">Score : 0/5 obstacles</p>
+    <!-- 2C-1. EAPA : Temple Run (Plots & Ballons) -->
+    <div id="eapa-runner-screen" class="screen" style="display:none;">
+        <h2>TEMPLE RUN : RÉÉDUCATION</h2>
+        <p>Saute (Espace / Clic) pour ramasser ballons 🎈 et esquiver plots 🔺 !</p>
+        <canvas id="eapa-temple-canvas" width="380" height="240"></canvas>
+        <p style="font-size:7px; color:#f1c40f;" id="eapa-temple-score">Objets collectés : 0/5</p>
     </div>
 
-    <!-- 2D. BRANCARDIER -->
+    <!-- 2C-2. EAPA : Gyroscope Posture (3 secondes) -->
+    <div id="eapa-gyro-screen" class="screen" style="display:none;">
+        <h2>ÉQUILIBRE POSTURAL (GYROSCOPE)</h2>
+        <p>Incline ton téléphone pour maintenir le point rouge au centre de la cible durant 3 secondes !</p>
+        <canvas id="gyro-canvas" width="260" height="260"></canvas>
+        <p style="font-size:8px; color:#f1c40f;" id="gyro-timer">Temps tenu : 0.0s / 3.0s</p>
+        <button class="btn" style="background:#27ae60; margin-top:5px;" onclick="requestGyroPermission()">ACTIVER CAPTEURS</button>
+    </div>
+
+    <!-- 2D. BRANCARDIER : Racing Game -->
     <div id="brancardier-screen" class="screen" style="display:none;">
-        <h2>COURSIVE HÔPITAL</h2>
-        <p>Conduis le patient de bas en haut !</p>
-        <canvas id="chicken-canvas" width="380" height="320"></canvas>
-        <div style="display:flex; gap:5px; margin-top:5px;">
-            <button class="btn" style="width:70px; padding:8px;" onclick="moveChicken(0, -15)">⬆️</button>
-            <button class="btn" style="width:70px; padding:8px;" onclick="moveChicken(0, 15)">⬇️</button>
-            <button class="btn" style="width:70px; padding:8px;" onclick="moveChicken(-15, 0)">⬅️</button>
-            <button class="btn" style="width:70px; padding:8px;" onclick="moveChicken(15, 0)">➡️</button>
+        <h2>COURSIVE RACING GAME</h2>
+        <p>Évite les chariots et slalome jusqu'au bloc opératoire ! (Flèches / Boutons)</p>
+        <canvas id="racing-canvas" width="360" height="340"></canvas>
+        <div style="display:flex; gap:10px; margin-top:5px;">
+            <button class="btn" style="width:90px; padding:8px;" onclick="racingMove(-20)">⬅️ GAUCHE</button>
+            <button class="btn" style="width:90px; padding:8px;" onclick="racingMove(20)">DROITE ➡️</button>
         </div>
     </div>
 
     <!-- 3. CADEAU MYSTÈRE -->
     <div id="gift-screen" class="screen" style="display:none;">
         <h2>OBJECTIF ATTEINT !</h2>
-        <p>Ouvre ton colis pour le grand reveal :</p>
+        <p>Parcours validé avec brio. Ouvre ton colis pour le grand reveal :</p>
         <div id="mystery-gift" onclick="revealGender()">🎁</div>
         <p style="font-size: 8px; color:#aaa;">(Clique sur le paquet)</p>
     </div>
@@ -200,379 +189,565 @@
         document.getElementById(screenId).style.display = 'flex';
     }
 
-    // --- KINÉ ---
-    let kineMassageProgress = 0;
-    let kineMassageTimer = 4.0;
-    let kineMassageInterval = null;
+    // ==========================================
+    // 1. KINÉ
+    // ==========================================
+    // Massage swipe aller-retour
+    let swipeCount = 0;
+    let lastX = null;
+    let direction = null;
 
     function startKineMassage() {
-        kineMassageProgress = 0;
-        kineMassageTimer = 4.0;
+        swipeCount = 0;
         document.getElementById('progress-fill').style.width = '0%';
+        document.getElementById('swipe-count').innerText = '0';
         showScreen('kine-massage-screen');
 
-        if (kineMassageInterval) clearInterval(kineMassageInterval);
-        kineMassageInterval = setInterval(() => {
-            kineMassageTimer -= 0.1;
-            document.getElementById('kine-massage-timer').innerText = `Temps : ${kineMassageTimer.toFixed(1)}s`;
-            if (kineMassageTimer <= 0) {
-                clearInterval(kineMassageInterval);
-                alert("Trop lent ! Recommence le massage.");
-                startKineMassage();
+        let zone = document.getElementById('massage-zone');
+        zone.onpointerdown = (e) => { lastX = e.clientX; direction = null; };
+        zone.onpointermove = (e) => {
+            if (lastX === null) return;
+            let currentX = e.clientX;
+            let diff = currentX - lastX;
+            if (diff > 30 && direction !== 'right') {
+                direction = 'right';
+                lastX = currentX;
+                addSwipe();
+            } else if (diff < -30 && direction !== 'left') {
+                direction = 'left';
+                lastX = currentX;
+                addSwipe();
             }
-        }, 100);
+        };
+        zone.onpointerup = () => { lastX = null; };
     }
 
-    function kineMassageClick() {
-        if (kineMassageTimer > 0) {
-            kineMassageProgress += 10;
-            if (kineMassageProgress > 100) kineMassageProgress = 100;
-            document.getElementById('progress-fill').style.width = kineMassageProgress + '%';
-            if (kineMassageProgress >= 100) {
-                clearInterval(kineMassageInterval);
-                setTimeout(startKineGoniometer, 400);
-            }
+    function addSwipe() {
+        swipeCount++;
+        let pct = (swipeCount / 10) * 100;
+        document.getElementById('progress-fill').style.width = pct + '%';
+        document.getElementById('swipe-count').innerText = swipeCount;
+        if (swipeCount >= 10) {
+            setTimeout(startKineGoniometer, 400);
         }
     }
+
+    // Goniomètre aveugle
+    let gonioAngle = 0;
+    let gonioCtx, gonioCanvas;
 
     function startKineGoniometer() {
-        document.getElementById('goniometer-slider').value = 0;
-        document.getElementById('gonio-angle-display').innerText = "Angle : 0°";
+        gonioCanvas = document.getElementById('gonio-canvas');
+        gonioCtx = gonioCanvas.getContext('2d');
+        gonioAngle = Math.floor(Math.random() * 80) + 10; // angle initial aléatoire
         showScreen('kine-gonio-screen');
+        drawGoniometer();
+
+        gonioCanvas.onpointermove = (e) => {
+            if (e.buttons === 1) {
+                let rect = gonioCanvas.getBoundingClientRect();
+                let cx = rect.width / 2;
+                let cy = rect.height / 2;
+                let x = e.clientX - rect.left - cx;
+                let y = e.clientY - rect.top - cy;
+                gonioAngle = Math.round(Math.atan2(y, x) * (180 / Math.PI));
+                if (gonioAngle < 0) gonioAngle += 360;
+                drawGoniometer();
+            }
+        };
     }
 
-    function updateGoniometer(val) {
-        document.getElementById('gonio-angle-display').innerText = `Angle : ${val}°`;
+    function drawGoniometer() {
+        gonioCtx.clearRect(0, 0, gonioCanvas.width, gonioCanvas.height);
+        let cx = gonioCanvas.width / 2;
+        let cy = gonioCanvas.height / 2;
+
+        // Cadran
+        gonioCtx.beginPath();
+        gonioCtx.arc(cx, cy, 80, 0, 2 * Math.PI);
+        gonioCtx.strokeStyle = '#fff';
+        gonioCtx.lineWidth = 2;
+        gonioCtx.stroke();
+
+        // Aiguille
+        let rad = (gonioAngle * Math.PI) / 180;
+        gonioCtx.beginPath();
+        gonioCtx.moveTo(cx, cy);
+        gonioCtx.lineTo(cx + Math.cos(rad) * 70, cy + Math.sin(rad) * 70);
+        gonioCtx.strokeStyle = '#e74c3c';
+        gonioCtx.lineWidth = 4;
+        gonioCtx.stroke();
     }
 
-    function validateGoniometer() {
-        let val = parseInt(document.getElementById('goniometer-slider').value);
-        if (val >= 25 && val <= 35) {
-            alert("Parfait ! Angle validé à 30° (+/-5°).");
-            startKineCooking();
+    function validateBlindGoniometer() {
+        // Normaliser l'angle cible à 30°
+        let normalized = gonioAngle % 360;
+        if (normalized >= 25 && normalized <= 35) {
+            alert("Excellent ! Angle estimé à 30° (+/-5°).");
+            startKineCookingAdvanced();
         } else {
-            alert(`Raté ! Tu es à ${val}°. Vise 30° !`);
+            alert(`Raté ! Ton aiguille pointe vers ${normalized}°. Vise 30° !`);
         }
     }
 
-    let cookingPatients = 3;
-    let cookingScore = 0;
-    let cookingState = { plat: 'libre', soin1: 'libre', soin2: 'libre' };
+    // Cooking Avancé Kiné
+    let cookCanvas, cookCtx;
+    let cookScore = 0;
+    let patientsList = [];
+    let rooms = [
+        { name: "Salle Soin 1", x: 20, y: 150, w: 90, h: 80, patient: null },
+        { name: "Salle Soin 2", x: 140, y: 150, w: 90, h: 80, patient: null },
+        { name: "Plateau Rééduc", x: 260, y: 150, w: 100, h: 80, patient: null }
+    ];
 
-    function startKineCooking() {
-        cookingScore = 0;
-        cookingPatients = 5;
-        cookingState = { plat: 'libre', soin1: 'libre', soin2: 'libre' };
-        updateCookingUI();
-        showScreen('kine-cooking-screen');
-    }
-
-    function updateCookingUI() {
-        document.getElementById('cooking-score').innerText = cookingScore;
-        document.getElementById('txt-wait').innerText = "👤".repeat(cookingPatients);
-        document.getElementById('txt-plat').innerText = cookingState.plat === 'libre' ? "Libre" : "En cours ⏳";
-        document.getElementById('txt-soin1').innerText = cookingState.soin1 === 'libre' ? "Libre" : "En cours ⏳";
-        document.getElementById('txt-soin2').innerText = cookingState.soin2 === 'libre' ? "Libre" : "En cours ⏳";
-        
-        document.getElementById('room-plat').className = cookingState.plat === 'occupe' ? "cooking-room active-patient" : "cooking-room";
-        document.getElementById('room-soin1').className = cookingState.soin1 === 'occupe' ? "cooking-room active-patient" : "cooking-room";
-        document.getElementById('room-soin2').className = cookingState.soin2 === 'occupe' ? "cooking-room active-patient" : "cooking-room";
-    }
-
-    function cookingAction(room) {
-        if (cookingState[room] === 'occupe') {
-            cookingState[room] = 'libre';
-            cookingScore++;
-            if (cookingScore >= 5) {
-                setTimeout(() => showScreen('gift-screen'), 400);
-                return;
-            }
-        } else if (cookingPatients > 0 && cookingState[room] === 'libre') {
-            cookingPatients--;
-            cookingState[room] = 'occupe';
-            setTimeout(() => { if(cookingState[room] === 'occupe') updateCookingUI(); }, 2000);
-        }
-        updateCookingUI();
-    }
-
-
-    // --- ERGO ---
-    let draggedElement = null;
-    let offsetX = 0, offsetY = 0;
-
-    function startDrag(e, el) {
-        draggedElement = el;
-        let rect = el.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-        document.onmousemove = elementDrag;
-        document.onmouseup = closeDragElement;
-    }
-
-    function elementDrag(e) {
-        if (!draggedElement) return;
-        e.preventDefault();
-        let parentRect = draggedElement.parentElement.getBoundingClientRect();
-        let x = e.clientX - parentRect.left - offsetX;
-        let y = e.clientY - parentRect.top - offsetY;
-        draggedElement.style.left = x + 'px';
-        draggedElement.style.top = y + 'px';
-    }
-
-    function closeDragElement() {
-        document.onmousemove = null;
-        document.onmouseup = null;
-        draggedElement = null;
-    }
-
-    function startErgoRepair() {
-        document.getElementById('item-chassis').style.top = '100px';
-        document.getElementById('item-chassis').style.left = '30px';
-        document.getElementById('item-roues').style.top = '100px';
-        document.getElementById('item-roues').style.left = '130px';
-        document.getElementById('item-coussin').style.top = '100px';
-        document.getElementById('item-coussin').style.left = '230px';
-        showScreen('ergo-repair-screen');
-    }
-
-    function checkErgoRepair() {
-        alert("Fauteuil assemblé avec succès !");
-        startErgoPosture();
-    }
-
-    function startErgoPosture() {
-        document.getElementById('item-tete').style.top = '100px';
-        document.getElementById('item-tete').style.left = '20px';
-        document.getElementById('item-bras').style.top = '100px';
-        document.getElementById('item-bras').style.left = '120px';
-        document.getElementById('item-pieds').style.top = '100px';
-        document.getElementById('item-pieds').style.left = '220px';
-        showScreen('ergo-posture-screen');
-    }
-
-    function checkErgoPosture() {
-        alert("Posture parfaite !");
-        setTimeout(() => showScreen('gift-screen'), 400);
-    }
-
-
-    // --- EAPA ---
-    let eapaCanvas, eapaCtx;
-    let eapaRunner = { x: 40, y: 140, w: 20, h: 20, vy: 0, gravity: 0.6, jump: -9, grounded: true };
-    let eapaObstacles = [];
-    let eapaScore = 0;
-    let eapaPlaying = false;
-    let eapaAnimFrame = null;
-    let isBalancing = false;
-    let balanceVal = 110;
-    let balanceInterval = null;
-
-    function startEapa() {
-        eapaCanvas = document.getElementById('eapa-canvas');
-        eapaCtx = eapaCanvas.getContext('2d');
-        eapaScore = 0;
-        eapaObstacles = [];
-        eapaRunner.y = 140;
-        eapaRunner.vy = 0;
-        eapaPlaying = true;
-        document.getElementById('eapa-balance-overlay').style.display = 'none';
-        showScreen('eapa-screen');
-
-        window.removeEventListener('keydown', eapaHandleKey);
-        window.addEventListener('keydown', eapaHandleKey);
-        eapaCanvas.onclick = () => eapaJump();
-        
-        if(eapaAnimFrame) cancelAnimationFrame(eapaAnimFrame);
-        eapaLoop();
-    }
-
-    function eapaJump() {
-        if (eapaRunner.grounded && eapaPlaying && !isBalancing) {
-            eapaRunner.vy = eapaRunner.jump;
-            eapaRunner.grounded = false;
-        }
-    }
-
-    function eapaHandleKey(e) {
-        if (e.code === 'Space') {
-            e.preventDefault();
-            eapaJump();
-        }
-    }
-
-    function triggerBalanceMiniGame() {
-        eapaPlaying = false;
-        isBalancing = true;
-        balanceVal = 110;
-        document.getElementById('balance-indicator').style.left = balanceVal + 'px';
-        document.getElementById('eapa-balance-overlay').style.display = 'flex';
-
-        if(balanceInterval) clearInterval(balanceInterval);
-        balanceInterval = setInterval(() => {
-            balanceVal += (Math.random() * 8 - 4);
-            if (balanceVal < 0 || balanceVal > 220) {
-                clearInterval(balanceInterval);
-                alert("Déséquilibre ! Réessaie.");
-                startEapa();
-            }
-            document.getElementById('balance-indicator').style.left = balanceVal + 'px';
-        }, 50);
-    }
-
-    function balancePush() {
-        balanceVal += 15;
-        if (balanceVal >= 90 && balanceVal <= 130) {
-            setTimeout(() => {
-                clearInterval(balanceInterval);
-                document.getElementById('eapa-balance-overlay').style.display = 'none';
-                isBalancing = false;
-                eapaPlaying = true;
-                eapaLoop();
-            }, 400);
-        }
-    }
-
-    function eapaLoop() {
-        if (!eapaPlaying) return;
-        eapaCtx.clearRect(0, 0, eapaCanvas.width, eapaCanvas.height);
-
-        eapaCtx.fillStyle = '#fff';
-        eapaCtx.fillRect(0, 160, eapaCanvas.width, 2);
-
-        eapaRunner.vy += eapaRunner.gravity;
-        eapaRunner.y += eapaRunner.vy;
-        if (eapaRunner.y > 140) {
-            eapaRunner.y = 140;
-            eapaRunner.vy = 0;
-            eapaRunner.grounded = true;
-        }
-
-        eapaCtx.fillStyle = '#2ecc71';
-        eapaCtx.fillRect(eapaRunner.x, eapaRunner.y, eapaRunner.w, eapaRunner.h);
-
-        if (Math.random() < 0.015 && eapaObstacles.length < 2) {
-            let type = Math.random() > 0.5 ? 'barre' : 'plot';
-            eapaObstacles.push({ x: eapaCanvas.width, w: 20, h: type === 'barre' ? 15 : 25, y: type === 'barre' ? 130 : 135 });
-        }
-
-        for (let i = eapaObstacles.length - 1; i >= 0; i--) {
-            let obs = eapaObstacles[i];
-            obs.x -= 3.5;
-
-            eapaCtx.fillStyle = '#e74c3c';
-            eapaCtx.fillRect(obs.x, obs.y, obs.w, obs.h);
-
-            if (
-                eapaRunner.x < obs.x + obs.w &&
-                eapaRunner.x + eapaRunner.w > obs.x &&
-                eapaRunner.y < obs.y + obs.h &&
-                eapaRunner.y + eapaRunner.h > obs.y
-            ) {
-                alert("Aïe ! Obstacle touché.");
-                startEapa();
-                return;
-            }
-
-            if (obs.x + obs.w < 0) {
-                eapaObstacles.splice(i, 1);
-                eapaScore++;
-                document.getElementById('eapa-score-txt').innerText = `Score : ${eapaScore}/5 obstacles`;
-                
-                if (eapaScore === 3) {
-                    triggerBalanceMiniGame();
-                    return;
-                }
-
-                if (eapaScore >= 5) {
-                    eapaPlaying = false;
-                    window.removeEventListener('keydown', eapaHandleKey);
-                    setTimeout(() => showScreen('gift-screen'), 400);
-                    return;
-                }
-            }
-        }
-
-        eapaAnimFrame = requestAnimationFrame(eapaLoop);
-    }
-
-
-    // --- BRANCARDIER ---
-    let chickenCanvas, chickenCtx;
-    let brancard = { x: 175, y: 280, size: 20 };
-    let obstaclesRoad = [];
-    let chickenPlaying = false;
-    let chickenAnim = null;
-
-    function startBrancardier() {
-        chickenCanvas = document.getElementById('chicken-canvas');
-        chickenCtx = chickenCanvas.getContext('2d');
-        brancard = { x: 175, y: 280, size: 20 };
-        
-        obstaclesRoad = [
-            { x: 0, y: 80, speed: 2, w: 40 },
-            { x: 150, y: 140, speed: -3, w: 50 },
-            { x: 50, y: 200, speed: 2.5, w: 45 }
+    function startKineCookingAdvanced() {
+        cookCanvas = document.getElementById('cooking-canvas');
+        cookCtx = cookCanvas.getContext('2d');
+        cookScore = 0;
+        patientsList = [
+            { id: 1, type: 'Soin', targetRoom: 0, progress: 0, x: 50, y: 40 },
+            { id: 2, type: 'Plateau', targetRoom: 2, progress: 0, x: 190, y: 40 },
+            { id: 3, type: 'Soin', targetRoom: 1, progress: 0, x: 330, y: 40 }
         ];
-
-        chickenPlaying = true;
-        showScreen('brancardier-screen');
-        chickenLoop();
+        showScreen('kine-cooking-screen');
+        requestAnimationFrame(cookingLoop);
     }
 
-    function moveChicken(dx, dy) {
-        if (!chickenPlaying) return;
-        brancard.x += dx;
-        brancard.y += dy;
+    function cookingLoop() {
+        if (document.getElementById('kine-cooking-screen').style.display === 'none') return;
+        cookCtx.clearRect(0, 0, cookCanvas.width, cookCanvas.height);
 
-        if (brancard.x < 0) brancard.x = 0;
-        if (brancard.x > chickenCanvas.width - brancard.size) brancard.x = chickenCanvas.width - brancard.size;
-        if (brancard.y < 0) brancard.y = 0;
-        if (brancard.y > chickenCanvas.height - brancard.size) brancard.y = chickenCanvas.height - brancard.size;
-
-        if (brancard.y <= 20) {
-            chickenPlaying = false;
-            cancelAnimationFrame(chickenAnim);
-            setTimeout(() => showScreen('gift-screen'), 400);
-        }
-    }
-
-    function chickenLoop() {
-        if (!chickenPlaying) return;
-        chickenCtx.clearRect(0, 0, chickenCanvas.width, chickenCanvas.height);
-
-        chickenCtx.fillStyle = '#27ae60';
-        chickenCtx.fillRect(0, 0, chickenCanvas.width, 30);
-        chickenCtx.fillStyle = '#fff';
-        chickenCtx.font = '8px monospace';
-        chickenCtx.fillText("ARRIVÉE CHAMBRE 🛏️", 90, 18);
-
-        chickenCtx.fillStyle = '#e67e22';
-        obstaclesRoad.forEach(obs => {
-            obs.x += obs.speed;
-            if (obs.x > chickenCanvas.width) obs.x = -obs.w;
-            if (obs.x < -obs.w) obs.x = chickenCanvas.width;
-
-            chickenCtx.fillRect(obs.x, obs.y, obs.w, 18);
-
-            if (
-                brancard.x < obs.x + obs.w &&
-                brancard.x + brancard.size > obs.x &&
-                brancard.y < obs.y + 18 &&
-                brancard.y + brancard.size > obs.y
-            ) {
-                alert("Collision ! Recommence.");
-                startBrancardier();
+        // Dessiner les salles
+        rooms.forEach((r, idx) => {
+            cookCtx.fillStyle = r.patient ? '#c0392b' : '#34495e';
+            cookCtx.fillRect(r.x, r.y, r.w, r.h);
+            cookCtx.strokeStyle = '#fff';
+            cookCtx.strokeRect(r.x, r.y, r.w, r.h);
+            cookCtx.fillStyle = '#fff';
+            cookCtx.font = '7px monospace';
+            cookCtx.fillText(r.name, r.x + 5, r.y + 15);
+            if (r.patient) {
+                cookCtx.fillText(`Soins: ${Math.floor(r.patient.progress)}%`, r.x + 10, r.y + 50);
             }
         });
 
-        chickenCtx.fillStyle = '#9b59b6';
-        chickenCtx.fillRect(brancard.x, brancard.y, brancard.size, brancard.size);
+        // Gérer les patients
+        patientsList.forEach((p, idx) => {
+            cookCtx.fillStyle = '#f1c40f';
+            cookCtx.beginPath();
+            cookCtx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+            cookCtx.fill();
 
-        chickenAnim = requestAnimationFrame(chickenLoop);
+            // Si assigné à une salle
+            let assignedRoom = rooms.find(r => r.patient === p);
+            if (assignedRoom) {
+                assignedRoom.patient.progress += 0.5;
+                if (assignedRoom.patient.progress >= 100) {
+                    assignedRoom.patient = null;
+                    patientsList.splice(idx, 1);
+                    cookScore++;
+                    document.getElementById('cook-score').innerText = cookScore;
+                    if (cookScore >= 3) {
+                        setTimeout(() => showScreen('gift-screen'), 400);
+                        return;
+                    }
+                }
+            }
+        });
+
+        requestAnimationFrame(cookingLoop);
+    }
+
+    // Interaction clic sur les salles du plateau technique
+    document.getElementById('cooking-canvas').onclick = (e) => {
+        let rect = document.getElementById('cooking-canvas').getBoundingClientRect();
+        let mx = e.clientX - rect.left;
+        let my = e.clientY - rect.top;
+
+        rooms.forEach((r, idx) => {
+            if (mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) {
+                if (!r.patient && patientsList.length > 0) {
+                    let p = patientsList.find(pat => !rooms.some(room => room.patient === pat));
+                    if (p) r.patient = p;
+                }
+            }
+        });
+    };
+
+
+    // ==========================================
+    // 2. ERGO
+    // ==========================================
+    // Assemblage réel Fauteuil
+    function startErgoRepair() {
+        showScreen('ergo-repair-screen');
+        let parts = document.querySelectorAll('.part');
+        parts.forEach(p => {
+            if(p.id !== 'part-base') {
+                p.style.top = (Math.random() * 100 + 150) + 'px';
+                p.style.left = (Math.random() * 250 + 20) + 'px';
+            }
+            makeDraggable(p);
+        });
+    }
+
+    function makeDraggable(el) {
+        let offsetX, offsetY;
+        el.onpointerdown = (e) => {
+            let rect = el.getBoundingClientRect();
+            let parentRect = document.getElementById('workbench').getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            
+            let onMove = (ev) => {
+                el.style.left = (ev.clientX - parentRect.left - offsetX) + 'px';
+                el.style.top = (ev.clientY - parentRect.top - offsetY) + 'px';
+            };
+            let onUp = () => {
+                document.removeEventListener('pointermove', onMove);
+                document.removeEventListener('pointerup', onUp);
+            };
+            document.addEventListener('pointermove', onMove);
+            document.addEventListener('pointerup', onUp);
+        };
+    }
+
+    function checkErgoAssembly() {
+        let w1 = document.getElementById('part-wheel1').getBoundingClientRect();
+        let w2 = document.getElementById('part-wheel2').getBoundingClientRect();
+        let c = document.getElementById('part-cushion').getBoundingClientRect();
+        let wb = document.getElementById('workbench').getBoundingClientRect();
+
+        // Vérification approximative de placement centralisé
+        if (w1.left < w2.left && c.top > w1.top) {
+            alert("Fauteuil assemblé avec succès !");
+            startErgoSteady();
+        } else {
+            alert("Les pièces ne sont pas correctement positionnées sur le châssis !");
+        }
+    }
+
+    // Dextérité (Ne pas toucher les bords)
+    let steadyCanvas, steadyCtx;
+    let steadyPlaying = false;
+    let steadyTime = 0.0;
+    let steadyInterval = null;
+    let dotX = 50, dotY = 150;
+
+    function startErgoSteady() {
+        steadyCanvas = document.getElementById('steady-canvas');
+        steadyCtx = steadyCanvas.getContext('2d');
+        steadyTime = 0.0;
+        steadyPlaying = true;
+        dotX = 50; dotY = 150;
+        showScreen('ergo-steady-screen');
+
+        steadyCanvas.onpointermove = (e) => {
+            if (!steadyPlaying) return;
+            let rect = steadyCanvas.getBoundingClientRect();
+            let mx = e.clientX - rect.left;
+            let my = e.clientY - rect.top;
+
+            // Vérifier collision avec murs (Maze noir au centre)
+            // Labyrinthe simple : un couloir central resserré
+            if (my > 120 && my < 180 && mx > 40 && mx < 340) {
+                dotX = mx; dotY = my;
+            } else {
+                steadyPlaying = false;
+                clearInterval(steadyInterval);
+                alert("Mur touché ! Recommence le test de dextérité.");
+                startErgoSteady();
+            }
+        };
+
+        if(steadyInterval) clearInterval(steadyInterval);
+        steadyInterval = setInterval(() => {
+            if (steadyPlaying) {
+                steadyTime += 0.1;
+                document.getElementById('steady-timer').innerText = `Temps de stabilité : ${steadyTime.toFixed(1)}s / 5.0s`;
+                if (steadyTime >= 5.0) {
+                    steadyPlaying = false;
+                    clearInterval(steadyInterval);
+                    setTimeout(() => showScreen('gift-screen'), 400);
+                }
+            }
+        }, 100);
+
+        drawSteadyMaze();
+    }
+
+    function drawSteadyMaze() {
+        if (!steadyPlaying) return;
+        steadyCtx.clearRect(0, 0, steadyCanvas.width, steadyCanvas.height);
+
+        // Murs du labyrinthe
+        steadyCtx.fillStyle = '#e74c3c';
+        steadyCtx.fillRect(40, 60, 300, 60);
+        steadyCtx.fillRect(40, 180, 300, 60);
+
+        // Point du joueur
+        steadyCtx.fillStyle = '#2ecc71';
+        steadyCtx.beginPath();
+        steadyCtx.arc(dotX, dotY, 6, 0, Math.PI * 2);
+        steadyCtx.fill();
+
+        requestAnimationFrame(drawSteadyMaze);
     }
 
 
-    // --- REVEAL ---
+    // ==========================================
+    // 3. EAPA
+    // ==========================================
+    // Temple Run (Plots & Ballons)
+    let templeCanvas, templeCtx;
+    let templeRunner = { x: 40, y: 170, w: 18, h: 18, vy: 0, gravity: 0.6, jump: -9, grounded: true };
+    let templeItems = [];
+    let templeScore = 0;
+    let templePlaying = false;
+
+    function startEapaRunner() {
+        templeCanvas = document.getElementById('eapa-temple-canvas');
+        templeCtx = templeCanvas.getContext('2d');
+        templeScore = 0;
+        templeItems = [];
+        templePlaying = true;
+        showScreen('eapa-runner-screen');
+
+        window.onkeydown = (e) => { if(e.code === 'Space') templeJump(); };
+        templeCanvas.onclick = () => templeJump();
+        templeLoop();
+    }
+
+    function templeJump() {
+        if (templeRunner.grounded && templePlaying) {
+            templeRunner.vy = templeRunner.jump;
+            templeRunner.grounded = false;
+        }
+    }
+
+    function templeLoop() {
+        if (!templePlaying) return;
+        templeCtx.clearRect(0, 0, templeCanvas.width, templeCanvas.height);
+
+        // Sol
+        templeCtx.fillStyle = '#fff';
+        templeCtx.fillRect(0, 190, templeCanvas.width, 2);
+
+        // Physique joueur
+        templeRunner.vy += templeRunner.gravity;
+        templeRunner.y += templeRunner.vy;
+        if (templeRunner.y > 170) {
+            templeRunner.y = 170;
+            templeRunner.vy = 0;
+            templeRunner.grounded = true;
+        }
+
+        templeCtx.fillStyle = '#2ecc71';
+        templeCtx.fillRect(templeRunner.x, templeRunner.y, templeRunner.w, templeRunner.h);
+
+        // Génération items (Plots 🔺 ou Ballons 🎈)
+        if (Math.random() < 0.02 && templeItems.length < 2) {
+            let isBalloon = Math.random() > 0.5;
+            templeItems.push({ x: templeCanvas.width, y: isBalloon ? 130 : 170, type: isBalloon ? 'ballon' : 'plot', w: 16, h: 16 });
+        }
+
+        for (let i = templeItems.length - 1; i >= 0; i--) {
+            let item = templeItems[i];
+            item.x -= 3;
+
+            templeCtx.fillStyle = item.type === 'ballon' ? '#3498db' : '#e74c3c';
+            templeCtx.fillRect(item.x, item.y, item.w, item.h);
+
+            // Collision
+            if (
+                templeRunner.x < item.x + item.w &&
+                templeRunner.x + templeRunner.w > item.x &&
+                templeRunner.y < item.y + item.h &&
+                templeRunner.y + templeRunner.h > item.y
+            ) {
+                if (item.type === 'plot') {
+                    alert("Aïe, touché un plot ! Recommence.");
+                    startEapaRunner();
+                    return;
+                } else {
+                    templeItems.splice(i, 1);
+                    templeScore++;
+                    document.getElementById('eapa-temple-score').innerText = `Objets collectés : ${templeScore}/5`;
+                    if (templeScore >= 5) {
+                        templePlaying = false;
+                        setTimeout(startEapaGyro, 400);
+                        return;
+                    }
+                }
+            }
+        }
+
+        requestAnimationFrame(templeLoop);
+    }
+
+    // Gyroscope Posture
+    let gyroCanvas, gyroCtx;
+    let gyroTime = 0.0;
+    let gyroInterval = null;
+    let targetX = 130, targetY = 130;
+    let ballX = 130, ballY = 130;
+
+    function startEapaGyro() {
+        gyroCanvas = document.getElementById('gyro-canvas');
+        gyroCtx = gyroCanvas.getContext('2d');
+        gyroTime = 0.0;
+        showScreen('eapa-gyro-screen');
+        drawGyro();
+    }
+
+    function requestGyroPermission() {
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission().then(response => {
+                if (response === 'granted') {
+                    window.addEventListener('deviceorientation', handleOrientation);
+                }
+            });
+        } else {
+            window.addEventListener('deviceorientation', handleOrientation);
+            // Simulation tactile de secours si pas sur mobile
+            gyroCanvas.onpointermove = (e) => {
+                let rect = gyroCanvas.getBoundingClientRect();
+                ballX = e.clientX - rect.left;
+                ballY = e.clientY - rect.top;
+                checkGyroHold();
+            };
+        }
+    }
+
+    function handleOrientation(e) {
+        let tiltX = e.gamma; // -90 à 90
+        let tiltY = e.beta;  // -180 to 180
+        ballX = 130 + (tiltX * 2);
+        ballY = 130 + (tiltY * 2);
+        checkGyroHold();
+    }
+
+    function checkGyroHold() {
+        let dist = Math.hypot(ballX - targetX, ballY - targetY);
+        if (dist < 30) {
+            if (!gyroInterval) {
+                gyroInterval = setInterval(() => {
+                    gyroTime += 0.1;
+                    document.getElementById('gyro-timer').innerText = `Temps tenu : ${gyroTime.toFixed(1)}s / 3.0s`;
+                    if (gyroTime >= 3.0) {
+                        clearInterval(gyroInterval);
+                        setTimeout(() => showScreen('gift-screen'), 400);
+                    }
+                }, 100);
+            }
+        } else {
+            if (gyroInterval) {
+                clearInterval(gyroInterval);
+                gyroInterval = null;
+                gyroTime = 0.0;
+            }
+        }
+        drawGyro();
+    }
+
+    function drawGyro() {
+        gyroCtx.clearRect(0, 0, gyroCanvas.width, gyroCanvas.height);
+        // Cible
+        gyroCtx.strokeStyle = '#2ecc71';
+        gyroCtx.lineWidth = 3;
+        gyroCtx.beginPath();
+        gyroCtx.arc(targetX, targetY, 30, 0, 2 * Math.PI);
+        gyroCtx.stroke();
+
+        // Bille
+        gyroCtx.fillStyle = '#e74c3c';
+        gyroCtx.beginPath();
+        gyroCtx.arc(ballX, ballY, 10, 0, 2 * Math.PI);
+        gyroCtx.fill();
+    }
+
+
+    // ==========================================
+    // 4. BRANCARDIER : Racing Game
+    // ==========================================
+    let racingCanvas, racingCtx;
+    let racer = { x: 165, y: 280, w: 30, h: 40 };
+    let racersObstacles = [];
+    let racingPlaying = false;
+
+    function startBrancardier() {
+        racingCanvas = document.getElementById('racing-canvas');
+        racingCtx = racingCanvas.getContext('2d');
+        racer.x = 165; racer.y = 280;
+        racersObstacles = [
+            { x: 50, y: 60, speed: 3, w: 35 },
+            { x: 250, y: 140, speed: -4, w: 40 },
+            { x: 100, y: 220, speed: 3.5, w: 35 }
+        ];
+        racingPlaying = true;
+        showScreen('brancardier-screen');
+        racingLoop();
+    }
+
+    function racingMove(dx) {
+        if (!racingPlaying) return;
+        racer.x += dx;
+        if (racer.x < 20) racer.x = 20;
+        if (racer.x > racingCanvas.width - 50) racer.x = racingCanvas.width - 50;
+    }
+
+    function racingLoop() {
+        if (!racingPlaying) return;
+        racingCtx.clearRect(0, 0, racingCanvas.width, racingCanvas.height);
+
+        // Ligne d'arrivée
+        racingCtx.fillStyle = '#27ae60';
+        racingCtx.fillRect(20, 10, racingCanvas.width - 40, 25);
+        racingCtx.fillStyle = '#fff';
+        racingCtx.font = '8px monospace';
+        racingCtx.fillText("BLOC OPÉRATOIRE 🏥", 90, 25);
+
+        // Obstacles (Chariots en mouvement latéral)
+        racingCtx.fillStyle = '#e67e22';
+        racersObstacles.forEach(obs => {
+            obs.x += obs.speed;
+            if (obs.x > racingCanvas.width - 40 || obs.x < 20) obs.speed *= -1;
+
+            racingCtx.fillRect(obs.x, obs.y, obs.w, 20);
+
+            // Collision
+            if (
+                racer.x < obs.x + obs.w &&
+                racer.x + racer.w > obs.x &&
+                racer.y < obs.y + 20 &&
+                racer.y + racer.h > obs.y
+            ) {
+                alert("Collision dans le couloir !");
+                startBrancardier();
+                return;
+            }
+        });
+
+        // Brancard joueur
+        racingCtx.fillStyle = '#9b59b6';
+        racingCtx.fillRect(racer.x, racer.y, racer.w, racer.h);
+
+        // Victoire
+        if (racer.y <= 35) {
+            racingPlaying = false;
+            setTimeout(() => showScreen('gift-screen'), 400);
+            return;
+        }
+
+        racer.y -= 0.5; // Avancée automatique progressive
+
+        requestAnimationFrame(racingLoop);
+    }
+
+
+    // ==========================================
+    // 5. REVEAL
+    // ==========================================
     function revealGender() {
         showScreen('reveal-screen');
     }
