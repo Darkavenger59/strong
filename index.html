@@ -276,11 +276,11 @@
     function startKineCooking() {
         showScreen('kine-cooking-screen');
         let canvas = document.getElementById('cooking-canvas'), ctx = canvas.getContext('2d');
-        let cookScore = 0, patientsQ = 20, cBoxes = [];
+        let cookScore = 0, patientsQ = 20, cBoxes = [], gameOver = false;
         for(let i=0; i<8; i++) cBoxes.push({id: i, p: null});
         
         let loop = () => {
-            if(document.getElementById('kine-cooking-screen').style.display === 'none') return;
+            if(gameOver || document.getElementById('kine-cooking-screen').style.display === 'none') return;
             ctx.clearRect(0,0,400,340);
             ctx.fillStyle='#fff'; ctx.font='8px monospace'; ctx.fillText(`File d'attente : ${patientsQ}`, 15, 20);
 
@@ -302,9 +302,12 @@
                     } else {
                         let elapsed = Date.now() - box.p.overdueTime;
                         if(elapsed > 1500) {
+                            gameOver = true;
                             stopAllLoops();
-                            alert("Temps écoulé pour libérer la box ! Jeu perdu.");
-                            startKineCooking();
+                            ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0,0,400,340);
+                            ctx.fillStyle = '#e74c3c'; ctx.font = '12px monospace'; ctx.fillText("TROP TARD !", 120, 150);
+                            ctx.fillStyle = '#fff'; ctx.font = '8px monospace'; ctx.fillText("Clique pour recommencer", 90, 180);
+                            canvas.onclick = () => startKineCooking();
                             return;
                         }
                         ctx.fillStyle='#fff'; ctx.fillText("VITE ! LIBR", bx+5, by+50);
@@ -319,6 +322,7 @@
         loop();
 
         canvas.onclick = (e) => {
+            if(gameOver) return;
             let r = canvas.getBoundingClientRect();
             let mx = e.clientX - r.left, my = e.clientY - r.top;
             cBoxes.forEach((box, i) => {
@@ -367,8 +371,10 @@
             } else {
                 mazePlaying = false;
                 stopAllLoops();
-                alert("Mur touché ! Recommence le labyrinthe.");
-                startErgoMaze();
+                ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0,0,380,320);
+                ctx.fillStyle = '#e74c3c'; ctx.font = '10px monospace'; ctx.fillText("MUR TOUCHÉ !", 110, 140);
+                ctx.fillStyle = '#fff'; ctx.font = '7px monospace'; ctx.fillText("Clique pour recommencer", 95, 170);
+                c.onclick = () => startErgoMaze();
             }
         };
 
@@ -425,7 +431,8 @@
             };
         });
     }
-// --- 3. EAPA ---
+
+    // --- 3. EAPA ---
     function startEapaTempleRun() {
         showScreen('eapa-runner-screen');
         let c = document.getElementById('eapa-temple-canvas'), ctx = c.getContext('2d');
@@ -463,8 +470,10 @@
                     if(o.type === 'plot') {
                         tRunning = false;
                         stopAllLoops();
-                        alert("Plot touché ! Retour au début.");
-                        startEapaTempleRun();
+                        ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0,0,300,400);
+                        ctx.fillStyle = '#e74c3c'; ctx.font = '10px monospace'; ctx.fillText("PLOT TOUCHÉ !", 90, 180);
+                        ctx.fillStyle = '#fff'; ctx.font = '7px monospace'; ctx.fillText("Clique pour recommencer", 70, 210);
+                        c.onclick = () => startEapaTempleRun();
                         return;
                     } else {
                         eapaObstacles.splice(index, 1);
@@ -534,9 +543,10 @@
                     if(rX < o.gapX || rX + 30 > o.gapX + 60) {
                         rPlaying = false;
                         stopAllLoops();
-                        rY = 320; // Réinitialise la position en sécurité avant l'alerte
-                        alert("Mur percuté ! Retour au départ de la coursive.");
-                        startBrancardier();
+                        ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0,0,320,380);
+                        ctx.fillStyle = '#e74c3c'; ctx.font = '10px monospace'; ctx.fillText("COLLISION !", 100, 170);
+                        ctx.fillStyle = '#fff'; ctx.font = '7px monospace'; ctx.fillText("Clique pour recommencer", 75, 200);
+                        c.onclick = () => startBrancardier();
                         return;
                     }
                 }
@@ -587,4 +597,3 @@
 </script>
 </body>
 </html>
-    
