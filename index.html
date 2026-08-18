@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centre de Rééduc' - Hardcore Ultimate Edition</title>
+    <title>Centre de Rééduc' - Ultimate Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body { 
@@ -65,7 +65,6 @@
         .workbench { width: 380px; height: 280px; border: 2px dashed #fff; position: relative; background: #34495e; margin: 5px auto; }
         .part { position: absolute; cursor: grab; user-select: none; font-size: 22px; padding: 6px; background: rgba(0,0,0,0.6); border: 2px solid #fff; border-radius: 4px; }
         
-        /* Zones cibles sur l'établi */
         .slot { position: absolute; border: 2px dashed #f1c40f; background: rgba(241, 196, 15, 0.1); display: flex; align-items: center; justify-content: center; font-size: 7px; color: #f1c40f; }
 
         #mystery-gift { cursor: pointer; font-size: 50px; margin-top: 15px; animation: bounce 1s infinite alternate; }
@@ -81,11 +80,19 @@
         <h2>CENTRE DE<br>RÉÉDUCATION</h2>
         <p>Choisis ton métier !</p>
         <div class="menu-grid">
-            <button class="btn" style="background:#3498db; width:100%;" onclick="startKineMassage()">1. KINÉ</button>
-            <button class="btn" style="background:#e67e22; width:100%;" onclick="startErgoRepair1()">2. ERGO</button>
-            <button class="btn" style="background:#2ecc71; width:100%;" onclick="startEapaTempleRun()">3. EAPA</button>
-            <button class="btn" style="background:#9b59b6; width:100%;" onclick="startBrancardier()">4. BRANCARDIER</button>
+            <button class="btn" style="background:#3498db; width:100%;" onclick="openRules('kine')">1. KINÉ</button>
+            <button class="btn" style="background:#e67e22; width:100%;" onclick="openRules('ergo')">2. ERGO</button>
+            <button class="btn" style="background:#2ecc71; width:100%;" onclick="openRules('eapa')">3. EAPA</button>
+            <button class="btn" style="background:#9b59b6; width:100%;" onclick="openRules('brancardier')">4. BRANCARDIER</button>
         </div>
+    </div>
+
+    <!-- RÈGLEMENT DU JEU -->
+    <div id="rules-screen" class="screen" style="display:none;">
+        <h2>RÈGLEMENT DU JEU</h2>
+        <p id="rules-text" style="font-size: 7px; line-height: 1.8; margin: 15px 0;"></p>
+        <button class="btn" onclick="startCurrentGame()">JOUER</button>
+        <button class="btn" style="background:#7f8c8d; box-shadow:0 4px 0 #2c3e50;" onclick="showScreen('menu-screen')">RETOUR</button>
     </div>
 
     <!-- 2A-1. KINÉ : Massage -->
@@ -118,13 +125,11 @@
         <h2>ATELIER MÉCANIQUE (1/2)</h2>
         <p id="ergo-txt1">Place les pièces dans les emplacements puis MAINTIENZ pour VISSER !</p>
         <div class="workbench" id="workbench1">
-            <!-- Emplacements cibles -->
             <div class="slot" id="slot-base1" style="top:110px; left:130px; width:100px; height:80px;">Châssis</div>
             <div class="slot" id="slot-wheel1-1" style="top:110px; left:20px; width:70px; height:80px;">Roue G</div>
             <div class="slot" id="slot-wheel2-1" style="top:110px; left:270px; width:70px; height:80px;">Roue D</div>
             <div class="slot" id="slot-cushion1" style="top:25px; left:130px; width:100px; height:60px;">Assise</div>
 
-            <!-- Pièces à glisser -->
             <div id="part-base1" class="part" style="top:210px; left:20px;">🦽 Châssis</div>
             <div id="part-wheel1-1" class="part" style="top:210px; left:130px;">⚙️ Roue G</div>
             <div id="part-wheel2-1" class="part" style="top:210px; left:200px;">⚙️ Roue D</div>
@@ -133,9 +138,9 @@
         <p style="font-size:7px; color:#f1c40f;" id="ergo-status1">Vis serrées : 0/4</p>
     </div>
 
-    <!-- 2B-2. ERGO : Labyrinthe étroit -->
+    <!-- 2B-2. ERGO : Labyrinthe étroit & complexe -->
     <div id="ergo-maze-screen" class="screen" style="display:none;">
-        <h2>LABYRINTHE DE DEXTÉRITÉ</h2>
+        <h2>LABYRINTHE DE DEXTÉRITÉ COMPLEXE</h2>
         <p>Guide ton doigt du VERT vers le BLEU sans toucher les murs noirs !</p>
         <canvas id="maze-canvas" width="380" height="320"></canvas>
     </div>
@@ -166,18 +171,18 @@
         <p style="font-size:7px; color:#f1c40f;" id="eapa-temple-score">Ballons : 0/8</p>
     </div>
 
-    <!-- 2C-2. EAPA : Balle à déplacer dans 18 trous -->
+    <!-- 2C-2. EAPA : Balle à déplacer dans 18 trous (Timer 0.5s par trou) -->
     <div id="eapa-ball-screen" class="screen" style="display:none;">
         <h2>PROPRIOCEPTION : GUIDAGE DE BALLE</h2>
-        <p>Amène la balle dans les 18 trous successifs !</p>
+        <p>Amène la balle dans les trous (Attention : 0.5s max par trou ou retour à 0 !)</p>
         <canvas id="ball-canvas" width="300" height="300"></canvas>
         <p style="font-size:7px; color:#f1c40f;" id="ball-score">Trous validés : 0/18</p>
     </div>
 
-    <!-- 2D. BRANCARDIER -->
+    <!-- 2D. BRANCARDIER (Joueur réduit à 18px) -->
     <div id="brancardier-screen" class="screen" style="display:none;">
         <h2>COURSIVE RACING SWIPE</h2>
-        <p>Swipe à gauche / droite pour te faufiler !</p>
+        <p>Swipe à gauche / droite (Brancard miniature 18px) !</p>
         <canvas id="racing-canvas" width="320" height="380" style="touch-action: none;"></canvas>
     </div>
 
@@ -188,13 +193,20 @@
         <p style="font-size:7px; color:#f1c40f; margin-top:10px;">Points : <span id="dating-score">0</span>/3</p>
     </div>
 
-    <!-- 3. CADEAU -->
+    <!-- 3. INTERmédiaire FÉLICITATIONS -->
+    <div id="congrats-screen" class="screen" style="display:none;">
+        <h2>FÉLICITATIONS</h2>
+        <p style="font-size: 8px; line-height: 1.6; margin: 15px 0;">Tu as réussi toutes les épreuves du centre !</p>
+        <button class="btn" onclick="showScreen('gift-screen')">SAVOIR LE SEXE</button>
+    </div>
+
+    <!-- 4. CADEAU -->
     <div id="gift-screen" class="screen" style="display:none;">
         <h2>OBJECTIF ATTEINT !</h2>
         <div id="mystery-gift" onclick="showScreen('reveal-screen')">🎁</div>
     </div>
 
-    <!-- 4. REVEAL -->
+    <!-- 5. REVEAL -->
     <div id="reveal-screen" class="screen" style="display:none; background: rgba(255, 107, 129, 0.95);">
         <h2>C'EST UNE FILLE ! 🌸</h2>
     </div>
@@ -203,6 +215,7 @@
 
 <script>
     let activeLoop = null;
+    let selectedGameType = '';
 
     function stopAllLoops() {
         if (activeLoop) {
@@ -217,6 +230,26 @@
         stopAllLoops();
         document.querySelectorAll('.screen').forEach(s => s.style.display = 'none'); 
         document.getElementById(id).style.display = 'flex'; 
+    }
+
+    // Gestion du règlement avant chaque jeu
+    function openRules(type) {
+        selectedGameType = type;
+        const textRules = {
+            kine: "RÈGLEMENT KINÉ :\n\n1. Frotte rapidement pour masser les 3 mamies.\n2. Règle le goniomètre précisément à 30°.\n3. Gère les boxs du plateau technique en libérant les patients en moins de 1.5s dès qu'ils sont prêts !",
+            ergo: "RÈGLEMENT ERGO :\n\n1. Assemble le fauteuil en plaçant chaque pièce sur sa zone et maintiens pour visser.\n2. Traverse le labyrinthe de dextérité extrêmement sinueux sans toucher les bords.\n3. Réitère l'assemblage après le parcours.",
+            eapa: "RÈGLEMENT EAPA :\n\n1. Survie au Temple Run en swipant.\n2. Guidage de balle : Tu disposes de STRICTEMENT 0.5 seconde pour valider chaque trou consécutif. Si tu rates le timing, ton score retombe immédiatement à 0 !",
+            brancardier: "RÈGLEMENT BRANCARDIER :\n\n1. Ton brancard est ultra-réduit (18px) pour pouvoir se faufiler.\n2. Swipe latéralement pour éviter les murs des couloirs de l'hôpital.\n3. Termine le speed-dating avec brio !"
+        };
+        document.getElementById('rules-text').innerText = textRules[type];
+        showScreen('rules-screen');
+    }
+
+    function startCurrentGame() {
+        if(selectedGameType === 'kine') startKineMassage();
+        if(selectedGameType === 'ergo') startErgoRepair1();
+        if(selectedGameType === 'eapa') startEapaTempleRun();
+        if(selectedGameType === 'brancardier') startBrancardier();
     }
 
     // --- 1. KINÉ ---
@@ -343,21 +376,22 @@
                     if(box.p && box.p.ready) {
                         box.p = null; cookScore++;
                         document.getElementById('cook-score').innerText = cookScore;
-                        if(cookScore >= 15) setTimeout(() => showScreen('gift-screen'), 400);
+                        if(cookScore >= 15) setTimeout(() => showScreen('congrats-screen'), 400);
                     }
                 }
             });
         };
     }
 
-    // --- 2. ERGO : Mécanique de Vissage Réaliste ---
+    // --- 2. ERGO : Vissage ---
     function startErgoRepair1() {
         showScreen('ergo-repair1-screen');
-        setupRealisticWorkbench('workbench1', 'ergo-status1', () => startErgoMaze());
+        setupRealisticWorkbench('workbench1', 'ergo-status1', () => startErgoMazeComplex());
     }
 
+    // Labyrinthe Ergo complexifié et très étroit
     let mazePlaying = false, mX = 30, mY = 50;
-    function startErgoMaze() {
+    function startErgoMazeComplex() {
         showScreen('ergo-maze-screen');
         let c = document.getElementById('maze-canvas'), ctx = c.getContext('2d');
         mazePlaying = true; mX = 30; mY = 50;
@@ -367,13 +401,16 @@
             let r = c.getBoundingClientRect();
             let x = e.clientX - r.left, y = e.clientY - r.top;
 
-            let inC1 = (x >= 20 && x <= 350 && y >= 40 && y <= 65);
-            let inC2 = (x >= 325 && x <= 350 && y >= 40 && y <= 180);
-            let inC3 = (x >= 50 && x <= 350 && y >= 155 && y <= 180);
-            let inC4 = (x >= 50 && x <= 75 && y >= 155 && y <= 270);
-            let inC5 = (x >= 50 && x <= 340 && y >= 245 && y <= 270);
+            // Chemins ultra-étroits et sinueux (Labyrinthe complexe)
+            let p1 = (x >= 20 && x <= 360 && y >= 30 && y <= 50);
+            let p2 = (x >= 340 && x <= 360 && y >= 30 && y <= 150);
+            let p3 = (x >= 50 && x <= 360 && y >= 130 && y <= 150);
+            let p4 = (x >= 50 && x <= 70 && y >= 130 && y <= 240);
+            let p5 = (x >= 50 && x <= 330 && y >= 220 && y <= 240);
+            let p6 = (x >= 310 && x <= 330 && y >= 220 && y <= 290);
+            let p7 = (x >= 80 && x <= 330 && y >= 270 && y <= 290);
 
-            if(inC1 || inC2 || inC3 || inC4 || inC5) {
+            if(p1 || p2 || p3 || p4 || p5 || p6 || p7) {
                 mX = x; mY = y;
             } else {
                 mazePlaying = false;
@@ -381,7 +418,7 @@
                 ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0,0,380,320);
                 ctx.fillStyle = '#e74c3c'; ctx.font = '10px monospace'; ctx.fillText("MUR TOUCHÉ !", 110, 140);
                 ctx.fillStyle = '#fff'; ctx.font = '7px monospace'; ctx.fillText("Clique pour recommencer", 95, 170);
-                c.onclick = () => startErgoMaze();
+                c.onclick = () => startErgoMazeComplex();
             }
         };
 
@@ -389,19 +426,23 @@
             if(!mazePlaying) return;
             ctx.clearRect(0,0,380,320);
 
+            // Dessin des murs du labyrinthe complexe (tout est mur sauf les chemins étroits)
             ctx.fillStyle = '#e74c3c'; ctx.fillRect(0, 0, 380, 320);
             ctx.fillStyle = '#111';
-            ctx.fillRect(20, 40, 330, 25);
-            ctx.fillRect(325, 40, 25, 140);
-            ctx.fillRect(50, 155, 300, 25);
-            ctx.fillRect(50, 155, 25, 115);
-            ctx.fillRect(50, 245, 290, 25);
+            ctx.fillRect(20, 30, 340, 20);
+            ctx.fillRect(340, 30, 20, 120);
+            ctx.fillRect(50, 130, 310, 20);
+            ctx.fillRect(50, 130, 20, 110);
+            ctx.fillRect(50, 220, 280, 20);
+            ctx.fillRect(310, 220, 20, 70);
+            ctx.fillRect(80, 270, 250, 20);
 
-            ctx.fillStyle = '#2ecc71'; ctx.fillRect(20, 40, 15, 25);
-            ctx.fillStyle = '#3498db'; ctx.fillRect(315, 245, 25, 25);
-            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(mX, mY, 6, 0, 2*Math.PI); ctx.fill();
+            // Départ (Vert) et Arrivée (Bleu)
+            ctx.fillStyle = '#2ecc71'; ctx.fillRect(20, 30, 12, 20);
+            ctx.fillStyle = '#3498db'; ctx.fillRect(80, 270, 20, 20);
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(mX, mY, 5, 0, 2*Math.PI); ctx.fill();
 
-            if(mX >= 315 && mY >= 245 && mY <= 270) {
+            if(mX >= 80 && mX <= 100 && mY >= 270 && mY <= 290) {
                 mazePlaying = false;
                 setTimeout(startErgoRepair2, 400);
                 return;
@@ -414,7 +455,7 @@
     function startErgoRepair2() {
         showScreen('ergo-repair2-screen');
         setupRealisticWorkbench('workbench2', 'ergo-status2', () => {
-            setTimeout(() => showScreen('gift-screen'), 400);
+            setTimeout(() => showScreen('congrats-screen'), 400);
         });
     }
 
@@ -437,7 +478,6 @@
             el.style.left = (Math.random() * 250 + 20) + 'px';
             pair.screwed = false;
 
-            // Glisser-déposer de la pièce
             el.onpointerdown = (e) => {
                 if(pair.screwed) return;
                 let move = (ev) => {
@@ -447,17 +487,14 @@
                 };
                 let up = () => {
                     document.removeEventListener('pointermove', move);
-                    // Vérifier si la pièce est déposée sur son slot
                     let sRect = slot.getBoundingClientRect();
                     let eRect = el.getBoundingClientRect();
                     let overlap = !(eRect.right < sRect.left || eRect.left > sRect.right || eRect.bottom < sRect.top || eRect.top > sRect.bottom);
                     
                     if(overlap && !pair.screwed) {
-                        // Aligner parfaitement sur le slot
                         el.style.left = slot.style.left;
                         el.style.top = slot.style.top;
                         
-                        // Lancer le vissage (maintenir cliqué pour visser)
                         el.style.background = '#e67e22';
                         el.innerText += ' 🔧';
                         
@@ -470,7 +507,7 @@
                                 pair.screwed = true;
                                 el.style.background = '#27ae60';
                                 el.innerText = el.innerText.replace(' 🔧', ' ✔️');
-                                el.onpointerdown = null; // Fixé !
+                                el.onpointerdown = null;
                                 screwedCount++;
                                 document.getElementById(statusId).innerText = `Vis serrées : ${screwedCount}/4`;
 
@@ -537,7 +574,7 @@
                         eapaObstacles.splice(index, 1);
                         tScore++;
                         document.getElementById('eapa-temple-score').innerText = `Ballons : ${tScore}/8`;
-                        if(tScore >= 8) { tRunning = false; setTimeout(startBallGame, 400); }
+                        if(tScore >= 8) { tRunning = false; setTimeout(startBallGameWithTimer, 400); }
                     }
                 }
             });
@@ -546,12 +583,14 @@
         loop();
     }
 
-    function startBallGame() {
+    // Balle EAPA (18 trous avec Timer strict de 0.5s par trou)
+    function startBallGameWithTimer() {
         showScreen('eapa-ball-screen');
         let c = document.getElementById('ball-canvas'), ctx = c.getContext('2d');
         let ballX = 150, ballY = 150;
         let holes = Array.from({length: 18}, () => ({ x: Math.random() * 200 + 50, y: Math.random() * 200 + 50 }));
         let currentHole = 0;
+        let holeStartTime = Date.now();
 
         c.onpointermove = (e) => {
             let r = c.getBoundingClientRect();
@@ -562,21 +601,33 @@
             if(document.getElementById('eapa-ball-screen').style.display === 'none') return;
             ctx.clearRect(0,0,300,300);
 
+            // Vérification stricte du délai de 0.5s (500 ms) par trou
+            let elapsed = Date.now() - holeStartTime;
+            if(elapsed > 500) {
+                currentHole = 0; // Retour à zéro en cas de dépassement
+                holeStartTime = Date.now();
+                document.getElementById('ball-score').style.color = '#e74c3c';
+                setTimeout(() => document.getElementById('ball-score').style.color = '#f1c40f', 200);
+            }
+
             let h = holes[currentHole];
             ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(h.x, h.y, 22, 0, 2*Math.PI); ctx.fill();
             ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(ballX, ballY, 8, 0, 2*Math.PI); ctx.fill();
 
+            document.getElementById('ball-score').innerText = `Trous : ${currentHole}/18 (Temps: ${((500 - elapsed)/1000).toFixed(1)}s)`;
+
             if(Math.hypot(ballX - h.x, ballY - h.y) < 22) {
                 currentHole++;
+                holeStartTime = Date.now(); // Reset du timer pour le prochain trou
                 document.getElementById('ball-score').innerText = `Trous validés : ${currentHole}/18`;
-                if(currentHole >= 18) { setTimeout(() => showScreen('gift-screen'), 400); return; }
+                if(currentHole >= 18) { setTimeout(() => startBrancardier(), 400); return; }
             }
             activeLoop = requestAnimationFrame(loop);
         };
         loop();
     }
 
-    // --- 4. BRANCARDIER ---
+    // --- 4. BRANCARDIER (Joueur miniature 18px) ---
     let rX = 140, rY = 350, rPlaying = false;
     function startBrancardier() {
         showScreen('brancardier-screen');
@@ -596,7 +647,7 @@
             if(Math.abs(diff) > 5) {
                 rX += diff * 0.7;
                 startSwipeX = e.clientX;
-                rX = Math.max(15, Math.min(275, rX));
+                rX = Math.max(15, Math.min(285, rX));
             }
         };
 
@@ -612,8 +663,9 @@
                 ctx.fillRect(15, o.y, o.gapX - 15, 18);
                 ctx.fillRect(o.gapX + 130, o.y, 305 - (o.gapX + 130), 18);
 
-                if(rY < o.y + 18 && rY + 35 > o.y) {
-                    if(rX < o.gapX || rX + 30 > o.gapX + 130) {
+                // Collision ajustée pour la taille réduite du joueur (18px)
+                if(rY < o.y + 18 && rY + 18 > o.y) {
+                    if(rX < o.gapX || rX + 18 > o.gapX + 130) {
                         rPlaying = false;
                         stopAllLoops();
                         ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0,0,320,380);
@@ -625,7 +677,8 @@
                 }
             });
 
-            ctx.fillStyle = '#9b59b6'; ctx.fillRect(rX, rY, 30, 35);
+            // Affichage du joueur miniature (18px x 18px)
+            ctx.fillStyle = '#9b59b6'; ctx.fillRect(rX, rY, 18, 18);
             rY -= 0.08;
 
             if(rY <= 15) { 
@@ -650,7 +703,7 @@
         showScreen('dating-screen'); loadDatingStage();
     }
     function loadDatingStage() {
-        if(datingScore >= 3) { setTimeout(() => showScreen('gift-screen'), 400); return; }
+        if(datingScore >= 3) { setTimeout(() => showScreen('congrats-screen'), 400); return; }
         if(datingStep >= datingStages.length) {
             alert("Échec de la séduction ! Recommence le speed-dating.");
             startSpeedDating();
