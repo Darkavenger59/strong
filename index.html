@@ -603,7 +603,7 @@
 
             // Vérification stricte du délai de 0.5s (500 ms) par trou
             let elapsed = Date.now() - holeStartTime;
-            if(elapsed > 500) {
+            if(elapsed > 800) {
                 currentHole = 0; // Retour à zéro en cas de dépassement
                 holeStartTime = Date.now();
                 document.getElementById('ball-score').style.color = '#e74c3c';
