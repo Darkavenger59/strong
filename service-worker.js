@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gender10';
+const CACHE_NAME = 'gender11';
 const ASSETS = [
     '/',
     '/index.html',
