@@ -614,7 +614,7 @@
             ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(h.x, h.y, 22, 0, 2*Math.PI); ctx.fill();
             ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(ballX, ballY, 8, 0, 2*Math.PI); ctx.fill();
 
-            document.getElementById('ball-score').innerText = `Trous : ${currentHole}/18 (Temps: ${((500 - elapsed)/1000).toFixed(1)}s)`;
+            document.getElementById('ball-score').innerText = `Trous : ${currentHole}/18 (Temps: ${((800 - elapsed)/1000).toFixed(1)}s)`;
 
             if(Math.hypot(ballX - h.x, ballY - h.y) < 22) {
                 currentHole++;
@@ -656,7 +656,7 @@
             ctx.clearRect(0,0,320,380);
 
             roadObs.forEach(o => {
-                o.y += 1.4;
+                o.y += 1.6;
                 if(o.y > 380) o.y = -30;
 
                 ctx.fillStyle = '#e67e22';
@@ -679,7 +679,7 @@
 
             // Affichage du joueur miniature (18px x 18px)
             ctx.fillStyle = '#9b59b6'; ctx.fillRect(rX, rY, 18, 18);
-            rY -= 0.08;
+            rY -= 0.16;
 
             if(rY <= 15) { 
                 rPlaying = false; 
