@@ -110,7 +110,7 @@
         <p style="font-size:7px; color:#f1c40f;">Guéris : <span id="cook-score">0</span>/15</p>
     </div>
 
-    <!-- 2B-1. ERGO : Réparation 1 (Tolérance large) -->
+    <!-- 2B-1. ERGO : Réparation 1 -->
     <div id="ergo-repair1-screen" class="screen" style="display:none;">
         <h2>RÉPARATION FAUTEUIL (1/2)</h2>
         <p>Assemble les pièces grossièrement sur le plan de travail !</p>
@@ -335,7 +335,7 @@
         };
     }
 
-    // --- 2. ERGO (Validation assouplie : vérifie juste que les pièces sont déposées dans la zone générale du plateau) ---
+    // --- 2. ERGO ---
     function startErgoRepair1() {
         showScreen('ergo-repair1-screen');
         setupWorkbench('workbench1', ['part-base1', 'part-wheel1-1', 'part-wheel2-1', 'part-cushion1'], () => startErgoMaze());
@@ -422,7 +422,6 @@
         });
 
         window[workbenchId === 'workbench1' ? 'checkErgoAssembly1' : 'checkErgoAssembly2'] = () => {
-            // Tolérance très souple : vérifie simplement que les pièces ont été déplacées à l'intérieur de l'établi
             let wbRect = wb.getBoundingClientRect();
             let allInside = partIds.every(id => {
                 let el = document.getElementById(id).getBoundingClientRect();
@@ -438,7 +437,7 @@
         };
     }
 
-    // --- 3. EAPA (18 Trous) ---
+    // --- 3. EAPA ---
     function startEapaTempleRun() {
         showScreen('eapa-runner-screen');
         let c = document.getElementById('eapa-temple-canvas'), ctx = c.getContext('2d');
@@ -494,7 +493,6 @@
         loop();
     }
 
-    // Balle EAPA portée à 18 trous
     function startBallGame() {
         showScreen('eapa-ball-screen');
         let c = document.getElementById('ball-canvas'), ctx = c.getContext('2d');
@@ -525,18 +523,18 @@
         loop();
     }
 
-    // --- 4. BRANCARDIER (Swipe tactile/souris fluide + Trajet rallongé pour éviter la fin abrupte) ---
+    // --- 4. BRANCARDIER (Ouvertures larges, espacées et sécurisées) ---
     let rX = 140, rY = 350, rPlaying = false;
     function startBrancardier() {
         showScreen('brancardier-screen');
         let c = document.getElementById('racing-canvas'), ctx = c.getContext('2d');
         rX = 140; rY = 350; rPlaying = true;
         
-        // Trajet plus long avec des vagues d'obstacles espacées pour donner le temps de voir venir
+        // Largeur de passage garantie à 110 pixels (le joueur fait 30px, il passe largement partout)
         let roadObs = [
-            {y: -50, gapX: 60}, {y: -150, gapX: 180}, {y: -250, gapX: 100},
-            {y: -350, gapX: 150}, {y: -450, gapX: 80}, {y: -550, gapX: 170},
-            {y: -650, gapX: 120}, {y: -750, gapX: 90}, {y: -850, gapX: 160}
+            {y: 0, gapX: 70}, {y: -110, gapX: 160}, {y: -220, gapX: 90},
+            {y: -330, gapX: 170}, {y: -440, gapX: 80}, {y: -550, gapX: 150},
+            {y: -660, gapX: 110}, {y: -770, gapX: 130}, {y: -880, gapX: 90}
         ];
 
         let startSwipeX = 0;
@@ -544,8 +542,8 @@
         c.onpointermove = (e) => {
             if(!rPlaying) return;
             let diff = e.clientX - startSwipeX;
-            if(Math.abs(diff) > 10) {
-                rX += diff * 0.4;
+            if(Math.abs(diff) > 5) {
+                rX += diff * 0.6; // Maniabilité plus réactive au swipe
                 startSwipeX = e.clientX;
                 rX = Math.max(15, Math.min(275, rX));
             }
@@ -556,15 +554,15 @@
             ctx.clearRect(0,0,320,380);
 
             roadObs.forEach(o => {
-                o.y += 1.8; // Vitesse modérée
-                if(o.y > 380) o.y = -20; // Recyclage lointain
+                o.y += 1.6; 
+                if(o.y > 380) o.y = -30;
 
                 ctx.fillStyle = '#e67e22';
                 ctx.fillRect(15, o.y, o.gapX - 15, 18);
-                ctx.fillRect(o.gapX + 90, o.y, 305 - (o.gapX + 90), 18);
+                ctx.fillRect(o.gapX + 110, o.y, 305 - (o.gapX + 110), 18); // Brèche de 110px sécurisée
 
                 if(rY < o.y + 18 && rY + 35 > o.y) {
-                    if(rX < o.gapX || rX + 30 > o.gapX + 90) {
+                    if(rX < o.gapX || rX + 30 > o.gapX + 110) {
                         rPlaying = false;
                         stopAllLoops();
                         ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0,0,320,380);
@@ -577,7 +575,7 @@
             });
 
             ctx.fillStyle = '#9b59b6'; ctx.fillRect(rX, rY, 30, 35);
-            rY -= 0.12; // Trajet global plus long avant d'arriver au bout
+            rY -= 0.10; 
 
             if(rY <= 15) { 
                 rPlaying = false; 
