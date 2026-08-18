@@ -63,7 +63,7 @@
         canvas { background: #111; border: 2px solid #fff; display: block; margin: 5px auto; }
 
         .workbench { width: 380px; height: 260px; border: 2px dashed #fff; position: relative; background: #34495e; margin: 10px auto; }
-        .part { position: absolute; cursor: grab; user-select: none; font-size: 28px; padding: 5px; background: rgba(0,0,0,0.3); border: 1px solid #fff; }
+        .part { position: absolute; cursor: grab; user-select: none; font-size: 20px; padding: 5px; background: rgba(0,0,0,0.5); border: 1px solid #fff; }
 
         #mystery-gift { cursor: pointer; font-size: 50px; margin-top: 15px; animation: bounce 1s infinite alternate; }
         @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
@@ -113,9 +113,9 @@
     <!-- 2B-1. ERGO : Réparation 1 -->
     <div id="ergo-repair1-screen" class="screen" style="display:none;">
         <h2>RÉPARATION FAUTEUIL (1/2)</h2>
-        <p>Assemble les pièces pour réparer le fauteuil !</p>
+        <p>Glisse les pièces à leur emplacement exact !</p>
         <div class="workbench" id="workbench1">
-            <div id="part-base1" class="part" style="top:100px; left:140px; background:#2c3e50; border:2px solid #f1c40f;">🦽 Base</div>
+            <div id="part-base1" class="part" style="top:120px; left:140px; background:#2c3e50; border:2px solid #f1c40f;">🦽 Base</div>
             <div id="part-wheel1-1" class="part" style="top:20px; left:20px;">⚙️ Roue G</div>
             <div id="part-wheel2-1" class="part" style="top:20px; left:280px;">⚙️ Roue D</div>
             <div id="part-cushion1" class="part" style="top:200px; left:140px;">🛋️ Coussin</div>
@@ -135,7 +135,7 @@
         <h2>RE-RÉPARATION DU FAUTEUIL (2/2)</h2>
         <p>Remets les pièces en place après le parcours !</p>
         <div class="workbench" id="workbench2">
-            <div id="part-base2" class="part" style="top:100px; left:140px; background:#2c3e50; border:2px solid #f1c40f;">🦽 Base</div>
+            <div id="part-base2" class="part" style="top:120px; left:140px; background:#2c3e50; border:2px solid #f1c40f;">🦽 Base</div>
             <div id="part-wheel1-2" class="part" style="top:20px; left:20px;">⚙️ Roue G</div>
             <div id="part-wheel2-2" class="part" style="top:20px; left:280px;">⚙️ Roue D</div>
             <div id="part-cushion2" class="part" style="top:200px; left:140px;">🛋️ Coussin</div>
@@ -151,12 +151,12 @@
         <p style="font-size:7px; color:#f1c40f;" id="eapa-temple-score">Ballons : 0/8</p>
     </div>
 
-    <!-- 2C-2. EAPA : Balle à déplacer dans les trous -->
+    <!-- 2C-2. EAPA : Balle à déplacer dans 6 trous -->
     <div id="eapa-ball-screen" class="screen" style="display:none;">
         <h2>PROPRIOCEPTION : GUIDAGE DE BALLE</h2>
-        <p>Amène la balle dans les 3 trous successifs !</p>
+        <p>Amène la balle dans les 6 trous successifs !</p>
         <canvas id="ball-canvas" width="300" height="300"></canvas>
-        <p style="font-size:7px; color:#f1c40f;" id="ball-score">Trous validés : 0/3</p>
+        <p style="font-size:7px; color:#f1c40f;" id="ball-score">Trous validés : 0/6</p>
     </div>
 
     <!-- 2D. BRANCARDIER -->
@@ -339,14 +339,10 @@
         };
     }
 
-    // --- 2. ERGO ---
+    // --- 2. ERGO (Avec zones de dépôt précises) ---
     function startErgoRepair1() {
         showScreen('ergo-repair1-screen');
-        setupWorkbench('workbench1', ['part-wheel1-1', 'part-wheel2-1', 'part-cushion1']);
-    }
-    function checkErgoAssembly1() {
-        alert("Fauteuil assemblé !");
-        startErgoMaze();
+        setupWorkbench('workbench1', ['part-base1', 'part-wheel1-1', 'part-wheel2-1', 'part-cushion1'], () => startErgoMaze());
     }
 
     let mazePlaying = false, mX = 30, mY = 50;
@@ -406,23 +402,21 @@
 
     function startErgoRepair2() {
         showScreen('ergo-repair2-screen');
-        setupWorkbench('workbench2', ['part-wheel1-2', 'part-wheel2-2', 'part-cushion2']);
-    }
-    function checkErgoAssembly2() {
-        alert("Re-réparation effectuée !");
-        setTimeout(() => showScreen('gift-screen'), 400);
+        setupWorkbench('workbench2', ['part-base2', 'part-wheel1-2', 'part-wheel2-2', 'part-cushion2'], () => {
+            setTimeout(() => showScreen('gift-screen'), 400);
+        });
     }
 
-    function setupWorkbench(workbenchId, partIds) {
+    function setupWorkbench(workbenchId, partIds, onSuccess) {
         let wb = document.getElementById(workbenchId);
         partIds.forEach(id => {
             let el = document.getElementById(id);
-            el.style.top = (Math.random() * 100 + 130) + 'px';
-            el.style.left = (Math.random() * 250 + 20) + 'px';
+            el.style.top = (Math.random() * 80 + 150) + 'px';
+            el.style.left = (Math.random() * 220 + 20) + 'px';
             el.onpointerdown = (e) => {
                 let move = (ev) => {
                     let rect = wb.getBoundingClientRect();
-                    el.style.left = (ev.clientX - rect.left - 20) + 'px';
+                    el.style.left = (ev.clientX - rect.left - 25) + 'px';
                     el.style.top = (ev.clientY - rect.top - 20) + 'px';
                 };
                 let up = () => { document.removeEventListener('pointermove', move); };
@@ -430,6 +424,32 @@
                 document.addEventListener('pointerup', up);
             };
         });
+
+        // Fonction de validation ciblée avec zones spécifiques
+        window[workbenchId === 'workbench1' ? 'checkErgoAssembly1' : 'checkErgoAssembly2'] = () => {
+            let base = document.getElementById(partIds[0]).getBoundingClientRect();
+            let w1 = document.getElementById(partIds[1]).getBoundingClientRect();
+            let w2 = document.getElementById(partIds[2]).getBoundingClientRect();
+            let cushion = document.getElementById(partIds[3]).getBoundingClientRect();
+            let wbRect = wb.getBoundingClientRect();
+// Vérification des positions relatives au plateau (zones cibles approximatives)
+            let bX = base.left - wbRect.left, bY = base.top - wbRect.top;
+            let w1X = w1.left - wbRect.left, w1Y = w1.top - wbRect.top;
+            let w2X = w2.left - wbRect.left, w2Y = w2.top - wbRect.top;
+            let cX = cushion.left - wbRect.left, cY = cushion.top - wbRect.top;
+
+            let baseOk = (bX > 110 && bX < 180 && bY > 80 && bY < 140);
+            let w1Ok = (w1X > 10 && w1X < 100 && w1Y > 100 && w1Y < 180);
+            let w2Ok = (w2X > 200 && w2X < 300 && w2Y > 100 && w2Y < 180);
+            let cushionOk = (cX > 120 && cX < 180 && cY > 30 && cY < 90);
+
+            if (baseOk && w1Ok && w2Ok && cushionOk) {
+                alert("Fauteuil parfaitement assemblé !");
+                onSuccess();
+            } else {
+                alert("Les pièces sont mal positionnées sur le fauteuil ! Place les roues sur les côtés, la base et le coussin au centre.");
+            }
+        };
     }
 
     // --- 3. EAPA ---
@@ -488,10 +508,13 @@
         loop();
     }
 
+    // Balle EAPA allongée à 6 trous
     function startBallGame() {
         showScreen('eapa-ball-screen');
         let c = document.getElementById('ball-canvas'), ctx = c.getContext('2d');
-        let ballX = 150, ballY = 150, holes = [{x: 50, y: 50}, {x: 250, y: 50}, {x: 150, y: 250}], currentHole = 0;
+        let ballX = 150, ballY = 150;
+        let holes = Array.from({length: 6}, () => ({ x: Math.random() * 220 + 40, y: Math.random() * 220 + 40 }));
+        let currentHole = 0;
 
         c.onpointermove = (e) => {
             let r = c.getBoundingClientRect();
@@ -503,44 +526,44 @@
             ctx.clearRect(0,0,300,300);
 
             let h = holes[currentHole];
-            ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(h.x, h.y, 15, 0, 2*Math.PI); ctx.fill();
+            ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(h.x, h.y, 14, 0, 2*Math.PI); ctx.fill();
             ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(ballX, ballY, 8, 0, 2*Math.PI); ctx.fill();
 
             if(Math.hypot(ballX - h.x, ballY - h.y) < 12) {
                 currentHole++;
-                document.getElementById('ball-score').innerText = `Trous validés : ${currentHole}/3`;
-                if(currentHole >= 3) { setTimeout(() => showScreen('gift-screen'), 400); return; }
+                document.getElementById('ball-score').innerText = `Trous validés : ${currentHole}/6`;
+                if(currentHole >= 6) { setTimeout(() => showScreen('gift-screen'), 400); return; }
             }
             activeLoop = requestAnimationFrame(loop);
         };
         loop();
     }
 
-    // --- 4. BRANCARDIER ---
+    // --- 4. BRANCARDIER (Espaces équilibrés et maniables) ---
     let rX = 140, rY = 320, rPlaying = false;
     function startBrancardier() {
         showScreen('brancardier-screen');
         let c = document.getElementById('racing-canvas'), ctx = c.getContext('2d');
         rX = 140; rY = 320; rPlaying = true;
         let roadObs = [
-            {y: 60, gapX: 40, w: 240},
-            {y: 140, gapX: 120, w: 220},
-            {y: 220, gapX: 80, w: 230}
+            {y: 40, gapX: 90, w: 140},
+            {y: 140, gapX: 140, w: 140},
+            {y: 240, gapX: 70, w: 140}
         ];
 
         let loop = () => {
             if(!rPlaying) return;
             ctx.clearRect(0,0,320,380);
             roadObs.forEach(o => {
-                o.y += 2.5;
+                o.y += 2.0; // Vitesse plus douce
                 if(o.y > 380) o.y = -40;
 
                 ctx.fillStyle = '#e67e22';
                 ctx.fillRect(15, o.y, o.gapX - 15, 18);
-                ctx.fillRect(o.gapX + 60, o.y, 305 - (o.gapX + 60), 18);
+                ctx.fillRect(o.gapX + 90, o.y, 305 - (o.gapX + 90), 18); // Espace de passage élargi à 90px
 
                 if(rY < o.y + 18 && rY + 35 > o.y) {
-                    if(rX < o.gapX || rX + 30 > o.gapX + 60) {
+                    if(rX < o.gapX || rX + 30 > o.gapX + 90) {
                         rPlaying = false;
                         stopAllLoops();
                         ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0,0,320,380);
@@ -553,7 +576,7 @@
             });
 
             ctx.fillStyle = '#9b59b6'; ctx.fillRect(rX, rY, 30, 35);
-            rY -= 0.3;
+            rY -= 0.25;
             if(rY <= 15) { rPlaying = false; startSpeedDating(); return; }
             activeLoop = requestAnimationFrame(loop);
         };
@@ -597,3 +620,4 @@
 </script>
 </body>
 </html>
+        
