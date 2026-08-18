@@ -113,7 +113,7 @@
     <!-- 2B-1. ERGO : Réparation 1 -->
     <div id="ergo-repair1-screen" class="screen" style="display:none;">
         <h2>RÉPARATION FAUTEUIL (1/2)</h2>
-        <p>Assemble les pièces grossièrement sur le plan de travail !</p>
+        <p>Déplace les pièces pour réparer le fauteuil !</p>
         <div class="workbench" id="workbench1">
             <div id="part-base1" class="part" style="top:120px; left:140px; background:#2c3e50; border:2px solid #f1c40f;">🦽 Base</div>
             <div id="part-wheel1-1" class="part" style="top:20px; left:20px;">⚙️ Roue G</div>
@@ -159,7 +159,7 @@
         <p style="font-size:7px; color:#f1c40f;" id="ball-score">Trous validés : 0/18</p>
     </div>
 
-    <!-- 2D. BRANCARDIER (Swipable) -->
+    <!-- 2D. BRANCARDIER -->
     <div id="brancardier-screen" class="screen" style="display:none;">
         <h2>COURSIVE RACING SWIPE</h2>
         <p>Swipe à gauche / droite pour te faufiler !</p>
@@ -335,7 +335,7 @@
         };
     }
 
-    // --- 2. ERGO ---
+    // --- 2. ERGO (Avec obligation de bouger les pièces) ---
     function startErgoRepair1() {
         showScreen('ergo-repair1-screen');
         setupWorkbench('workbench1', ['part-base1', 'part-wheel1-1', 'part-wheel2-1', 'part-cushion1'], () => startErgoMaze());
@@ -405,11 +405,14 @@
 
     function setupWorkbench(workbenchId, partIds, onSuccess) {
         let wb = document.getElementById(workbenchId);
+        let hasMoved = false; // Suivi pour forcer le joueur à bouger les pièces
+
         partIds.forEach(id => {
             let el = document.getElementById(id);
             el.style.top = (Math.random() * 80 + 150) + 'px';
             el.style.left = (Math.random() * 220 + 20) + 'px';
             el.onpointerdown = (e) => {
+                hasMoved = true; // Marque comme bougé dès qu'on touche une pièce
                 let move = (ev) => {
                     let rect = wb.getBoundingClientRect();
                     el.style.left = (ev.clientX - rect.left - 25) + 'px';
@@ -422,6 +425,11 @@
         });
 
         window[workbenchId === 'workbench1' ? 'checkErgoAssembly1' : 'checkErgoAssembly2'] = () => {
+            if (!hasMoved) {
+                alert("Tu dois bouger les pièces avant de valider !");
+                return;
+            }
+
             let wbRect = wb.getBoundingClientRect();
             let allInside = partIds.every(id => {
                 let el = document.getElementById(id).getBoundingClientRect();
@@ -523,18 +531,16 @@
         loop();
     }
 
-    // --- 4. BRANCARDIER (Ouvertures larges, espacées et sécurisées) ---
+    // --- 4. BRANCARDIER ---
     let rX = 140, rY = 350, rPlaying = false;
     function startBrancardier() {
         showScreen('brancardier-screen');
         let c = document.getElementById('racing-canvas'), ctx = c.getContext('2d');
         rX = 140; rY = 350; rPlaying = true;
         
-        // Largeur de passage garantie à 110 pixels (le joueur fait 30px, il passe largement partout)
         let roadObs = [
-            {y: 0, gapX: 70}, {y: -110, gapX: 160}, {y: -220, gapX: 90},
-            {y: -330, gapX: 170}, {y: -440, gapX: 80}, {y: -550, gapX: 150},
-            {y: -660, gapX: 110}, {y: -770, gapX: 130}, {y: -880, gapX: 90}
+            {y: 0, gapX: 60}, {y: -130, gapX: 150}, {y: -260, gapX: 80},
+            {y: -390, gapX: 160}, {y: -520, gapX: 100}, {y: -650, gapX: 140}
         ];
 
         let startSwipeX = 0;
@@ -543,7 +549,7 @@
             if(!rPlaying) return;
             let diff = e.clientX - startSwipeX;
             if(Math.abs(diff) > 5) {
-                rX += diff * 0.6; // Maniabilité plus réactive au swipe
+                rX += diff * 0.7;
                 startSwipeX = e.clientX;
                 rX = Math.max(15, Math.min(275, rX));
             }
@@ -554,15 +560,15 @@
             ctx.clearRect(0,0,320,380);
 
             roadObs.forEach(o => {
-                o.y += 1.6; 
+                o.y += 1.4;
                 if(o.y > 380) o.y = -30;
 
                 ctx.fillStyle = '#e67e22';
                 ctx.fillRect(15, o.y, o.gapX - 15, 18);
-                ctx.fillRect(o.gapX + 110, o.y, 305 - (o.gapX + 110), 18); // Brèche de 110px sécurisée
+                ctx.fillRect(o.gapX + 130, o.y, 305 - (o.gapX + 130), 18);
 
                 if(rY < o.y + 18 && rY + 35 > o.y) {
-                    if(rX < o.gapX || rX + 30 > o.gapX + 110) {
+                    if(rX < o.gapX || rX + 30 > o.gapX + 130) {
                         rPlaying = false;
                         stopAllLoops();
                         ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0,0,320,380);
@@ -575,7 +581,7 @@
             });
 
             ctx.fillStyle = '#9b59b6'; ctx.fillRect(rX, rY, 30, 35);
-            rY -= 0.10; 
+            rY -= 0.08;
 
             if(rY <= 15) { 
                 rPlaying = false; 
