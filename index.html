@@ -2,264 +2,81 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baby Reveal - L'Odyssée de la Cigogne</title>
+    <title>Rééduc' Reveal</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        body { 
-            background-color: #1a1a24; 
-            color: #ffffff; 
-            font-family: 'Press Start 2P', monospace; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            margin: 0; 
-            overflow: hidden; 
-            touch-action: manipulation; 
-        }
-        #game-container { 
-            position: relative; 
-            width: 400px; 
-            height: 500px; 
-            background: #2c3e50; 
-            border: 4px solid #fff; 
-            overflow: hidden; 
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
-        }
-        canvas { display: block; width: 100%; height: 100%; }
-        #ui { 
-            position: absolute; 
-            top: 10px; 
-            width: 100%; 
-            text-align: center; 
-            font-size: 12px; 
-            pointer-events: none; 
-            text-shadow: 2px 2px #000;
-        }
-        .screen { 
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.85); 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            text-align: center; 
-            padding: 20px;
-            box-sizing: border-box;
-            z-index: 10;
-        }
-        .screen h2 { font-size: 16px; line-height: 1.6; margin-bottom: 20px; }
-        .screen p { font-size: 10px; line-height: 1.8; margin-bottom: 25px; color: #ff6b81; }
-        .btn { 
-            background: #ff6b81; 
-            color: white; 
-            border: none; 
-            padding: 14px 20px; 
-            font-family: 'Press Start 2P'; 
-            font-size: 10px;
-            cursor: pointer; 
-            box-shadow: 0 4px 0 #c0392b;
-        }
-        .btn:active { transform: translateY(4px); box-shadow: none; }
-
-        /* Style pour le grand cadeau interactif */
-        #mystery-gift-container {
-            cursor: pointer;
-            animation: bounce 1s infinite alternate;
-            margin: 15px 0;
-        }
-        @keyframes bounce {
-            from { transform: translateY(0); }
-            to { transform: translateY(-8px); }
-        }
+        body { background: #2c3e50; color: white; font-family: 'Press Start 2P', monospace; display: flex; justify-content: center; height: 100vh; margin: 0; }
+        #game { width: 400px; height: 500px; border: 4px solid #fff; position: relative; overflow: hidden; background: #34495e; }
+        .screen { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        button { background: #e74c3c; color: white; border: none; padding: 15px; margin: 10px; cursor: pointer; font-family: inherit; font-size: 10px; width: 250px; }
+        #mystery-gift { cursor: pointer; font-size: 50px; margin-top: 20px; animation: pulse 1s infinite; }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="ui">Cadeaux : <span id="scoreVal">0</span>/5</div>
-        <canvas id="gameCanvas" width="400" height="500"></canvas>
-        
-        <!-- Écran d'accueil -->
-        <div id="start-screen" class="screen">
-            <h2>L'ODYSSÉE<br>DE LA CIGOGNE</h2>
-            <p>Attrape 5 cadeaux<br>en esquivant les obstacles !</p>
-            <button class="btn" onclick="startGame()">JOUER</button>
-        </div>
-
-        <!-- Écran du Grand Cadeau Mystère -->
-        <div id="gift-screen" class="screen" style="display: none; background: rgba(26, 26, 36, 0.95);">
-            <h2>MISSION ACCOMPLIE !</h2>
-            <p style="color: #f1c40f; font-size: 9px;">5 cadeaux récoltés !<br>Clique sur le colis pour l'ouvrir :</p>
-            <div id="mystery-gift-container" onclick="revealGender()">
-                <svg width="80" height="80" viewBox="0 0 24 24">
-                    <rect x="3" y="8" width="18" height="13" fill="#ff6b81" stroke="#fff" stroke-width="1.5"/>
-                    <rect x="2" y="5" width="20" height="4" fill="#e74c3c" stroke="#fff" stroke-width="1.5"/>
-                    <rect x="10.5" y="5" width="3" height="16" fill="#f1c40f"/>
-                    <rect x="3" y="13" width="18" height="3" fill="#f1c40f"/>
-                </svg>
-            </div>
-            <span style="font-size: 8px; color: #aaa; margin-top: 10px;">(Touche le paquet)</span>
-        </div>
-
-        <!-- Écran de Fin / Reveal (Fille) -->
-        <div id="reveal-screen" class="screen" style="display: none;">
-            <h2 id="reveal-text"></h2>
-            <button class="btn" onclick="resetGame()">REJOUER</button>
-        </div>
+<div id="game">
+    <!-- Menu Principal -->
+    <div id="menu" class="screen">
+        <h2>CHOISIS TON JOB</h2>
+        <button onclick="lancerJeu('KINE')">KINÉ (Massage)</button>
+        <button onclick="lancerJeu('ERGO')">ERGO (Fauteuil)</button>
+        <button onclick="lancerJeu('EAPA')">EAPA (Parcours)</button>
     </div>
 
-    <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        const scoreVal = document.getElementById("scoreVal");
-        const startScreen = document.getElementById("start-screen");
-        const giftScreen = document.getElementById("gift-screen");
-        const revealScreen = document.getElementById("reveal-screen");
-        const revealText = document.getElementById("reveal-text");
+    <!-- Zone de Jeu -->
+    <div id="game-zone" class="screen" style="display:none;">
+        <h2 id="job-title">JOB</h2>
+        <div id="action-area" style="font-size: 40px; margin: 20px;"></div>
+        <p id="instruction" style="font-size: 10px;"></p>
+    </div>
 
-        let gameStarted = false;
-        let isPlaying = false;
-        let score = 0;
-        let bird = { x: 80, y: 250, r: 12, vel: 0, gravity: 0.35, lift: -5.5 };
-        let pipes = [];
-        let gifts = [];
-        let frameCount = 0;
+    <!-- Reveal -->
+    <div id="reveal" class="screen" style="display:none;">
+        <h2>BRAVO !</h2>
+        <div id="mystery-gift" onclick="montrerSexe()">🎁</div>
+        <p>Ouvre ton cadeau !</p>
+    </div>
+</div>
 
-        function makeFly() { 
-            if(isPlaying) bird.vel = bird.lift; 
-        }
-        window.addEventListener("keydown", (e) => { if(e.code === "Space") makeFly(); });
-        canvas.addEventListener("click", makeFly);
-        canvas.addEventListener("touchstart", (e) => { e.preventDefault(); makeFly(); });
+<script>
+    let job = '';
+    let score = 0;
 
-        function startGame() {
-            startScreen.style.display = "none";
-            gameStarted = true;
-            isPlaying = true;
-            resetVariables();
-            loop();
-        }
-
-        function spawnPipeAndGift() {
-            let gap = 160;
-            let topHeight = Math.random() * (canvas.height - gap - 100) + 50;
-            pipes.push({ x: 400, top: topHeight, bottom: canvas.height - topHeight - gap });
-
-            if (Math.random() < 0.5) {
-                let giftY = topHeight + 20 + Math.random() * (gap - 40);
-                gifts.push({ x: 415, y: giftY, collected: false });
-            }
-        }
-
-        function update() {
-            if(!isPlaying) return;
-            bird.vel += bird.gravity;
-            bird.y += bird.vel;
-
-            if(bird.y > canvas.height || bird.y < 0) gameOver("CRASH !<br><br>La cigogne a piqué du nez.");
-
-            frameCount++;
-            if(frameCount % 100 === 0) spawnPipeAndGift();
-
-            pipes.forEach((p, i) => {
-                p.x -= 3;
-                if(bird.x + bird.r > p.x && bird.x - bird.r < p.x + 50 && (bird.y - bird.r < p.top || bird.y + bird.r > canvas.height - p.bottom)) {
-                    gameOver("AÏE !<br><br>Obstacle touché.");
-                }
-                if(p.x < -50) pipes.splice(i, 1);
-            });
-
-            gifts.forEach((g, i) => {
-                g.x -= 3;
-                let dist = Math.hypot(bird.x - g.x, bird.y - g.y);
-                if(dist < bird.r + 15 && !g.collected) {
-                    g.collected = true;
-                    score++;
-                    scoreVal.innerText = score;
-                    if(score >= 5) showMysteryGift();
-                }
-                if(g.x < -30) gifts.splice(i, 1);
-            });
-        }
-
-        function draw() {
-            ctx.fillStyle = "#1a1a24";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.fillStyle = "#e67e22";
-            pipes.forEach(p => {
-                ctx.fillRect(p.x, 0, 50, p.top);
-                ctx.fillRect(p.x, canvas.height - p.bottom, 50, p.bottom);
-            });
-
-            gifts.forEach(g => { 
-                if(!g.collected) {
-                    ctx.fillStyle = "#ff6b81";
-                    ctx.fillRect(g.x - 10, g.y - 10, 20, 20);
-                    ctx.fillStyle = "#f1c40f";
-                    ctx.fillRect(g.x - 3, g.y - 10, 6, 20);
-                } 
-            });
-
-            ctx.fillStyle = "#fff";
-            ctx.beginPath();
-            ctx.arc(bird.x, bird.y, bird.r, 0, Math.PI*2);
-            ctx.fill();
-            ctx.fillStyle = "#f1c40f";
-            ctx.fillRect(bird.x + bird.r - 2, bird.y - 3, 8, 5);
-        }
-
-        function gameOver(msg) { 
-            isPlaying = false; 
-            revealText.innerHTML = msg; 
-            revealScreen.style.background = "rgba(255, 255, 255, 0.95)";
-            revealScreen.style.color = "#1a1a24";
-            giftScreen.style.display = "none";
-            revealScreen.style.display = "flex"; 
-        }
-
-        function showMysteryGift() {
-            isPlaying = false;
-            giftScreen.style.display = "flex";
-        }
-
-        function revealGender() {
-            giftScreen.style.display = "none";
-            revealText.innerHTML = "OUVERTURE DU COLIS !<br><br>C'est une <span style='color: #000000;'>FILLE</span> ! 🌸";
-            revealScreen.style.background = "rgba(255, 107, 129, 0.92)";
-            revealScreen.style.color = "#ffffff";
-            revealScreen.style.display = "flex";
-        }
-
-        function resetVariables() {
-            bird.y = 250;
-            bird.vel = 0;
-            score = 0;
-            scoreVal.innerText = 0;
-            pipes = [];
-            gifts = [];
-            frameCount = 0;
-            giftScreen.style.display = "none";
-            revealScreen.style.display = "none";
-        }
-
-        function resetGame() {
-            resetVariables();
-            isPlaying = true;
-        }
+    function lancerJeu(type) {
+        job = type;
+        score = 0;
+        document.getElementById('menu').style.display = 'none';
+        document.getElementById('game-zone').style.display = 'flex';
+        document.getElementById('job-title').innerText = job;
         
-        function loop() { 
-            if (gameStarted && isPlaying) {
-                update(); 
-                draw(); 
-                requestAnimationFrame(loop); 
-            }
-        }
-    </script>
+        let instr = job === 'KINE' ? "Clic pour masser !" : (job === 'ERGO' ? "Clic pour réparer !" : "Clic pour guider !");
+        document.getElementById('instruction').innerText = instr;
+        gameLoop();
+    }
+
+    function gameLoop() {
+        let area = document.getElementById('action-area');
+        area.innerHTML = job === 'KINE' ? "👵" : (job === 'ERGO' ? "🪑" : "🏃");
+        
+        area.onclick = () => {
+            score++;
+            if(score >= 5) finJeu();
+        };
+    }
+
+    function finJeu() {
+        document.getElementById('game-zone').style.display = 'none';
+        document.getElementById('reveal').style.display = 'flex';
+    }
+
+    function montrerSexe() {
+        document.getElementById('reveal').innerHTML = `
+            <h2>C'EST UNE...</h2>
+            <h1 style="color:#ff6b81">FILLE !</h1>
+            <p style="font-size: 20px">🌸</p>
+        `;
+    }
+</script>
 </body>
 </html>
