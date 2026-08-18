@@ -62,8 +62,11 @@
         .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%; max-width: 360px; }
         canvas { background: #111; border: 2px solid #fff; display: block; margin: 5px auto; }
 
-        .workbench { width: 380px; height: 260px; border: 2px dashed #fff; position: relative; background: #34495e; margin: 10px auto; }
-        .part { position: absolute; cursor: grab; user-select: none; font-size: 20px; padding: 5px; background: rgba(0,0,0,0.5); border: 1px solid #fff; }
+        .workbench { width: 380px; height: 280px; border: 2px dashed #fff; position: relative; background: #34495e; margin: 5px auto; }
+        .part { position: absolute; cursor: grab; user-select: none; font-size: 22px; padding: 6px; background: rgba(0,0,0,0.6); border: 2px solid #fff; border-radius: 4px; }
+        
+        /* Zones cibles sur l'établi */
+        .slot { position: absolute; border: 2px dashed #f1c40f; background: rgba(241, 196, 15, 0.1); display: flex; align-items: center; justify-content: center; font-size: 7px; color: #f1c40f; }
 
         #mystery-gift { cursor: pointer; font-size: 50px; margin-top: 15px; animation: bounce 1s infinite alternate; }
         @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
@@ -110,17 +113,24 @@
         <p style="font-size:7px; color:#f1c40f;">Guéris : <span id="cook-score">0</span>/15</p>
     </div>
 
-    <!-- 2B-1. ERGO : Réparation 1 -->
+    <!-- 2B-1. ERGO : Réparation Réaliste (Vissage) -->
     <div id="ergo-repair1-screen" class="screen" style="display:none;">
-        <h2>RÉPARATION FAUTEUIL (1/2)</h2>
-        <p>Déplace les pièces pour réparer le fauteuil !</p>
+        <h2>ATELIER MÉCANIQUE (1/2)</h2>
+        <p id="ergo-txt1">Place les pièces dans les emplacements puis MAINTIENZ pour VISSER !</p>
         <div class="workbench" id="workbench1">
-            <div id="part-base1" class="part" style="top:120px; left:140px; background:#2c3e50; border:2px solid #f1c40f;">🦽 Base</div>
-            <div id="part-wheel1-1" class="part" style="top:20px; left:20px;">⚙️ Roue G</div>
-            <div id="part-wheel2-1" class="part" style="top:20px; left:280px;">⚙️ Roue D</div>
-            <div id="part-cushion1" class="part" style="top:200px; left:140px;">🛋️ Coussin</div>
+            <!-- Emplacements cibles -->
+            <div class="slot" id="slot-base1" style="top:110px; left:130px; width:100px; height:80px;">Châssis</div>
+            <div class="slot" id="slot-wheel1-1" style="top:110px; left:20px; width:70px; height:80px;">Roue G</div>
+            <div class="slot" id="slot-wheel2-1" style="top:110px; left:270px; width:70px; height:80px;">Roue D</div>
+            <div class="slot" id="slot-cushion1" style="top:25px; left:130px; width:100px; height:60px;">Assise</div>
+
+            <!-- Pièces à glisser -->
+            <div id="part-base1" class="part" style="top:210px; left:20px;">🦽 Châssis</div>
+            <div id="part-wheel1-1" class="part" style="top:210px; left:130px;">⚙️ Roue G</div>
+            <div id="part-wheel2-1" class="part" style="top:210px; left:200px;">⚙️ Roue D</div>
+            <div id="part-cushion1" class="part" style="top:210px; left:280px;">🛋️ Coussin</div>
         </div>
-        <button class="btn" onclick="checkErgoAssembly1()">VALIDER</button>
+        <p style="font-size:7px; color:#f1c40f;" id="ergo-status1">Vis serrées : 0/4</p>
     </div>
 
     <!-- 2B-2. ERGO : Labyrinthe étroit -->
@@ -130,17 +140,22 @@
         <canvas id="maze-canvas" width="380" height="320"></canvas>
     </div>
 
-    <!-- 2B-3. ERGO : Re-réparation -->
+    <!-- 2B-3. ERGO : Re-réparation Réaliste -->
     <div id="ergo-repair2-screen" class="screen" style="display:none;">
-        <h2>RE-RÉPARATION DU FAUTEUIL (2/2)</h2>
-        <p>Remets les pièces en place après le parcours !</p>
+        <h2>RE-ATELIER MÉCANIQUE (2/2)</h2>
+        <p id="ergo-txt2">Re-place et visse tout après le parcours !</p>
         <div class="workbench" id="workbench2">
-            <div id="part-base2" class="part" style="top:120px; left:140px; background:#2c3e50; border:2px solid #f1c40f;">🦽 Base</div>
-            <div id="part-wheel1-2" class="part" style="top:20px; left:20px;">⚙️ Roue G</div>
-            <div id="part-wheel2-2" class="part" style="top:20px; left:280px;">⚙️ Roue D</div>
-            <div id="part-cushion2" class="part" style="top:200px; left:140px;">🛋️ Coussin</div>
+            <div class="slot" id="slot-base2" style="top:110px; left:130px; width:100px; height:80px;">Châssis</div>
+            <div class="slot" id="slot-wheel1-2" style="top:110px; left:20px; width:70px; height:80px;">Roue G</div>
+            <div class="slot" id="slot-wheel2-2" style="top:110px; left:270px; width:70px; height:80px;">Roue D</div>
+            <div class="slot" id="slot-cushion2" style="top:25px; left:130px; width:100px; height:60px;">Assise</div>
+
+            <div id="part-base2" class="part" style="top:210px; left:20px;">🦽 Châssis</div>
+            <div id="part-wheel1-2" class="part" style="top:210px; left:130px;">⚙️ Roue G</div>
+            <div id="part-wheel2-2" class="part" style="top:210px; left:200px;">⚙️ Roue D</div>
+            <div id="part-cushion2" class="part" style="top:210px; left:280px;">🛋️ Coussin</div>
         </div>
-        <button class="btn" onclick="checkErgoAssembly2()">VALIDER</button>
+        <p style="font-size:7px; color:#f1c40f;" id="ergo-status2">Vis serrées : 0/4</p>
     </div>
 
     <!-- 2C-1. EAPA : Temple Run -->
@@ -335,10 +350,10 @@
         };
     }
 
-    // --- 2. ERGO (Avec obligation de bouger les pièces) ---
+    // --- 2. ERGO : Mécanique de Vissage Réaliste ---
     function startErgoRepair1() {
         showScreen('ergo-repair1-screen');
-        setupWorkbench('workbench1', ['part-base1', 'part-wheel1-1', 'part-wheel2-1', 'part-cushion1'], () => startErgoMaze());
+        setupRealisticWorkbench('workbench1', 'ergo-status1', () => startErgoMaze());
     }
 
     let mazePlaying = false, mX = 30, mY = 50;
@@ -398,51 +413,81 @@
 
     function startErgoRepair2() {
         showScreen('ergo-repair2-screen');
-        setupWorkbench('workbench2', ['part-base2', 'part-wheel1-2', 'part-wheel2-2', 'part-cushion2'], () => {
+        setupRealisticWorkbench('workbench2', 'ergo-status2', () => {
             setTimeout(() => showScreen('gift-screen'), 400);
         });
     }
 
-    function setupWorkbench(workbenchId, partIds, onSuccess) {
-        let wb = document.getElementById(workbenchId);
-        let hasMoved = false; // Suivi pour forcer le joueur à bouger les pièces
+    function setupRealisticWorkbench(wbId, statusId, onSuccess) {
+        let wb = document.getElementById(wbId);
+        let pairs = [
+            { partId: wbId.includes('2') ? 'part-base2' : 'part-base1', slotId: wbId.includes('2') ? 'slot-base2' : 'slot-base1', screwed: false },
+            { partId: wbId.includes('2') ? 'part-wheel1-2' : 'part-wheel1-1', slotId: wbId.includes('2') ? 'slot-wheel1-2' : 'slot-wheel1-1', screwed: false },
+            { partId: wbId.includes('2') ? 'part-wheel2-2' : 'part-wheel2-1', slotId: wbId.includes('2') ? 'slot-wheel2-2' : 'slot-wheel2-1', screwed: false },
+            { partId: wbId.includes('2') ? 'part-cushion2' : 'part-cushion1', slotId: wbId.includes('2') ? 'slot-cushion2' : 'slot-cushion1', screwed: false }
+        ];
 
-        partIds.forEach(id => {
-            let el = document.getElementById(id);
-            el.style.top = (Math.random() * 80 + 150) + 'px';
-            el.style.left = (Math.random() * 220 + 20) + 'px';
+        let screwedCount = 0;
+        document.getElementById(statusId).innerText = `Vis serrées : 0/4`;
+
+        pairs.forEach(pair => {
+            let el = document.getElementById(pair.partId);
+            let slot = document.getElementById(pair.slotId);
+            el.style.top = '210px';
+            el.style.left = (Math.random() * 250 + 20) + 'px';
+            pair.screwed = false;
+
+            // Glisser-déposer de la pièce
             el.onpointerdown = (e) => {
-                hasMoved = true; // Marque comme bougé dès qu'on touche une pièce
+                if(pair.screwed) return;
                 let move = (ev) => {
                     let rect = wb.getBoundingClientRect();
                     el.style.left = (ev.clientX - rect.left - 25) + 'px';
                     el.style.top = (ev.clientY - rect.top - 20) + 'px';
                 };
-                let up = () => { document.removeEventListener('pointermove', move); };
+                let up = () => {
+                    document.removeEventListener('pointermove', move);
+                    // Vérifier si la pièce est déposée sur son slot
+                    let sRect = slot.getBoundingClientRect();
+                    let eRect = el.getBoundingClientRect();
+                    let overlap = !(eRect.right < sRect.left || eRect.left > sRect.right || eRect.bottom < sRect.top || eRect.top > sRect.bottom);
+                    
+                    if(overlap && !pair.screwed) {
+                        // Aligner parfaitement sur le slot
+                        el.style.left = slot.style.left;
+                        el.style.top = slot.style.top;
+                        
+                        // Lancer le vissage (maintenir cliqué pour visser)
+                        el.style.background = '#e67e22';
+                        el.innerText += ' 🔧';
+                        
+                        let screwProgress = 0;
+                        let screwingInterval = setInterval(() => {
+                            screwProgress += 10;
+                            el.style.opacity = (0.5 + screwProgress/200);
+                            if(screwProgress >= 100) {
+                                clearInterval(screwingInterval);
+                                pair.screwed = true;
+                                el.style.background = '#27ae60';
+                                el.innerText = el.innerText.replace(' 🔧', ' ✔️');
+                                el.onpointerdown = null; // Fixé !
+                                screwedCount++;
+                                document.getElementById(statusId).innerText = `Vis serrées : ${screwedCount}/4`;
+
+                                if(screwedCount === 4) {
+                                    alert("Fauteuil assemblé et vissé avec succès !");
+                                    onSuccess();
+                                }
+                            }
+                        }, 150);
+
+                        el.onpointerup = () => clearInterval(screwingInterval);
+                    }
+                };
                 document.addEventListener('pointermove', move);
-                document.addEventListener('pointerup', up);
+                document.addEventListener('pointerup', up, { once: true });
             };
         });
-
-        window[workbenchId === 'workbench1' ? 'checkErgoAssembly1' : 'checkErgoAssembly2'] = () => {
-            if (!hasMoved) {
-                alert("Tu dois bouger les pièces avant de valider !");
-                return;
-            }
-
-            let wbRect = wb.getBoundingClientRect();
-            let allInside = partIds.every(id => {
-                let el = document.getElementById(id).getBoundingClientRect();
-                return el.left >= wbRect.left && el.right <= wbRect.right && el.top >= wbRect.top && el.bottom <= wbRect.bottom;
-            });
-
-            if (allInside) {
-                alert("Fauteuil assemblé avec succès !");
-                onSuccess();
-            } else {
-                alert("Place toutes les pièces à l'intérieur de l'établi !");
-            }
-        };
     }
 
     // --- 3. EAPA ---
@@ -505,7 +550,7 @@
         showScreen('eapa-ball-screen');
         let c = document.getElementById('ball-canvas'), ctx = c.getContext('2d');
         let ballX = 150, ballY = 150;
-        let holes = Array.from({length: 18}, () => ({ x: Math.random() * 220 + 40, y: Math.random() * 220 + 40 }));
+        let holes = Array.from({length: 18}, () => ({ x: Math.random() * 200 + 50, y: Math.random() * 200 + 50 }));
         let currentHole = 0;
 
         c.onpointermove = (e) => {
@@ -518,10 +563,10 @@
             ctx.clearRect(0,0,300,300);
 
             let h = holes[currentHole];
-            ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(h.x, h.y, 14, 0, 2*Math.PI); ctx.fill();
+            ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(h.x, h.y, 22, 0, 2*Math.PI); ctx.fill();
             ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(ballX, ballY, 8, 0, 2*Math.PI); ctx.fill();
 
-            if(Math.hypot(ballX - h.x, ballY - h.y) < 12) {
+            if(Math.hypot(ballX - h.x, ballY - h.y) < 22) {
                 currentHole++;
                 document.getElementById('ball-score').innerText = `Trous validés : ${currentHole}/18`;
                 if(currentHole >= 18) { setTimeout(() => showScreen('gift-screen'), 400); return; }
