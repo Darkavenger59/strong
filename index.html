@@ -110,9 +110,17 @@
         <p style="font-size:7px; color:#f1c40f;">Guéris : <span id="cook-score">0</span>/8</p>
     </div>
 
-    <!-- 2B-1. ERGO : Assemblage -->
+    <!-- 2B-1. ERGO : Labyrinthe étroit -->
+    <div id="ergo-maze-screen" class="screen" style="display:none;">
+        <h2>LABYRINTHE DE DEXTÉRITÉ</h2>
+        <p>Guide ton doigt du VERT vers le BLEU sans toucher les murs noirs !</p>
+        <canvas id="maze-canvas" width="380" height="320"></canvas>
+    </div>
+
+    <!-- 2B-2. ERGO : Re-réparation du fauteuil -->
     <div id="ergo-repair-screen" class="screen" style="display:none;">
-        <h2>ASSEMBLAGE FAUTEUIL</h2>
+        <h2>RE-RÉPARATION DU FAUTEUIL</h2>
+        <p>Remets les pièces en place !</p>
         <div class="workbench" id="workbench">
             <div id="part-base" class="part" style="top:100px; left:140px; background:#2c3e50; border:2px solid #f1c40f;">🦽 Base</div>
             <div id="part-wheel1" class="part" style="top:20px; left:20px;">⚙️ Roue G</div>
@@ -120,13 +128,6 @@
             <div id="part-cushion" class="part" style="top:200px; left:140px;">🛋️ Coussin</div>
         </div>
         <button class="btn" onclick="checkErgoAssembly()">VALIDER</button>
-    </div>
-
-    <!-- 2B-2. ERGO : Parcours de dextérité gauche à droite -->
-    <div id="ergo-maze-screen" class="screen" style="display:none;">
-        <h2>PARCOURS DE DEXTÉRITÉ</h2>
-        <p>Emmène le point de GAUCHE vers la DROITE sans toucher !</p>
-        <canvas id="maze-canvas" width="380" height="280"></canvas>
     </div>
 
     <!-- 2C-1. EAPA : Temple Run -->
@@ -195,10 +196,10 @@
             if(lastX !== null) {
                 let dist = Math.abs(e.clientX - lastX);
                 let dt = Date.now() - lastTime;
-                let speed = dist / (dt || 1); // Vitesse de friction
+                let speed = dist / (dt || 1);
                 lastX = e.clientX; lastTime = Date.now();
 
-                if(speed > 0.8) { // Exige de la vitesse
+                if(speed > 0.8) {
                     swipeProgress += 1.5;
                     document.getElementById('progress-fill').style.width = Math.min(100, swipeProgress) + '%';
                     document.getElementById('swipe-count').innerText = Math.floor(swipeProgress);
@@ -208,14 +209,13 @@
                         else { setTimeout(startKineGoniometer, 400); }
                     }
                 } else {
-                    swipeProgress = Math.max(0, swipeProgress - 0.5); // Pénalité si trop lent
+                    swipeProgress = Math.max(0, swipeProgress - 0.5);
                 }
             }
         };
         z.onpointerup = () => lastX = null;
     }
 
-    // Goniomètre classique (Pivot en bas)
     let gAngle = 0, draggingG = false;
     function startKineGoniometer() {
         showScreen('kine-gonio-screen');
@@ -223,11 +223,8 @@
         gAngle = Math.floor(Math.random() * 60) + 10;
         let draw = () => {
             ctx.clearRect(0,0,240,200);
-            // Pivot en bas (120, 180)
             ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(120, 180, 6, 0, 2*Math.PI); ctx.fill();
-            // Branche fixe
             ctx.strokeStyle = '#3498db'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(120, 180); ctx.lineTo(200, 180); ctx.stroke();
-            // Branche mobile
             let rad = (-gAngle) * Math.PI / 180;
             ctx.strokeStyle = '#e74c3c'; ctx.beginPath(); ctx.moveTo(120, 180); ctx.lineTo(120 + Math.cos(rad)*80, 180 + Math.sin(rad)*80); ctx.stroke();
         };
@@ -248,8 +245,7 @@
         else alert("Angle incorrect ! Vise 30°.");
     }
 
-    // Cabinet Temps Asynchrones
-    let cookScore = 0, patientsQ = 12, cRooms = [{name:"Soin A", p:null, duration:0}, {name:"Soin B", p:null, duration:0}];
+    let cookScore = 0, patientsQ = 12, cRooms = [{name:"Soin A", p:null}, {name:"Soin B", p:null}];
     function startKineCooking() {
         cookScore = 0; patientsQ = 12; cRooms.forEach(r => r.p = null);
         showScreen('kine-cooking-screen');
@@ -267,7 +263,7 @@
                 ctx.fillStyle='#fff'; ctx.fillText(r.name, rx+10, rx+85);
                 
                 if(r.p) {
-                    r.p.progress += 0.25 / r.p.speed; // Temps variable selon patient
+                    r.p.progress += 0.25 / r.p.speed;
                     if(r.p.progress >= 100) r.p.ready = true;
                     ctx.fillStyle='#f1c40f'; ctx.fillRect(rx+10, 130, Math.min(100, r.p.progress), 10);
                     if(r.p.ready) { ctx.fillStyle='#fff'; ctx.fillText("LIBÉRER !", rx+20, 110); }
@@ -293,11 +289,73 @@
         };
     }
 
-    // --- 2. ERGO ---
+    // --- 2. ERGO : Labyrinthe étroit & re-réparation ---
+    let mazePlaying = false, mX = 30, mY = 50;
+    function startErgoMaze() {
+        showScreen('ergo-maze-screen');
+        let c = document.getElementById('maze-canvas'), ctx = c.getContext('2d');
+        mazePlaying = true; mX = 30; mY = 50;
+
+        c.onpointermove = (e) => {
+            if(!mazePlaying) return;
+            let r = c.getBoundingClientRect();
+            let x = e.clientX - r.left, y = e.clientY - r.top;
+
+            // Définition des murs étroits du labyrinthe (chemins autorisés)
+            let inCorridor1 = (x >= 20 && x <= 350 && y >= 40 && y <= 65);
+            let inCorridor2 = (x >= 325 && x <= 350 && y >= 40 && y <= 180);
+            let inCorridor3 = (x >= 50 && x <= 350 && y >= 155 && y <= 180);
+            let inCorridor4 = (x >= 50 && x <= 75 && y >= 155 && y <= 270);
+            let inCorridor5 = (x >= 50 && x <= 340 && y >= 245 && y <= 270);
+
+            if(inCorridor1 || inCorridor2 || inCorridor3 || inCorridor4 || inCorridor5) {
+                mX = x; mY = y;
+            } else {
+                mazePlaying = false;
+                alert("Mur touché ! Recommence le labyrinthe.");
+                startErgoMaze();
+            }
+        };
+
+        let loop = () => {
+            if(!mazePlaying) return;
+            ctx.clearRect(0,0,380,320);
+
+            // Dessin des murs du labyrinthe (zones infranchissables en noir/rouge, chemins vides)
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(0, 0, 380, 320); // Tout est un mur, on creuse les couloirs en noir
+
+            ctx.fillStyle = '#111';
+            ctx.fillRect(20, 40, 330, 25);   // Couloir 1
+            ctx.fillRect(325, 40, 25, 140);  // Couloir 2
+            ctx.fillRect(50, 155, 300, 25);  // Couloir 3
+            ctx.fillRect(50, 155, 25, 115);  // Couloir 4
+            ctx.fillRect(50, 245, 290, 25);  // Couloir 5
+
+            // Départ (Vert) et Arrivée (Bleu)
+            ctx.fillStyle = '#2ecc71'; ctx.fillRect(20, 40, 15, 25);
+            ctx.fillStyle = '#3498db'; ctx.fillRect(315, 245, 25, 25);
+
+            // Doigt / Curseur (Blanc)
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(mX, mY, 6, 0, 2*Math.PI); ctx.fill();
+
+            // Vérification arrivée
+            if(mX >= 315 && mY >= 245 && mY <= 270) {
+                mazePlaying = false;
+                setTimeout(startErgoRepair, 400);
+                return;
+            }
+            requestAnimationFrame(loop);
+        };
+        loop();
+    }
+
     function startErgoRepair() {
         showScreen('ergo-repair-screen');
         ['part-wheel1', 'part-wheel2', 'part-cushion'].forEach(id => {
             let el = document.getElementById(id);
+            el.style.top = (Math.random() * 100 + 130) + 'px';
+            el.style.left = (Math.random() * 250 + 20) + 'px';
             el.onpointerdown = (e) => {
                 let move = (ev) => { el.style.left = (ev.clientX - 100) + 'px'; el.style.top = (ev.clientY - 100) + 'px'; };
                 let up = () => { document.removeEventListener('pointermove', move); };
@@ -305,52 +363,7 @@
             };
         });
     }
-    function checkErgoAssembly() { alert("Fauteuil assemblé !"); startErgoMaze(); }
-
-    // Parcours de gauche à droite sans toucher les murs mobiles
-    let mazePlaying = false, mX = 20, mY = 140, mObstacleX = 150;
-    function startErgoMaze() {
-        showScreen('ergo-maze-screen');
-        let c = document.getElementById('maze-canvas'), ctx = c.getContext('2d');
-        mazePlaying = true; mX = 20; mY = 140; mObstacleX = 200;
-
-        c.onpointermove = (e) => {
-            if(!mazePlaying) return;
-            let r = c.getBoundingClientRect();
-            mX = e.clientX - r.left; mY = e.clientY - r.top;
-            
-            // Mur central mobile vertical qui obstrue le passage
-            if(mX > mObstacleX - 15 && mX < mObstacleX + 15 && (mY < 100 || mY > 180)) {
-                mazePlaying = false; alert("Mur touché !"); startErgoMaze();
-            }
-        };
-
-        let loop = () => {
-            if(!mazePlaying) return;
-            ctx.clearRect(0,0,380,280);
-            mObstacleX += 1.5; if(mObstacleX > 350) mObstacleX = 50;
-
-            // Murs hauts et bas
-            ctx.fillStyle = '#e74c3c';
-            ctx.fillRect(0, 0, 380, 70);
-            ctx.fillRect(0, 210, 380, 70);
-            // Mur mobile vertical
-            ctx.fillRect(mObstacleX - 10, 70, 20, 140);
-
-            // Joueur
-            ctx.fillStyle = '#2ecc71'; ctx.beginPath(); ctx.arc(mX, mY, 6, 0, 2*Math.PI); ctx.fill();
-
-            // Arrivée à droite
-            ctx.fillStyle = '#3498db'; ctx.fillRect(360, 70, 20, 140);
-            if(mX >= 360) {
-                mazePlaying = false;
-                setTimeout(() => showScreen('gift-screen'), 400);
-                return;
-            }
-            requestAnimationFrame(loop);
-        };
-        loop();
-    }
+    function checkErgoAssembly() { alert("Fauteuil re-réparé avec succès !"); setTimeout(() => showScreen('gift-screen'), 400); }
 
     // --- 3. EAPA ---
     let tLane = 1, tScore = 0, tRunning = false;
@@ -388,8 +401,17 @@
                 ctx.fillRect(oX - 10, o.y, 20, 20);
 
                 if(o.y > 300 && o.y < 340 && o.lane === tLane) {
-                    if(o.type === 'plot') { tRunning = false; alert("Plot touché !"); startEapaTempleRun(); return; }
-                    else { obstacles.splice(index, 1); tScore++; document.getElementById('eapa-temple-score').innerText = `Ballons : ${tScore}/8`; if(tScore >= 8) { tRunning = false; setTimeout(startBallGame, 400); } }
+                    if(o.type === 'plot') {
+                        tRunning = false;
+                        alert("Plot touché !");
+                        startEapaTempleRun();
+                        return;
+                    } else {
+                        obstacles.splice(index, 1);
+                        tScore++;
+                        document.getElementById('eapa-temple-score').innerText = `Ballons : ${tScore}/8`;
+                        if(tScore >= 8) { tRunning = false; setTimeout(startBallGame, 400); }
+                    }
                 }
             });
             requestAnimationFrame(loop);
@@ -397,8 +419,7 @@
         loop();
     }
 
-    // Jeu de guidage de balle dans les trous
-    let ballX = 150, ballY = 150, holes = [{x: 50, y: 50}, {x: 250, y: 50}, {x: 150, y: 250}], currentHole = 0;
+ let ballX = 150, ballY = 150, holes = [{x: 50, y: 50}, {x: 250, y: 50}, {x: 150, y: 250}], currentHole = 0;
     function startBallGame() {
         showScreen('eapa-ball-screen');
         let c = document.getElementById('ball-canvas'), ctx = c.getContext('2d');
@@ -408,7 +429,7 @@
             ballX += (e.gamma || 0) * 0.2;
             ballY += (e.beta || 0) * 0.2;
         };
-        c.onpointermove = (e) => { // Solution de secours tactile/souris
+        c.onpointermove = (e) => {
             let r = c.getBoundingClientRect();
             ballX = e.clientX - r.left; ballY = e.clientY - r.top;
         };
@@ -417,11 +438,8 @@
             if(document.getElementById('eapa-ball-screen').style.display === 'none') return;
             ctx.clearRect(0,0,300,300);
 
-            // Trou actif
             let h = holes[currentHole];
             ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(h.x, h.y, 15, 0, 2*Math.PI); ctx.fill();
-
-            // Balle
             ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(ballX, ballY, 8, 0, 2*Math.PI); ctx.fill();
 
             if(Math.hypot(ballX - h.x, ballY - h.y) < 12) {
@@ -433,13 +451,14 @@
         };
         loop();
     }
-// --- 4. BRANCARDIER ---
+
+    // --- 4. BRANCARDIER ---
     let rX = 140, rY = 320, rPlaying = false;
     function startBrancardier() {
         showScreen('brancardier-screen');
         let c = document.getElementById('racing-canvas'), ctx = c.getContext('2d');
         rX = 140; rY = 320; rPlaying = true;
-        let roadObs = [{x: 30, y: 50, s: 3}, {x: 200, y: 150, s: -3.5}, {x: 100, y: 250, s: 3}];
+        let roadObs = [{x: 30, y: 50, s: 3}, {x: 200, y: 150, s: -3.5}, {x: 80, y: 250, s: 3}];
 
         let loop = () => {
             if(!rPlaying) return;
@@ -450,7 +469,10 @@
                 ctx.fillStyle = '#e67e22'; ctx.fillRect(o.x, o.y, 50, 18);
 
                 if(rX < o.x + 50 && rX + 30 > o.x && rY < o.y + 18 && rY + 35 > o.y) {
-                    rPlaying = false; alert("Collision !"); startBrancardier(); return;
+                    rPlaying = false;
+                    alert("Collision !");
+                    startBrancardier();
+                    return;
                 }
             });
             ctx.fillStyle = '#9b59b6'; ctx.fillRect(rX, rY, 30, 35);
