@@ -620,7 +620,7 @@
                 currentHole++;
                 holeStartTime = Date.now(); // Reset du timer pour le prochain trou
                 document.getElementById('ball-score').innerText = `Trous validés : ${currentHole}/18`;
-                if(currentHole >= 18) { setTimeout(() => startBrancardier(), 400); return; }
+                if(currentHole >= 18) { setTimeout(() => finishAll(), 400); return; }
             }
             activeLoop = requestAnimationFrame(loop);
         };
