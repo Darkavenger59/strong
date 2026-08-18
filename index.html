@@ -85,7 +85,7 @@
         </div>
     </div>
 
-    <!-- 2A-1. KINÉ : Massage vitesse requise -->
+    <!-- 2A-1. KINÉ : Massage -->
     <div id="kine-massage-screen" class="screen" style="display:none;">
         <h2>MASSAGE DE VITESSE (3 MAMIES)</h2>
         <p id="mamie-txt">Mamie 1/3 - Frotte de PLUS EN PLUS VITE !</p>
@@ -102,10 +102,10 @@
         <button class="btn" onclick="validateClassicGoniometer()">VALIDER L'ANGLE</button>
     </div>
 
-    <!-- 2A-3. KINÉ : 8 Boxs Haute Tension -->
+    <!-- 2A-3. KINÉ : 8 Boxs Haute Tension (Temps Aléatoires) -->
     <div id="kine-cooking-screen" class="screen" style="display:none;">
         <h2>PLATEAU 8 BOXS (HARDCORE)</h2>
-        <p>Libère en < 1s dès que c'est prêt sinon PERDU !</p>
+        <p>Libère en < 1.5s dès que c'est prêt !</p>
         <canvas id="cooking-canvas" width="400" height="340"></canvas>
         <p style="font-size:7px; color:#f1c40f;">Guéris : <span id="cook-score">0</span>/15</p>
     </div>
@@ -191,7 +191,6 @@
 </div>
 
 <script>
-    // Variables globales pour stocker les boucles et pouvoir les stopper proprement
     let activeLoop = null;
 
     function stopAllLoops() {
@@ -297,20 +296,22 @@
 
                 if(box.p) {
                     if(!box.p.ready) {
-                        box.p.progress += 1.5;
+                        box.p.progress += box.p.speed; // Vitesse de soin aléatoire
                         if(box.p.progress >= 100) { box.p.ready = true; box.p.overdueTime = Date.now(); }
                         ctx.fillStyle='#f1c40f'; ctx.fillRect(bx+10, by+60, box.p.progress * 0.65, 8);
                     } else {
                         let elapsed = Date.now() - box.p.overdueTime;
-                        if(elapsed > 1000) {
-                            alert("Temps écoulé (>1s) pour libérer la box ! Jeu perdu.");
+                        if(elapsed > 1500) { // Tolérance de 1.5s
+                            stopAllLoops();
+                            alert("Temps écoulé pour libérer la box ! Jeu perdu.");
                             startKineCooking();
                             return;
                         }
                         ctx.fillStyle='#fff'; ctx.fillText("VITE ! LIBR", bx+5, by+50);
                     }
                 } else if(patientsQ > 0) {
-                    box.p = { progress: 0, ready: false, overdueTime: 0 };
+                    // Temps de soin aléatoire et un peu plus long (vitesse entre 0.4 et 1.0)
+                    box.p = { progress: 0, ready: false, overdueTime: 0, speed: Math.random() * 0.6 + 0.4 };
                     patientsQ--;
                 }
             });
@@ -366,6 +367,7 @@
                 mX = x; mY = y;
             } else {
                 mazePlaying = false;
+                stopAllLoops();
                 alert("Mur touché ! Recommence le labyrinthe.");
                 startErgoMaze();
             }
@@ -462,6 +464,7 @@
                 if(o.y > 300 && o.y < 340 && o.lane === tLane) {
                     if(o.type === 'plot') {
                         tRunning = false;
+                        stopAllLoops();
                         alert("Plot touché ! Retour au début.");
                         startEapaTempleRun();
                         return;
@@ -532,6 +535,7 @@
                 if(rY < o.y + 18 && rY + 35 > o.y) {
                     if(rX < o.gapX || rX + 30 > o.gapX + 60) {
                         rPlaying = false;
+                        stopAllLoops();
                         alert("Mur percuté ! Retour au départ de la coursive.");
                         startBrancardier();
                         return;
