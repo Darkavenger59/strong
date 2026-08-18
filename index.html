@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centre de Rééduc' - Baby Reveal</title>
+    <title>Centre de Rééduc' - Baby Reveal Hardcore</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body { 
@@ -21,7 +21,7 @@
         }
         #game-container { 
             width: 400px; 
-            height: 500px; 
+            height: 520px; 
             border: 4px solid #fff; 
             position: relative; 
             overflow: hidden; 
@@ -37,17 +37,17 @@
             align-items: center; 
             justify-content: center; 
             text-align: center; 
-            padding: 20px;
+            padding: 15px;
             box-sizing: border-box;
         }
-        h2 { font-size: 14px; line-height: 1.5; margin-bottom: 15px; }
-        p { font-size: 9px; line-height: 1.6; margin-bottom: 20px; }
+        h2 { font-size: 13px; line-height: 1.5; margin-bottom: 12px; }
+        p { font-size: 8px; line-height: 1.6; margin-bottom: 15px; }
         .btn { 
             background: #e74c3c; 
             color: white; 
             border: none; 
             padding: 12px 16px; 
-            margin: 8px; 
+            margin: 6px; 
             cursor: pointer; 
             font-family: inherit; 
             font-size: 9px; 
@@ -56,22 +56,17 @@
         }
         .btn:active { transform: translateY(4px); box-shadow: none; }
         
-        /* Barres de progression & stats */
-        .progress-bar-container { width: 80%; height: 20px; border: 2px solid #fff; margin: 15px 0; background: #111; }
-        #progress-fill { width: 0%; height: 100%; background: #2ecc71; transition: width 0.1s; }
-        
-        /* Mini-jeu ERGO (Drag & Drop visuel) */
-        .ergo-slot { width: 70px; height: 70px; border: 2px dashed #fff; display: inline-flex; align-items: center; justify-content: center; margin: 10px; font-size: 24px; background: rgba(0,0,0,0.3); }
-        .ergo-item { font-size: 24px; cursor: pointer; user-select: none; margin: 10px; display: inline-block; }
+        /* Barres de progression */
+        .progress-bar-container { width: 85%; height: 18px; border: 2px solid #fff; margin: 10px 0; background: #111; }
+        #progress-fill { width: 0%; height: 100%; background: #2ecc71; transition: width 0.05s; }
 
-        /* Mini-jeu EAPA (Grille / Parcours) */
-        #grid { display: grid; grid-template-columns: repeat(4, 60px); grid-template-rows: repeat(4, 60px); gap: 5px; margin: 10px 0; }
-        .cell { width: 60px; height: 60px; background: #34495e; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid #7f8c8d; }
-        .controls { display: flex; gap: 5px; margin-top: 10px; }
-        .ctrl-btn { width: 50px; height: 40px; background: #3498db; border: none; color: white; font-family: inherit; font-size: 12px; cursor: pointer; box-shadow: 0 3px 0 #2980b9; }
+        /* Grilles Ergo & EAPA */
+        .action-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px 0; }
+        .grid-btn { background: #34495e; border: 2px solid #fff; color: white; padding: 15px; font-family: inherit; font-size: 8px; cursor: pointer; }
+        .grid-btn.fixed { background: #27ae60; border-color: #2ecc71; }
 
         /* Coffre Mystère */
-        #mystery-gift { cursor: pointer; font-size: 50px; margin-top: 20px; animation: bounce 1s infinite alternate; }
+        #mystery-gift { cursor: pointer; font-size: 50px; margin-top: 15px; animation: bounce 1s infinite alternate; }
         @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
     </style>
 </head>
@@ -83,59 +78,60 @@
     <div id="menu-screen" class="screen">
         <h2>CENTRE DE<br>RÉÉDUCATION</h2>
         <p>Choisis ta spécialité pour débloquer le grand secret !</p>
-        <button class="btn" style="background:#3498db; box-shadow:0 4px 0 #2980b9;" onclick="startKine()">1. KINÉ (Massage)</button>
-        <button class="btn" style="background:#e67e22; box-shadow:0 4px 0 #d35400;" onclick="startErgo()">2. ERGO (Fauteuil)</button>
+        <button class="btn" style="background:#3498db; box-shadow:0 4px 0 #2980b9;" onclick="startKine()">1. KINÉ (Tournée)</button>
+        <button class="btn" style="background:#e67e22; box-shadow:0 4px 0 #d35400;" onclick="startErgoRepair()">2. ERGO (Fauteuil & Posture)</button>
         <button class="btn" style="background:#2ecc71; box-shadow:0 4px 0 #27ae60;" onclick="startEapa()">3. EAPA (Parcours)</button>
     </div>
 
-    <!-- 2A. JEU KINÉ (Mash de clic) -->
+    <!-- 2A. JEU KINÉ (Tournée progressive) -->
     <div id="kine-screen" class="screen" style="display:none;">
-        <h2>DÉTENTE DE MAMIE</h2>
-        <p>Clique le plus vite possible pour détendre le dos de Mamie avant la fin du chrono !</p>
+        <h2>TOURNÉE KINÉ</h2>
+        <p id="kine-subtitle">Patient 1/3</p>
         <div style="font-size: 50px; margin: 10px; cursor:pointer;" onclick="kineClick()">👵</div>
         <div class="progress-bar-container"><div id="progress-fill"></div></div>
-        <p id="kine-timer" style="font-size: 10px; color:#f1c40f;">Temps : 5.0s</p>
+        <p id="kine-timer" style="font-size: 9px; color:#f1c40f;">Temps : 4.0s</p>
     </div>
 
-    <!-- 2B. JEU ERGO (Assemblage Fauteuil) -->
-    <div id="ergo-screen" class="screen" style="display:none;">
+    <!-- 2B. JEU ERGO - PARTIE 1 : Réparation Fauteuil -->
+    <div id="ergo-repair-screen" class="screen" style="display:none;">
         <h2>ATELIER ERGO</h2>
-        <p>Glisse ou clique sur les éléments pour réparer le fauteuil et installer le patient !</p>
-        <div>
-            <span class="ergo-slot" id="slot-0" onclick="ergoDrop(0)">🦽</span>
-            <span class="ergo-slot" id="slot-1" onclick="ergoDrop(1)">🧑</span>
+        <p>Répare les éléments cassés du fauteuil dans l'ordre !</p>
+        <div class="action-grid">
+            <button class="grid-btn" id="rep-0" onclick="repairPart(0)">🦽 Roue crevée</button>
+            <button class="grid-btn" id="rep-1" onclick="repairPart(1)">🦶 Repose-pieds</button>
+            <button class="grid-btn" id="rep-2" onclick="repairPart(2)">🛋️ Coussin mousse</button>
+            <button class="grid-btn" id="rep-3" onclick="repairPart(3)">🔧 Freins bloqués</button>
         </div>
-        <div id="ergo-items-pool">
-            <span class="ergo-item" onclick="ergoSelect('🦽')">🦽</span>
-            <span class="ergo-item" onclick="ergoSelect('🧑')">🧑</span>
-        </div>
-        <p id="ergo-status" style="font-size: 8px; color: #f1c40f; margin-top:10px;">Étape 1 : Place le fauteuil</p>
+        <p id="ergo-repair-status" style="font-size: 8px; color: #f1c40f;">Répare : Roue crevée</p>
     </div>
 
-    <!-- 2C. JEU EAPA (Labyrinthe / Parcours) -->
+    <!-- 2B. JEU ERGO - PARTIE 2 : Correction Posturale -->
+    <div id="ergo-posture-screen" class="screen" style="display:none;">
+        <h2>INSTALLATION POSTURALE</h2>
+        <p id="posture-inst">Le patient est mal installé. Redresse la tête !</p>
+        <div style="font-size: 45px; margin: 10px;" id="patient-avatar">🧟‍♂️</div>
+        <button class="btn" style="background:#8e44ad; box-shadow:0 4px 0 #6c3483; width:220px;" onclick="fixPosture()">Corriger</button>
+    </div>
+
+    <!-- 2C. JEU EAPA (Parcours d'obstacles dynamique) -->
     <div id="eapa-screen" class="screen" style="display:none;">
         <h2>PARCOURS EAPA</h2>
-        <p>Guide le patient 🏃 jusqu'à la sortie 🏁 en évitant les obstacles ⛔ !</p>
-        <div id="grid"></div>
-        <div class="controls">
-            <button class="ctrl-btn" onclick="movePlayer(0, -1)">⬆️</button>
-            <button class="ctrl-btn" onclick="movePlayer(0, 1)">⬇️</button>
-            <button class="ctrl-btn" onclick="movePlayer(-1, 0)">⬅️</button>
-            <button class="ctrl-btn" onclick="movePlayer(1, 0)">➡️</button>
-        </div>
+        <p id="eapa-desc">Le patient arrive face à un obstacle !</p>
+        <div style="font-size: 55px; margin: 10px;" id="eapa-icon">🏃</div>
+        <div id="eapa-action-zone"></div>
     </div>
 
     <!-- 3. ÉCRAN DU CADEAU MYSTÈRE -->
     <div id="gift-screen" class="screen" style="display:none;">
         <h2>OBJECTIF ATTEINT !</h2>
-        <p>Tu as validé ta prise en charge. Ouvre ton colis pour le grand reveal :</p>
+        <p>Séance validée avec succès. Ouvre ton colis pour le grand reveal :</p>
         <div id="mystery-gift" onclick="revealGender()">🎁</div>
         <p style="font-size: 8px; color:#aaa;">(Clique sur le paquet)</p>
     </div>
 
     <!-- 4. ÉCRAN DU REVEAL FINAL -->
     <div id="reveal-screen" class="screen" style="display:none; background: rgba(255, 107, 129, 0.95);">
-        <h2>MISSION ACCOMPLIE !</h2>
+        <h2>MISSION ACCOMPLI !</h2>
         <h2 style="font-size: 20px; margin: 20px 0;">C'est une <span style="color: #000;">FILLE</span> ! 🌸</h2>
         <button class="btn" onclick="location.reload()" style="background:#2c3e50; box-shadow:0 4px 0 #1a1a24;">RECOMMENCER</button>
     </div>
@@ -143,153 +139,185 @@
 </div>
 
 <script>
-    // --- GESTION DES ÉCRANS ---
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
         document.getElementById(screenId).style.display = 'flex';
     }
 
     // ==========================================
-    // 1. MINI-JEU KINÉ (Mash de clics)
+    // 1. KINÉ : Tournée progressive (3 patients)
     // ==========================================
+    let kinePatientIndex = 1;
     let kineProgress = 0;
-    let kineTimer = 5.0;
+    let kineTimer = 4.0;
     let kineInterval = null;
+    let requiredClicks = 15; // Augmente par patient
 
     function startKine() {
+        kinePatientIndex = 1;
+        initKinePatient();
+    }
+
+    function initKinePatient() {
         kineProgress = 0;
-        kineTimer = 5.0;
+        kineTimer = 4.0 - (kinePatientIndex * 0.5); // de plus en plus court (3.5s, 3.0s, 2.5s)
+        requiredClicks = 12 + (kinePatientIndex * 5); // de plus en plus de clics
         document.getElementById('progress-fill').style.width = '0%';
+        document.getElementById('kine-subtitle').innerText = `Patient ${kinePatientIndex}/3`;
         showScreen('kine-screen');
-        
+
+        if (kineInterval) clearInterval(kineInterval);
         kineInterval = setInterval(() => {
             kineTimer -= 0.1;
             document.getElementById('kine-timer').innerText = `Temps : ${kineTimer.toFixed(1)}s`;
             if (kineTimer <= 0) {
                 clearInterval(kineInterval);
-                if (kineProgress < 100) {
-                    alert("Trop lent ! Mamie a eu mal au dos. Recommence !");
-                    startKine();
-                }
+                alert(`Trop lent pour Mamie ${kinePatientIndex} ! Recommence la tournée.`);
+                startKine();
             }
         }, 100);
     }
 
     function kineClick() {
         if (kineTimer > 0) {
-            kineProgress += 6;
+            kineProgress += (100 / requiredClicks);
             if (kineProgress > 100) kineProgress = 100;
             document.getElementById('progress-fill').style.width = kineProgress + '%';
-            
-            if (kineProgress === 100) {
+
+            if (kineProgress >= 100) {
                 clearInterval(kineInterval);
-                setTimeout(() => showScreen('gift-screen'), 300);
+                kinePatientIndex++;
+                if (kinePatientIndex > 3) {
+                    setTimeout(() => showScreen('gift-screen'), 400);
+                } else {
+                    setTimeout(initKinePatient, 600);
+                }
             }
         }
     }
 
     // ==========================================
-    // 2. MINI-JEU ERGO (Assemblage Fauteuil)
+    // 2. ERGO : Réparation + Posture
     // ==========================================
-    let ergoStep = 0; // 0: placer fauteuil, 1: placer patient
-    let ergoSlotFilled = [false, false];
+    let repairStep = 0;
+    const repairSequence = [0, 1, 2, 3];
+    const repairNames = ["Roue crevée", "Repose-pieds", "Coussin mousse", "Freins bloqués"];
 
-    function startErgo() {
-        ergoStep = 0;
-        ergoSlotFilled = [false, false];
-        document.getElementById('slot-0').innerText = '🦽';
-        document.getElementById('slot-1').innerText = '🧑';
-        document.getElementById('slot-0').style.borderColor = '#fff';
-        document.getElementById('slot-1').style.borderColor = '#fff';
-        document.getElementById('ergo-status').innerText = "Étape 1 : Clique sur le fauteuil 🦽 pour l'installer";
-        showScreen('ergo-screen');
+    function startErgoRepair() {
+        repairStep = 0;
+        for (let i = 0; i < 4; i++) {
+            let btn = document.getElementById(`rep-${i}`);
+            btn.className = "grid-btn";
+            btn.disabled = false;
+        }
+        document.getElementById('ergo-repair-status').innerText = `Répare : ${repairNames[repairSequence[0]]}`;
+        showScreen('ergo-repair-screen');
     }
 
-    function ergoSelect(item) {
-        if (item === '🦽' && ergoStep === 0) {
-            ergoSlotFilled[0] = true;
-            document.getElementById('slot-0').innerText = '✅';
-            ergoStep = 1;
-            document.getElementById('ergo-status').innerText = "Étape 2 : Clique sur le patient 🧑 pour le positionner";
-        } else if (item === '🧑' && ergoStep === 1 && ergoSlotFilled[0]) {
-            ergoSlotFilled[1] = true;
-            document.getElementById('slot-1').innerText = '✅';
-            document.getElementById('ergo-status').innerText = "Parfait ! Installation réussie !";
-            setTimeout(() => showScreen('gift-screen'), 600);
+    function repairPart(index) {
+        if (index === repairSequence[repairStep]) {
+            let btn = document.getElementById(`rep-${index}`);
+            btn.className = "grid-btn fixed";
+            btn.disabled = true;
+            repairStep++;
+
+            if (repairStep < 4) {
+                document.getElementById('ergo-repair-status').innerText = `Répare : ${repairNames[repairSequence[repairStep]]}`;
+            } else {
+                document.getElementById('ergo-repair-status').innerText = "Fauteuil réparé ! Passage à la posture...";
+                setTimeout(startErgoPosture, 800);
+            }
+        } else {
+            alert("Mauvaise pièce ! Suis l'ordre logique de maintenance.");
+            startErgoRepair();
         }
     }
 
-    function ergoDrop(slotIndex) {
-        if (slotIndex === 0 && ergoStep === 0) ergoSelect('🦽');
-        if (slotIndex === 1 && ergoStep === 1) ergoSelect('🧑');
+    let postureStep = 0;
+    const postures = [
+        { text: "Tête penchée en arrière ! Redresse la tête.", avatar: "🧟‍♂️" },
+        { text: "Bras pendants ! Aligne les bras le long du corps.", avatar: "🤷‍♂️" },
+        { text: "Pieds glissés ! Cale les pieds sur les palettes.", avatar: "🦿" }
+    ];
+
+    function startErgoPosture() {
+        postureStep = 0;
+        updatePostureScreen();
+        showScreen('ergo-posture-screen');
+    }
+
+    function updatePostureScreen() {
+        document.getElementById('posture-inst').innerText = postures[postureStep].text;
+        document.getElementById('patient-avatar').innerText = postures[postureStep].avatar;
+    }
+
+    function fixPosture() {
+        postureStep++;
+        if (postureStep < postures.length) {
+            updatePostureScreen();
+        } else {
+            document.getElementById('patient-avatar').innerText = "🧘‍♂️";
+            document.getElementById('posture-inst').innerText = "Patient parfaitement installé !";
+            setTimeout(() => showScreen('gift-screen'), 800);
+        }
     }
 
     // ==========================================
-    // 3. MINI-JEU EAPA (Labyrinthe 4x4 simplifié)
+    // 3. EAPA : Parcours d'obstacles séquentiel
     // ==========================================
-    // 0: Vide, 1: Obstacle (⛔), 2: Joueur (🏃), 3: Sortie (🏁)
-    let mapData = [
-        [2, 0, 1, 0],
-        [1, 0, 1, 0],
-        [0, 0, 0, 1],
-        [1, 1, 0, 3]
+    let eapaStep = 0;
+    const eapaStages = [
+        { desc: "Attention ! Un plot bloque le chemin. Il faut slalomer !", icon: "⚠️", btnText: "Esquiver (Clic rapide)", action: "mash" },
+        { desc: "Une barre d'obstacle à franchir ! Saute au bon moment !", icon: "🚧", btnText: "Sauter !", action: "timing" },
+        { desc: "Plateforme d'équilibre instable ! Maintiens droit pour pas qu'il tombe !", icon: "⚖️", btnText: "Équilibrer (Mash de stabilisation)", action: "balance" }
     ];
-    let playerPos = {x: 0, y: 0};
+    let eapaCounter = 0;
 
     function startEapa() {
-        // Reset position
-        playerPos = {x: 0, y: 0};
-        mapData = [
-            [2, 0, 1, 0],
-            [1, 0, 1, 0],
-            [0, 0, 0, 1],
-            [1, 1, 0, 3]
-        ];
-        drawGrid();
+        eapaStep = 0;
+        loadEapaStage();
         showScreen('eapa-screen');
     }
 
-    function drawGrid() {
-        let gridEl = document.getElementById('grid');
-        gridEl.innerHTML = '';
-        for (let r = 0; r < 4; r++) {
-            for (let c = 0; c < 4; c++) {
-                let cell = document.createElement('div');
-                cell.className = 'cell';
-                let val = mapData[r][c];
-                if (val === 2) cell.innerText = '🏃';
-                else if (val === 1) cell.innerText = '⛔';
-                else if (val === 3) cell.innerText = '🏁';
-                gridEl.appendChild(cell);
-            }
+    function loadEapaStage() {
+        let stage = eapaStages[eapaStep];
+        document.getElementById('eapa-desc').innerText = stage.desc;
+        document.getElementById('eapa-icon').innerText = stage.icon;
+        
+        let zone = document.getElementById('eapa-action-zone');
+        eapaCounter = 0;
+
+        if (stage.action === 'mash' || stage.action === 'balance') {
+            zone.innerHTML = `<button class="btn" style="background:#2980b9;" onclick="eapaActionProgress()">${stage.btnText} (<span id="eapa-count">0</span>/10)</button>`;
+        } else if (stage.action === 'timing') {
+            zone.innerHTML = `<button class="btn" style="background:#27ae60;" onclick="eapaActionTiming()">${stage.btnText}</button>`;
         }
     }
 
-    function movePlayer(dx, dy) {
-        let newX = playerPos.x + dx;
-        let newY = playerPos.y + dy;
+    function eapaActionProgress() {
+        eapaCounter++;
+        let span = document.getElementById('eapa-count');
+        if (span) span.innerText = eapaCounter;
 
-        // Vérifier les limites de la grille (4x4)
-        if (newX >= 0 && newX < 4 && newY >= 0 && newY < 4) {
-            let targetVal = mapData[newY][newX];
-            
-            if (targetVal === 1) {
-                // Obstacle -> Bloqué ou petit message
-                return;
-            }
+        if (eapaCounter >= 10) {
+            nextEapaStage();
+        }
+    }
 
-            if (targetVal === 3) {
-                // Victoire !
-                showScreen('gift-screen');
-                return;
-            }
+    function eapaActionTiming() {
+        // Validation directe au clic pour le saut
+        nextEapaStage();
+    }
 
-            // Déplacement normal
-            mapData[playerPos.y][playerPos.x] = 0;
-            playerPos.x = newX;
-            playerPos.y = newY;
-            mapData[playerPos.y][playerPos.x] = 2;
-            drawGrid();
+    function nextEapaStage() {
+        eapaStep++;
+        if (eapaStep < eapaStages.length) {
+            loadEapaStage();
+        } else {
+            document.getElementById('eapa-desc').innerText = "Parcours EAPA terminé avec brio !";
+            document.getElementById('eapa-icon').innerText = "🏆";
+            document.getElementById('eapa-action-zone').innerHTML = "";
+            setTimeout(() => showScreen('gift-screen'), 1000);
         }
     }
 
