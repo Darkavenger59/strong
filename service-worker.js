@@ -1,4 +1,4 @@
-const CACHE_NAME = 'genderV4';
+const CACHE_NAME = 'genderX4';
 const ASSETS = [
     '/',
     '/index.html',
