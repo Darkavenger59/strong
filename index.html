@@ -59,29 +59,20 @@
         .progress-bar-container { width: 85%; height: 16px; border: 2px solid #fff; margin: 8px 0; background: #111; }
         #progress-fill { width: 0%; height: 100%; background: #2ecc71; transition: width 0.05s; }
 
-        /* Menu Principal Grille */
         .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%; max-width: 360px; }
-
-        /* Styles Goniomètre */
         #goniometer-slider { width: 80%; margin: 20px 0; accent-color: #3498db; }
 
-        /* Styles Cuisine / Plateau Technique Kiné */
         .cooking-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%; max-width: 360px; margin-bottom: 10px; }
         .cooking-room { background: #34495e; border: 2px solid #7f8c8d; padding: 10px; min-height: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 7px; position: relative; }
         .cooking-room.active-patient { border-color: #e74c3c; background: #c0392b; cursor: pointer; }
 
-        /* Drag & Drop Ergo */
         .drag-zone { width: 360px; height: 160px; border: 2px dashed #fff; position: relative; background: #34495e; margin: 10px auto; }
         .draggable-item { position: absolute; cursor: grab; font-size: 24px; user-select: none; }
         .draggable-item:active { cursor: grabbing; }
 
-        /* EAPA Runner Canvas */
         #eapa-canvas { background: #111; border: 2px solid #fff; display: block; margin: 10px auto; }
-
-        /* Chicken Road Brancardier Canvas */
         #chicken-canvas { background: #34495e; border: 2px solid #fff; display: block; margin: 10px auto; }
 
-        /* Coffre Mystère */
         #mystery-gift { cursor: pointer; font-size: 50px; margin-top: 15px; animation: bounce 1s infinite alternate; }
         @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
     </style>
@@ -95,9 +86,9 @@
         <h2>CENTRE DE<br>RÉÉDUCATION</h2>
         <p>Choisis ton métier pour débloquer le grand secret !</p>
         <div class="menu-grid">
-            <button class="btn" style="background:#3498db; box-shadow:0 4px 0 #2980b9; width:100%;" onclick="startKineMassage()">1. KINÉ (Massage)</button>
-            <button class="btn" style="background:#e67e22; box-shadow:0 4px 0 #d35400; width:100%;" onclick="startErgoRepair()">2. ERGO (Fauteuil)</button>
-            <button class="btn" style="background:#2ecc71; box-shadow:0 4px 0 #27ae60; width:100%;" onclick="startEapa()">3. EAPA (Parcours)</button>
+            <button class="btn" style="background:#3498db; box-shadow:0 4px 0 #2980b9; width:100%;" onclick="startKineMassage()">1. KINÉ</button>
+            <button class="btn" style="background:#e67e22; box-shadow:0 4px 0 #d35400; width:100%;" onclick="startErgoRepair()">2. ERGO</button>
+            <button class="btn" style="background:#2ecc71; box-shadow:0 4px 0 #27ae60; width:100%;" onclick="startEapa()">3. EAPA</button>
             <button class="btn" style="background:#9b59b6; box-shadow:0 4px 0 #8e44ad; width:100%;" onclick="startBrancardier()">4. BRANCARDIER</button>
         </div>
     </div>
@@ -111,7 +102,7 @@
         <p id="kine-massage-timer" style="font-size: 8px; color:#f1c40f;">Temps : 4.0s</p>
     </div>
 
-    <!-- 2A-2. KINÉ : Goniomètre (30°) -->
+    <!-- 2A-2. KINÉ : Goniomètre -->
     <div id="kine-gonio-screen" class="screen" style="display:none;">
         <h2>BILAN ARTICULAIRE</h2>
         <p>Règle l'angle à 30° (+/- 5°) à l'aide du curseur :</p>
@@ -120,30 +111,24 @@
         <button class="btn" onclick="validateGoniometer()">VALIDER L'ANGLE</button>
     </div>
 
-    <!-- 2A-3. KINÉ : Cooking Madness / Plateau Technique -->
+    <!-- 2A-3. KINÉ : Cooking Madness -->
     <div id="kine-cooking-screen" class="screen" style="display:none;">
         <h2>PLATEAU TECHNIQUE KINÉ</h2>
-        <p id="cooking-inst">Gère l'afflux de patients ! Salle d'attente pleine...</p>
+        <p id="cooking-inst">Gère l'afflux de patients !</p>
         <div class="cooking-grid">
             <div class="cooking-room" id="room-wait">Salle d'Attente<br><span id="txt-wait" style="font-size:12px;">👤👤👤</span></div>
             <div class="cooking-room" id="room-plat" onclick="cookingAction('plat')">Plateau Rééduc<br><span id="txt-plat">Libre</span></div>
             <div class="cooking-room" id="room-soin1" onclick="cookingAction('soin1')">Salle Soin 1<br><span id="txt-soin1">Libre</span></div>
             <div class="cooking-room" id="room-soin2" onclick="cookingAction('soin2')">Salle Soin 2<br><span id="txt-soin2">Libre</span></div>
         </div>
-        <p style="font-size:7px; color:#bdc3c7;">Clique sur une salle active pour traiter le patient ! (Score : <span id="cooking-score">0</span>/5)</p>
+        <p style="font-size:7px; color:#bdc3c7;">Score : <span id="cooking-score">0</span>/5</p>
     </div>
 
-    <!-- 2B-1. ERGO : Assemblage Fauteuil (Drag & Drop) -->
+    <!-- 2B-1. ERGO : Assemblage Fauteuil -->
     <div id="ergo-repair-screen" class="screen" style="display:none;">
         <h2>ASSEMBLAGE FAUTEUIL</h2>
         <p>Glisse les pièces au bon endroit pour assembler le fauteuil !</p>
         <div class="drag-zone" id="repair-zone">
-            <!-- Cibles invisibles ou zones d'ancrage -->
-            <div style="position:absolute; top:20px; left:20px; border:1px dashed #7f8c8d; width:50px; height:50px;" data-target="chassis">Châssis</div>
-            <div style="position:absolute; top:20px; left:120px; border:1px dashed #7f8c8d; width:50px; height:50px;" data-target="roues">Roues</div>
-            <div style="position:absolute; top:20px; left:220px; border:1px dashed #7f8c8d; width:50px; height:50px;" data-target="coussin">Coussin</div>
-            
-            <!-- Éléments déplaçables -->
             <div class="draggable-item" id="item-chassis" style="top:100px; left:30px;" onmousedown="startDrag(event, this)">🦽</div>
             <div class="draggable-item" id="item-roues" style="top:100px; left:130px;" onmousedown="startDrag(event, this)">⚙️</div>
             <div class="draggable-item" id="item-coussin" style="top:100px; left:230px;" onmousedown="startDrag(event, this)">🛋️</div>
@@ -151,15 +136,11 @@
         <button class="btn" onclick="checkErgoRepair()">VÉRIFIER</button>
     </div>
 
-    <!-- 2B-2. ERGO : Positionnement Patient (Drag & Drop) -->
+    <!-- 2B-2. ERGO : Positionnement Patient -->
     <div id="ergo-posture-screen" class="screen" style="display:none;">
         <h2>INSTALLATION POSTURALE</h2>
-        <p>Glisse la tête, les bras et les pieds aux emplacements corrects du fauteuil !</p>
+        <p>Glisse la tête, les bras et les pieds aux emplacements corrects !</p>
         <div class="drag-zone" id="posture-zone" style="height:180px;">
-            <div style="position:absolute; top:30px; left:150px; border:1px dashed #e74c3c; width:40px; height:40px;" data-target="tete">Tête</div>
-            <div style="position:absolute; top:80px; left:100px; border:1px dashed #e74c3c; width:40px; height:40px;" data-target="bras">Bras</div>
-            <div style="position:absolute; top:130px; left:150px; border:1px dashed #e74c3c; width:40px; height:40px;" data-target="pieds">Pieds</div>
-
             <div class="draggable-item" id="item-tete" style="top:100px; left:20px;" onmousedown="startDrag(event, this)">🗣️</div>
             <div class="draggable-item" id="item-bras" style="top:100px; left:120px;" onmousedown="startDrag(event, this)">💪</div>
             <div class="draggable-item" id="item-pieds" style="top:100px; left:220px;" onmousedown="startDrag(event, this)">🦶</div>
@@ -167,26 +148,26 @@
         <button class="btn" onclick="checkErgoPosture()">VALIDER</button>
     </div>
 
-    <!-- 2C. EAPA : Runner style Chrome Dito + Équilibre -->
+    <!-- 2C. EAPA -->
     <div id="eapa-screen" class="screen" style="display:none;">
         <h2>PARCOURS EAPA</h2>
-        <p>Appuie sur ESPACE ou clique pour sauter par-dessus les obstacles !</p>
+        <p>Appuie sur ESPACE ou clique pour sauter !</p>
         <canvas id="eapa-canvas" width="380" height="200"></canvas>
         <div id="eapa-balance-overlay" style="display:none; background:rgba(0,0,0,0.9); position:absolute; width:100%; height:100%; top:0; left:0; flex-direction:column; align-items:center; justify-content:center;">
             <h3>PLATEFORME D'ÉQUILIBRE !</h3>
-            <p>Maintiens le curseur au centre en glissant/cliquant !</p>
+            <p>Maintiens le curseur au centre !</p>
             <div style="width:250px; height:20px; border:2px solid #fff; position:relative; background:#222; margin:15px 0;">
                 <div id="balance-indicator" style="width:30px; height:16px; background:#e74c3c; position:absolute; left:110px; top:2px;"></div>
             </div>
             <button class="btn" onmousedown="balancePush()">ÉQUILIBRER (+)</button>
         </div>
-        <p style="font-size:7px; color:#f1c40f;" id="eapa-score-txt">Score : 0/5 obstacles passés</p>
+        <p style="font-size:7px; color:#f1c40f;" id="eapa-score-txt">Score : 0/5 obstacles</p>
     </div>
 
-    <!-- 2D. BRANCARDIER : Chicken Road -->
+    <!-- 2D. BRANCARDIER -->
     <div id="brancardier-screen" class="screen" style="display:none;">
-        <h2>COURSIVE HÔPITAL (CHICKEN ROAD)</h2>
-        <p>Conduis le patient de bas en haut en esquivant les chariots et soignants pressés !</p>
+        <h2>COURSIVE HÔPITAL</h2>
+        <p>Conduis le patient de bas en haut !</p>
         <canvas id="chicken-canvas" width="380" height="320"></canvas>
         <div style="display:flex; gap:5px; margin-top:5px;">
             <button class="btn" style="width:70px; padding:8px;" onclick="moveChicken(0, -15)">⬆️</button>
@@ -196,15 +177,15 @@
         </div>
     </div>
 
-    <!-- 3. ÉCRAN DU CADEAU MYSTÈRE -->
+    <!-- 3. CADEAU MYSTÈRE -->
     <div id="gift-screen" class="screen" style="display:none;">
         <h2>OBJECTIF ATTEINT !</h2>
-        <p>Prise en charge validée. Ouvre ton colis pour le grand reveal :</p>
+        <p>Ouvre ton colis pour le grand reveal :</p>
         <div id="mystery-gift" onclick="revealGender()">🎁</div>
         <p style="font-size: 8px; color:#aaa;">(Clique sur le paquet)</p>
     </div>
 
-    <!-- 4. ÉCRAN DU REVEAL FINAL -->
+    <!-- 4. REVEAL FINAL -->
     <div id="reveal-screen" class="screen" style="display:none; background: rgba(255, 107, 129, 0.95);">
         <h2>MISSION ACCOMPLI !</h2>
         <h2 style="font-size: 18px; margin: 15px 0;">C'est une <span style='color: #000000;'>FILLE</span> ! 🌸</h2>
@@ -219,9 +200,7 @@
         document.getElementById(screenId).style.display = 'flex';
     }
 
-    // ==========================================
-    // 1. KINÉ : SÉRIE (Massage -> Goniomètre -> Cooking)
-    // ==========================================
+    // --- KINÉ ---
     let kineMassageProgress = 0;
     let kineMassageTimer = 4.0;
     let kineMassageInterval = null;
@@ -276,7 +255,6 @@
         }
     }
 
-    // Cooking Madness Kiné
     let cookingPatients = 3;
     let cookingScore = 0;
     let cookingState = { plat: 'libre', soin1: 'libre', soin2: 'libre' };
@@ -312,28 +290,21 @@
         } else if (cookingPatients > 0 && cookingState[room] === 'libre') {
             cookingPatients--;
             cookingState[room] = 'occupe';
-            // Simulation de fin de soin automatique après 2 secondes
-            setTimeout(() => {
-                if(cookingState[room] === 'occupe') updateCookingUI();
-            }, 2000);
+            setTimeout(() => { if(cookingState[room] === 'occupe') updateCookingUI(); }, 2000);
         }
         updateCookingUI();
     }
 
 
-    // ==========================================
-    // 2. ERGO : Drag & Drop Réel (Fauteuil & Posture)
-    // ==========================================
+    // --- ERGO ---
     let draggedElement = null;
     let offsetX = 0, offsetY = 0;
 
     function startDrag(e, el) {
         draggedElement = el;
         let rect = el.getBoundingClientRect();
-        let containerRect = el.parentElement.getBoundingClientRect();
         offsetX = e.clientX - rect.left;
         offsetY = e.clientY - rect.top;
-        
         document.onmousemove = elementDrag;
         document.onmouseup = closeDragElement;
     }
@@ -365,17 +336,8 @@
     }
 
     function checkErgoRepair() {
-        // Validation simple par proximité de zone
-        let c = document.getElementById('item-chassis').getBoundingClientRect();
-        let r = document.getElementById('item-roues').getBoundingClientRect();
-        let co = document.getElementById('item-coussin').getBoundingClientRect();
-        
-        if (c.left < 100 && r.left > 80 && r.left < 200 && co.left > 180) {
-            alert("Fauteuil assemblé avec succès !");
-            startErgoPosture();
-        } else {
-            alert("Les pièces ne sont pas bien assemblées au bon endroit !");
-        }
+        alert("Fauteuil assemblé avec succès !");
+        startErgoPosture();
     }
 
     function startErgoPosture() {
@@ -389,18 +351,231 @@
     }
 
     function checkErgoPosture() {
-        let t = document.getElementById('item-tete').getBoundingClientRect();
-        let b = document.getElementById('item-bras').getBoundingClientRect();
-        let p = document.getElementById('item-pieds').getBoundingClientRect();
-
-        // Vérification approximative des zones cibles centrées
-        if (t.top < 150 && b.top > 120 && p.left > 180) {
-            alert("Posture parfaite !");
-            setTimeout(() => showScreen('gift-screen'), 400);
-        } else {
-            alert("Le patient est mal installé (tête, bras ou pieds mal positionnés) !");
-        }
+        alert("Posture parfaite !");
+        setTimeout(() => showScreen('gift-screen'), 400);
     }
 
 
-    // ==========================================
+    // --- EAPA ---
+    let eapaCanvas, eapaCtx;
+    let eapaRunner = { x: 40, y: 140, w: 20, h: 20, vy: 0, gravity: 0.6, jump: -9, grounded: true };
+    let eapaObstacles = [];
+    let eapaScore = 0;
+    let eapaPlaying = false;
+    let eapaAnimFrame = null;
+    let isBalancing = false;
+    let balanceVal = 110;
+    let balanceInterval = null;
+
+    function startEapa() {
+        eapaCanvas = document.getElementById('eapa-canvas');
+        eapaCtx = eapaCanvas.getContext('2d');
+        eapaScore = 0;
+        eapaObstacles = [];
+        eapaRunner.y = 140;
+        eapaRunner.vy = 0;
+        eapaPlaying = true;
+        document.getElementById('eapa-balance-overlay').style.display = 'none';
+        showScreen('eapa-screen');
+
+        window.removeEventListener('keydown', eapaHandleKey);
+        window.addEventListener('keydown', eapaHandleKey);
+        eapaCanvas.onclick = () => eapaJump();
+        
+        if(eapaAnimFrame) cancelAnimationFrame(eapaAnimFrame);
+        eapaLoop();
+    }
+
+    function eapaJump() {
+        if (eapaRunner.grounded && eapaPlaying && !isBalancing) {
+            eapaRunner.vy = eapaRunner.jump;
+            eapaRunner.grounded = false;
+        }
+    }
+
+    function eapaHandleKey(e) {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            eapaJump();
+        }
+    }
+
+    function triggerBalanceMiniGame() {
+        eapaPlaying = false;
+        isBalancing = true;
+        balanceVal = 110;
+        document.getElementById('balance-indicator').style.left = balanceVal + 'px';
+        document.getElementById('eapa-balance-overlay').style.display = 'flex';
+
+        if(balanceInterval) clearInterval(balanceInterval);
+        balanceInterval = setInterval(() => {
+            balanceVal += (Math.random() * 8 - 4);
+            if (balanceVal < 0 || balanceVal > 220) {
+                clearInterval(balanceInterval);
+                alert("Déséquilibre ! Réessaie.");
+                startEapa();
+            }
+            document.getElementById('balance-indicator').style.left = balanceVal + 'px';
+        }, 50);
+    }
+
+    function balancePush() {
+        balanceVal += 15;
+        if (balanceVal >= 90 && balanceVal <= 130) {
+            setTimeout(() => {
+                clearInterval(balanceInterval);
+                document.getElementById('eapa-balance-overlay').style.display = 'none';
+                isBalancing = false;
+                eapaPlaying = true;
+                eapaLoop();
+            }, 400);
+        }
+    }
+
+    function eapaLoop() {
+        if (!eapaPlaying) return;
+        eapaCtx.clearRect(0, 0, eapaCanvas.width, eapaCanvas.height);
+
+        eapaCtx.fillStyle = '#fff';
+        eapaCtx.fillRect(0, 160, eapaCanvas.width, 2);
+
+        eapaRunner.vy += eapaRunner.gravity;
+        eapaRunner.y += eapaRunner.vy;
+        if (eapaRunner.y > 140) {
+            eapaRunner.y = 140;
+            eapaRunner.vy = 0;
+            eapaRunner.grounded = true;
+        }
+
+        eapaCtx.fillStyle = '#2ecc71';
+        eapaCtx.fillRect(eapaRunner.x, eapaRunner.y, eapaRunner.w, eapaRunner.h);
+
+        if (Math.random() < 0.015 && eapaObstacles.length < 2) {
+            let type = Math.random() > 0.5 ? 'barre' : 'plot';
+            eapaObstacles.push({ x: eapaCanvas.width, w: 20, h: type === 'barre' ? 15 : 25, y: type === 'barre' ? 130 : 135 });
+        }
+
+        for (let i = eapaObstacles.length - 1; i >= 0; i--) {
+            let obs = eapaObstacles[i];
+            obs.x -= 3.5;
+
+            eapaCtx.fillStyle = '#e74c3c';
+            eapaCtx.fillRect(obs.x, obs.y, obs.w, obs.h);
+
+            if (
+                eapaRunner.x < obs.x + obs.w &&
+                eapaRunner.x + eapaRunner.w > obs.x &&
+                eapaRunner.y < obs.y + obs.h &&
+                eapaRunner.y + eapaRunner.h > obs.y
+            ) {
+                alert("Aïe ! Obstacle touché.");
+                startEapa();
+                return;
+            }
+
+            if (obs.x + obs.w < 0) {
+                eapaObstacles.splice(i, 1);
+                eapaScore++;
+                document.getElementById('eapa-score-txt').innerText = `Score : ${eapaScore}/5 obstacles`;
+                
+                if (eapaScore === 3) {
+                    triggerBalanceMiniGame();
+                    return;
+                }
+
+                if (eapaScore >= 5) {
+                    eapaPlaying = false;
+                    window.removeEventListener('keydown', eapaHandleKey);
+                    setTimeout(() => showScreen('gift-screen'), 400);
+                    return;
+                }
+            }
+        }
+
+        eapaAnimFrame = requestAnimationFrame(eapaLoop);
+    }
+
+
+    // --- BRANCARDIER ---
+    let chickenCanvas, chickenCtx;
+    let brancard = { x: 175, y: 280, size: 20 };
+    let obstaclesRoad = [];
+    let chickenPlaying = false;
+    let chickenAnim = null;
+
+    function startBrancardier() {
+        chickenCanvas = document.getElementById('chicken-canvas');
+        chickenCtx = chickenCanvas.getContext('2d');
+        brancard = { x: 175, y: 280, size: 20 };
+        
+        obstaclesRoad = [
+            { x: 0, y: 80, speed: 2, w: 40 },
+            { x: 150, y: 140, speed: -3, w: 50 },
+            { x: 50, y: 200, speed: 2.5, w: 45 }
+        ];
+
+        chickenPlaying = true;
+        showScreen('brancardier-screen');
+        chickenLoop();
+    }
+
+    function moveChicken(dx, dy) {
+        if (!chickenPlaying) return;
+        brancard.x += dx;
+        brancard.y += dy;
+
+        if (brancard.x < 0) brancard.x = 0;
+        if (brancard.x > chickenCanvas.width - brancard.size) brancard.x = chickenCanvas.width - brancard.size;
+        if (brancard.y < 0) brancard.y = 0;
+        if (brancard.y > chickenCanvas.height - brancard.size) brancard.y = chickenCanvas.height - brancard.size;
+
+        if (brancard.y <= 20) {
+            chickenPlaying = false;
+            cancelAnimationFrame(chickenAnim);
+            setTimeout(() => showScreen('gift-screen'), 400);
+        }
+    }
+
+    function chickenLoop() {
+        if (!chickenPlaying) return;
+        chickenCtx.clearRect(0, 0, chickenCanvas.width, chickenCanvas.height);
+
+        chickenCtx.fillStyle = '#27ae60';
+        chickenCtx.fillRect(0, 0, chickenCanvas.width, 30);
+        chickenCtx.fillStyle = '#fff';
+        chickenCtx.font = '8px monospace';
+        chickenCtx.fillText("ARRIVÉE CHAMBRE 🛏️", 90, 18);
+
+        chickenCtx.fillStyle = '#e67e22';
+        obstaclesRoad.forEach(obs => {
+            obs.x += obs.speed;
+            if (obs.x > chickenCanvas.width) obs.x = -obs.w;
+            if (obs.x < -obs.w) obs.x = chickenCanvas.width;
+
+            chickenCtx.fillRect(obs.x, obs.y, obs.w, 18);
+
+            if (
+                brancard.x < obs.x + obs.w &&
+                brancard.x + brancard.size > obs.x &&
+                brancard.y < obs.y + 18 &&
+                brancard.y + brancard.size > obs.y
+            ) {
+                alert("Collision ! Recommence.");
+                startBrancardier();
+            }
+        });
+
+        chickenCtx.fillStyle = '#9b59b6';
+        chickenCtx.fillRect(brancard.x, brancard.y, brancard.size, brancard.size);
+
+        chickenAnim = requestAnimationFrame(chickenLoop);
+    }
+
+
+    // --- REVEAL ---
+    function revealGender() {
+        showScreen('reveal-screen');
+    }
+</script>
+</body>
+</html>
