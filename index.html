@@ -102,7 +102,7 @@
         <button class="btn" onclick="validateClassicGoniometer()">VALIDER L'ANGLE</button>
     </div>
 
-    <!-- 2A-3. KINÉ : 8 Boxs Haute Tension (Temps Aléatoires) -->
+    <!-- 2A-3. KINÉ : Plateau Technique (8 Boxs) -->
     <div id="kine-cooking-screen" class="screen" style="display:none;">
         <h2>PLATEAU 8 BOXS (HARDCORE)</h2>
         <p>Libère en < 1.5s dès que c'est prêt !</p>
@@ -159,7 +159,7 @@
         <p style="font-size:7px; color:#f1c40f;" id="ball-score">Trous validés : 0/3</p>
     </div>
 
-    <!-- 2D. BRANCARDIER : Hardcore Racing + Dating -->
+    <!-- 2D. BRANCARDIER -->
     <div id="brancardier-screen" class="screen" style="display:none;">
         <h2>COURSIVE RACING ZIG-ZAG</h2>
         <p>Évite les murs en zigzaguant !</p>
@@ -296,12 +296,12 @@
 
                 if(box.p) {
                     if(!box.p.ready) {
-                        box.p.progress += box.p.speed; // Vitesse de soin aléatoire
+                        box.p.progress += box.p.speed;
                         if(box.p.progress >= 100) { box.p.ready = true; box.p.overdueTime = Date.now(); }
                         ctx.fillStyle='#f1c40f'; ctx.fillRect(bx+10, by+60, box.p.progress * 0.65, 8);
                     } else {
                         let elapsed = Date.now() - box.p.overdueTime;
-                        if(elapsed > 1500) { // Tolérance de 1.5s
+                        if(elapsed > 1500) {
                             stopAllLoops();
                             alert("Temps écoulé pour libérer la box ! Jeu perdu.");
                             startKineCooking();
@@ -310,7 +310,6 @@
                         ctx.fillStyle='#fff'; ctx.fillText("VITE ! LIBR", bx+5, by+50);
                     }
                 } else if(patientsQ > 0) {
-                    // Temps de soin aléatoire et un peu plus long (vitesse entre 0.4 et 1.0)
                     box.p = { progress: 0, ready: false, overdueTime: 0, speed: Math.random() * 0.6 + 0.4 };
                     patientsQ--;
                 }
@@ -426,8 +425,7 @@
             };
         });
     }
-
-    // --- 3. EAPA ---
+// --- 3. EAPA ---
     function startEapaTempleRun() {
         showScreen('eapa-runner-screen');
         let c = document.getElementById('eapa-temple-canvas'), ctx = c.getContext('2d');
@@ -536,6 +534,7 @@
                     if(rX < o.gapX || rX + 30 > o.gapX + 60) {
                         rPlaying = false;
                         stopAllLoops();
+                        rY = 320; // Réinitialise la position en sécurité avant l'alerte
                         alert("Mur percuté ! Retour au départ de la coursive.");
                         startBrancardier();
                         return;
@@ -588,3 +587,4 @@
 </script>
 </body>
 </html>
+    
