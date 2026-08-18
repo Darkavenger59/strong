@@ -94,7 +94,7 @@
         <p style="font-size:7px; color:#f1c40f;">Progression : <span id="swipe-count">0</span>%</p>
     </div>
 
-    <!-- 2A-2. KINÉ : Vrai Goniomètre classique (centre en bas) -->
+    <!-- 2A-2. KINÉ : Goniomètre classique -->
     <div id="kine-gonio-screen" class="screen" style="display:none;">
         <h2>GONIOMÈTRE CLASSIQUE</h2>
         <p>Ajuste l'angle à 30° depuis le pivot inférieur !</p>
@@ -102,15 +102,15 @@
         <button class="btn" onclick="validateClassicGoniometer()">VALIDER L'ANGLE</button>
     </div>
 
-    <!-- 2A-3. KINÉ : Cabinet temps variables -->
+    <!-- 2A-3. KINÉ : 8 Boxs Haute Tension (1s max pour libérer) -->
     <div id="kine-cooking-screen" class="screen" style="display:none;">
-        <h2>PLATEAU TECHNIQUE ASYNCHRONE</h2>
-        <p>Gère les temps de soins variables !</p>
-        <canvas id="cooking-canvas" width="380" height="280"></canvas>
-        <p style="font-size:7px; color:#f1c40f;">Guéris : <span id="cook-score">0</span>/8</p>
+        <h2>PLATEAU 8 BOXS (HARDCORE)</h2>
+        <p>Libère en < 1s dès que c'est prêt sinon PERDU !</p>
+        <canvas id="cooking-canvas" width="400" height="340"></canvas>
+        <p style="font-size:7px; color:#f1c40f;">Guéris : <span id="cook-score">0</span>/15</p>
     </div>
 
-    <!-- 2B-1. ERGO : Réparation 1 (Première fois) -->
+    <!-- 2B-1. ERGO : Réparation 1 -->
     <div id="ergo-repair1-screen" class="screen" style="display:none;">
         <h2>RÉPARATION FAUTEUIL (1/2)</h2>
         <p>Assemble les pièces pour réparer le fauteuil !</p>
@@ -125,12 +125,12 @@
 
     <!-- 2B-2. ERGO : Labyrinthe étroit -->
     <div id="ergo-maze-screen" class="screen" style="display:none;">
-        <h2>LABYRINTHIQUE DE DEXTÉRITÉ</h2>
+        <h2>LABYRINTHE DE DEXTÉRITÉ</h2>
         <p>Guide ton doigt du VERT vers le BLEU sans toucher les murs noirs !</p>
         <canvas id="maze-canvas" width="380" height="320"></canvas>
     </div>
 
-    <!-- 2B-3. ERGO : Re-réparation (Deuxième fois) -->
+    <!-- 2B-3. ERGO : Re-réparation -->
     <div id="ergo-repair2-screen" class="screen" style="display:none;">
         <h2>RE-RÉPARATION DU FAUTEUIL (2/2)</h2>
         <p>Remets les pièces en place après le parcours !</p>
@@ -143,7 +143,7 @@
         <button class="btn" onclick="checkErgoAssembly2()">VALIDER</button>
     </div>
 
-    <!-- 2C-1. EAPA : Temple Run -->
+    <!-- 2C-1. EAPA : Temple Run vitesse stable -->
     <div id="eapa-runner-screen" class="screen" style="display:none;">
         <h2>TEMPLE RUN : EAPA</h2>
         <p>Swipe ou clique GAUCHE / DROITE !</p>
@@ -151,7 +151,7 @@
         <p style="font-size:7px; color:#f1c40f;" id="eapa-temple-score">Ballons : 0/8</p>
     </div>
 
-    <!-- 2C-2. EAPA : Balle à déplacer dans les trous -->
+    <!-- 2C-2. EAPA : Balle dans les trous -->
     <div id="eapa-ball-screen" class="screen" style="display:none;">
         <h2>PROPRIOCEPTION : GUIDAGE DE BALLE</h2>
         <p>Amène la balle dans les 3 trous successifs !</p>
@@ -159,14 +159,14 @@
         <p style="font-size:7px; color:#f1c40f;" id="ball-score">Trous validés : 0/3</p>
     </div>
 
-    <!-- 2D. BRANCARDIER : Hardcore Racing + Dating -->
+    <!-- 2D. BRANCARDIER : Racing zig-zag obligatoire + Dating avec rebouclage en cas d'échec -->
     <div id="brancardier-screen" class="screen" style="display:none;">
-        <h2>COURSIVE RACING HARDCORE</h2>
-        <p>Évite le trafic dense !</p>
+        <h2>COURSIVE RACING ZIG-ZAG</h2>
+        <p>Impossible de tout faire tout droit !</p>
         <canvas id="racing-canvas" width="320" height="380"></canvas>
         <div style="display:flex; gap:10px; margin-top:5px;">
-            <button class="btn" style="width:90px;" onclick="racingMove(-35)">⬅️</button>
-            <button class="btn" style="width:90px;" onclick="racingMove(35)">➡️</button>
+            <button class="btn" style="width:90px;" onclick="racingMove(-45)">⬅️</button>
+            <button class="btn" style="width:90px;" onclick="racingMove(45)">➡️</button>
         </div>
     </div>
 
@@ -258,59 +258,76 @@
         else alert("Angle incorrect ! Vise 30°.");
     }
 
-    let cookScore = 0, patientsQ = 12, cRooms = [{name:"Soin A", p:null}, {name:"Soin B", p:null}];
+    // 8 Boxs Haute Tension (1s max pour libérer, 15 patients)
+    let cookScore = 0, patientsQ = 20, cBoxes = [];
     function startKineCooking() {
-        cookScore = 0; patientsQ = 12; cRooms.forEach(r => r.p = null);
+        cookScore = 0; patientsQ = 20; cBoxes = [];
+        for(let i=0; i<8; i++) cBoxes.push({id: i, p: null});
         showScreen('kine-cooking-screen');
         let canvas = document.getElementById('cooking-canvas'), ctx = canvas.getContext('2d');
+        
         let loop = () => {
             if(document.getElementById('kine-cooking-screen').style.display === 'none') return;
-            ctx.clearRect(0,0,380,280);
-            ctx.fillStyle='#fff'; ctx.fillText(`File d'attente : ${patientsQ}`, 20, 20);
+            ctx.clearRect(0,0,400,340);
+            ctx.fillStyle='#fff'; ctx.font='8px monospace'; ctx.fillText(`File d'attente : ${patientsQ}`, 15, 20);
 
-            cRooms.forEach((r, i) => {
-                let rx = 40 + i * 160;
-                ctx.fillStyle = r.p ? (r.p.ready ? '#27ae60' : '#c0392b') : '#34495e';
-                ctx.fillRect(rx, 60, 120, 100);
-                ctx.strokeRect(rx, 60, 120, 100);
-                ctx.fillStyle='#fff'; ctx.fillText(r.name, rx+10, rx+85);
-                
-                if(r.p) {
-                    r.p.progress += 0.25 / r.p.speed;
-                    if(r.p.progress >= 100) r.p.ready = true;
-                    ctx.fillStyle='#f1c40f'; ctx.fillRect(rx+10, 130, Math.min(100, r.p.progress), 10);
-                    if(r.p.ready) { ctx.fillStyle='#fff'; ctx.fillText("LIBÉRER !", rx+20, 110); }
+            cBoxes.forEach((box, i) => {
+                let bx = (i % 4) * 95 + 15;
+                let by = Math.floor(i / 4) * 110 + 40;
+
+                ctx.fillStyle = box.p ? (box.p.ready ? (box.p.overdue ? '#e74c3c' : '#27ae60') : '#c0392b') : '#34495e';
+                ctx.fillRect(bx, by, 85, 95);
+                ctx.strokeRect(bx, by, 85, 95);
+
+                ctx.fillStyle='#fff'; ctx.fillText(`Box ${i+1}`, bx+5, by+15);
+
+                if(box.p) {
+                    if(!box.p.ready) {
+                        box.p.progress += 1.5;
+                        if(box.p.progress >= 100) { box.p.ready = true; box.p.overdueTime = Date.now(); }
+                        ctx.fillStyle='#f1c40f'; ctx.fillRect(bx+10, by+60, box.p.progress * 0.65, 8);
+                    } else {
+                        // S'il est prêt, max 1 seconde (1000ms) pour cliquer
+                        let elapsed = Date.now() - box.p.overdueTime;
+                        if(elapsed > 1000) {
+                            alert("Temps écoulé (>1s) pour libérer la box ! Jeu perdu.");
+                            startKineCooking();
+                            return;
+                        }
+                        ctx.fillStyle='#fff'; ctx.fillText("VITE ! LIBR", bx+5, by+50);
+                    }
                 } else if(patientsQ > 0) {
-                    r.p = { progress: 0, ready: false, speed: Math.random() * 1.5 + 0.5 };
+                    box.p = { progress: 0, ready: false, overdueTime: 0 };
                     patientsQ--;
                 }
             });
             requestAnimationFrame(loop);
         };
         loop();
+
         canvas.onclick = (e) => {
             let r = canvas.getBoundingClientRect();
-            let mx = e.clientX - r.left;
-            cRooms.forEach((room, i) => {
-                let rx = 40 + i * 160;
-                if(mx >= rx && mx <= rx+120 && room.p && room.p.ready) {
-                    room.p = null; cookScore++;
-                    document.getElementById('cook-score').innerText = cookScore;
-                    if(cookScore >= 8) setTimeout(() => showScreen('gift-screen'), 400);
+            let mx = e.clientX - r.left, my = e.clientY - r.top;
+            cBoxes.forEach((box, i) => {
+                let bx = (i % 4) * 95 + 15;
+                let by = Math.floor(i / 4) * 110 + 40;
+                if(mx >= bx && mx <= bx+85 && my >= by && my <= by+95) {
+                    if(box.p && box.p.ready) {
+                        box.p = null; cookScore++;
+                        document.getElementById('cook-score').innerText = cookScore;
+                        if(cookScore >= 15) setTimeout(() => showScreen('gift-screen'), 400);
+                    }
                 }
             });
         };
     }
 
-    // --- 2. ERGO : Réparation 1 -> Labyrinthe -> Réparation 2 ---
+    // --- 2. ERGO ---
     function startErgoRepair1() {
         showScreen('ergo-repair1-screen');
         setupWorkbench('workbench1', ['part-wheel1-1', 'part-wheel2-1', 'part-cushion1']);
     }
-    function checkErgoAssembly1() {
-        alert("Fauteuil assemblé avec succès ! Passage au labyrinthe.");
-        startErgoMaze();
-    }
+    function checkErgoAssembly1() { alert("Fauteuil assemblé !"); startErgoMaze(); }
 
     let mazePlaying = false, mX = 30, mY = 50;
     function startErgoMaze() {
@@ -369,7 +386,7 @@
         setupWorkbench('workbench2', ['part-wheel1-2', 'part-wheel2-2', 'part-cushion2']);
     }
     function checkErgoAssembly2() {
-        alert("Re-réparation effectuée avec succès !");
+        alert("Re-réparation effectuée !");
         setTimeout(() => showScreen('gift-screen'), 400);
     }
 
@@ -392,7 +409,7 @@
         });
     }
 
-        // --- 3. EAPA (Reset au début en cas d'échec) ---
+    // --- 3. EAPA (Vitesse fixe, réinitialisation complète) ---
     let tLane = 1, tScore = 0, tRunning = false, eapaObstacles = [];
     function startEapaTempleRun() {
         showScreen('eapa-runner-screen');
@@ -422,7 +439,7 @@
 
             if(Math.random() < 0.025) eapaObstacles.push({lane: Math.floor(Math.random()*3), y: -40, type: Math.random()>0.4?'plot':'ballon'});
             eapaObstacles.forEach((o, index) => {
-                o.y += 5;
+                o.y += 4; // Vitesse strictement fixe et constante
                 let oX = 50 + o.lane * 100;
                 ctx.fillStyle = o.type === 'plot' ? '#e74c3c' : '#3498db';
                 ctx.fillRect(oX - 10, o.y, 20, 20);
@@ -430,8 +447,8 @@
                 if(o.y > 300 && o.y < 340 && o.lane === tLane) {
                     if(o.type === 'plot') {
                         tRunning = false;
-                        alert("Plot touché ! Retour au début du parcours.");
-                        startEapaTempleRun(); // Relance à zéro
+                        alert("Plot touché ! Retour au début.");
+                        startEapaTempleRun();
                         return;
                     } else {
                         eapaObstacles.splice(index, 1);
@@ -475,29 +492,43 @@
         loop();
     }
 
-    // --- 4. BRANCARDIER (Reset complet au début en cas de collision) ---
+    // --- 4. BRANCARDIER (Zig-zag obligatoire, pas de tout-droit gagnant, re-drague en cas d'échec) ---
     let rX = 140, rY = 320, rPlaying = false;
     function startBrancardier() {
         showScreen('brancardier-screen');
         let c = document.getElementById('racing-canvas'), ctx = c.getContext('2d');
         rX = 140; rY = 320; rPlaying = true;
-        let roadObs = [{x: 30, y: 50, s: 3}, {x: 200, y: 150, s: -3.5}, {x: 80, y: 250, s: 3}];
+        // Obstacles qui barrent la route sur toute la largeur avec un trou unique à trouver
+        let roadObs = [
+            {y: 60, gapX: 40, w: 240},
+            {y: 140, gapX: 120, w: 220},
+            {y: 220, gapX: 80, w: 230}
+        ];
 
         let loop = () => {
             if(!rPlaying) return;
             ctx.clearRect(0,0,320,380);
-            roadObs.forEach(o => {
-                o.y += 3;
-                if(o.y > 380) o.y = -40;
-                ctx.fillStyle = '#e67e22'; ctx.fillRect(o.x, o.y, 50, 18);
 
-                if(rX < o.x + 50 && rX + 30 > o.x && rY < o.y + 18 && rY + 35 > o.y) {
-                    rPlaying = false;
-                    alert("Collision ! Retour au départ de la coursive.");
-                    startBrancardier(); // Relance à zéro de la course
-                    return;
+            roadObs.forEach(o => {
+                o.y += 2.5;
+                if(o.y > 380) o.y = -40;
+
+                // Dessin du mur avec un trou (impossible de passer tout droit)
+                ctx.fillStyle = '#e67e22';
+                ctx.fillRect(15, o.y, o.gapX - 15, 18); // Partie gauche
+                ctx.fillRect(o.gapX + 60, o.y, 305 - (o.gapX + 60), 18); // Partie droite
+
+                // Collision si on tape les murs
+                if(rY < o.y + 18 && rY + 35 > o.y) {
+                    if(rX < o.gapX || rX + 30 > o.gapX + 60) {
+                        rPlaying = false;
+                        alert("Mur percuté ! Impossible de passer tout droit. Retour au départ.");
+                        startBrancardier();
+                        return;
+                    }
                 }
             });
+
             ctx.fillStyle = '#9b59b6'; ctx.fillRect(rX, rY, 30, 35);
             rY -= 0.3;
             if(rY <= 15) { rPlaying = false; startSpeedDating(); return; }
@@ -511,21 +542,32 @@
     const datingStages = [
         { q: "Tu croises la collègue dans le couloir :", choices: [{text:`"T'as une belle posture."`, pts:-1, msg:"Malaise... -1pt"}, {text:`"On pousse ensemble ?"`, pts:1, msg:"Sourire ! +1pt"}] },
         { q: "À la cafet' :", choices: [{text:`"Un café serré."`, pts:1, msg:"Bien joué ! +1pt"}, {text:`"Je préfère rester seul."`, pts:-1, msg:"Aïe... -1pt"}] },
-        { q: "Devant le bloc :", choices: [{text:`"Tu veux sauver des vies ?"`, pts:2, msg:"Coup de foudre ! ❤️"}, {text:`"À plus."`, pts:-2, msg:"Échec !"}] }
+        { q: "Devant le bloc :", choices: [{text:`"Tu veux sauver des vies ?"`, pts:2, msg:"Coup de foudre ! ❤️"}, {text:`"À plus."`, pts:-2, msg:"Échec critique !"}] }
     ];
     function startSpeedDating() {
         datingStep = 0; datingScore = 0;
         showScreen('dating-screen'); loadDatingStage();
     }
     function loadDatingStage() {
-        if(datingStep >= datingStages.length || datingScore >= 3) { setTimeout(() => showScreen('gift-screen'), 400); return; }
+        if(datingScore >= 3) { setTimeout(() => showScreen('gift-screen'), 400); return; }
+        if(datingStep >= datingStages.length) {
+            alert("Échec de la séduction ! Recommence le speed-dating.");
+            startSpeedDating(); // Re-draguer depuis le début en cas d'échec global
+            return;
+        }
         let stage = datingStages[datingStep];
         document.getElementById('dating-question').innerText = stage.q;
         document.getElementById('dating-score').innerText = datingScore;
         let container = document.getElementById('dating-choices'); container.innerHTML = '';
         stage.choices.forEach(ch => {
             let btn = document.createElement('button'); btn.className = 'btn'; btn.style.width = '100%'; btn.innerText = ch.text;
-            btn.onclick = () => { datingScore += ch.pts; alert(ch.msg); datingStep++; loadDatingStage(); };
+            btn.onclick = () => {
+                datingScore += ch.pts;
+                if(datingScore < 0) datingScore = 0;
+                alert(ch.msg);
+                datingStep++;
+                loadDatingStage();
+            };
             container.appendChild(btn);
         });
     }
