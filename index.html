@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL_ROOT // DEPLOY</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <title>WOD : THE REVEAL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #050505;
-            color: #0f0;
-            font-family: 'VT323', monospace;
+            background-color: #121212;
+            color: #fff;
+            font-family: 'Roboto', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -21,33 +21,31 @@
             -webkit-user-select: none;
         }
 
-        /* Effet d'écran cathodique (CRT) superposé */
-        body::after {
-            content: " ";
-            display: block;
+        /* Effet "Grit" (grain léger de salle de sport) */
+        body::before {
+            content: "";
             position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 999;
-            background-size: 100% 3px, 3px 100%;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.05"/></svg>');
             pointer-events: none;
+            z-index: 0;
         }
 
         #game-container {
             width: 100%;
-            max-width: 600px;
+            max-width: 500px;
             height: 100vh;
             max-height: 800px;
             position: relative;
-            background: radial-gradient(circle, #111 0%, #000 100%);
+            background-color: #1a1a1a;
+            border-left: 2px solid #333;
+            border-right: 2px solid #333;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            box-shadow: inset 0 0 50px rgba(0, 255, 0, 0.1);
+            z-index: 1;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
         }
 
         .screen {
@@ -64,68 +62,54 @@
 
         .active-screen { display: flex; }
 
-        h1 { font-size: 32px; margin: 0 0 10px 0; text-shadow: 0 0 10px #0f0; letter-spacing: 2px;}
-        p { font-size: 20px; margin: 10px 0; text-shadow: 0 0 5px #0f0;}
+        h1 { font-family: 'Bebas Neue', cursive; font-size: 50px; margin: 0 0 5px 0; color: #fff; letter-spacing: 2px;}
+        h2 { font-family: 'Bebas Neue', cursive; font-size: 30px; margin: 0 0 15px 0; color: #d32f2f; }
+        p { font-size: 16px; margin: 10px 0; color: #ccc; line-height: 1.5;}
         
         .btn {
-            background-color: transparent;
-            color: #0f0;
-            border: 2px solid #0f0;
+            background-color: #d32f2f;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
             padding: 15px 30px;
-            font-family: 'VT323', monospace;
-            font-size: 24px;
+            font-family: 'Bebas Neue', cursive;
+            font-size: 26px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 25px;
             text-transform: uppercase;
-            box-shadow: 0 0 10px rgba(0,255,0,0.2);
+            box-shadow: 0 6px 0 #9a0007;
             transition: 0.1s;
+            width: 80%;
+            max-width: 300px;
         }
-        .btn:active { background-color: #0f0; color: #000; }
+        .btn:active { transform: translateY(6px); box-shadow: none; }
+        .btn:disabled { background-color: #555; box-shadow: 0 6px 0 #333; color: #888; cursor: not-allowed; }
 
-        /* PHASE 1: BUGS */
-        #bug-zone {
-            width: 100%; height: 300px;
-            position: relative;
-            border: 1px dashed #0f0;
-            margin-top: 20px;
-            overflow: hidden;
-        }
-        .bug {
-            position: absolute;
-            background: #f00; color: #fff;
-            padding: 5px 10px; font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 0 10px #f00;
-            animation: glitch 0.2s infinite;
-        }
+        /* PHASE 1: RAMEUR */
+        .dashboard { background: #000; border: 2px solid #444; padding: 20px; border-radius: 8px; width: 80%; margin-top: 20px; }
+        .stat-row { display: flex; justify-content: space-between; font-family: 'Bebas Neue', cursive; font-size: 28px; margin-bottom: 10px; }
+        .bpm-bar-bg { width: 100%; height: 20px; background: #222; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        #bpm-bar { width: 40%; height: 100%; background: #4caf50; transition: width 0.1s, background 0.3s; }
+        #lactic-warning { color: #f44336; font-weight: bold; font-size: 14px; opacity: 0; transition: opacity 0.2s; margin-top: 5px; }
 
-        /* PHASE 2: FIRESTORE SYNC */
-        #sync-bar-container { width: 90%; height: 40px; border: 3px solid #0f0; padding: 3px; margin: 20px 0; }
-        #sync-bar { width: 0%; height: 100%; background-color: #0f0; box-shadow: 0 0 15px #0f0; }
-        #mash-btn { font-size: 36px; padding: 20px 50px; border-radius: 10px; background: rgba(0,255,0,0.1); }
+        /* PHASE 2: SNATCH */
+        #snatch-meter { width: 90%; height: 40px; background: #222; border: 2px solid #555; position: relative; margin: 30px 0; border-radius: 20px; overflow: hidden; }
+        #snatch-sweet-spot { position: absolute; width: 20%; height: 100%; background: #4caf50; left: 40%; top: 0; }
+        #snatch-cursor { position: absolute; width: 6px; height: 100%; background: #fff; left: 0%; top: 0; transition: left 0.05s linear; }
+        #snatch-reps { font-family: 'Bebas Neue', cursive; font-size: 30px; margin-top: 10px; color: #fff;}
 
-        /* PHASE 3: TERMINAL */
-        .cmd-btn { display: block; width: 80%; margin: 10px auto; padding: 15px; background: #111; color: #0f0; border: 1px solid #0f0; text-align: left; cursor: pointer; }
-        .cmd-btn:active { background: #0f0; color: #000; }
-        #terminal-log { width: 80%; height: 120px; text-align: left; font-size: 14px; color: #aaa; margin-bottom: 20px; border-left: 2px solid #0f0; padding-left: 10px; }
+        /* PHASE 3: MUSCLE UPS */
+        #mu-container { width: 40px; height: 250px; background: #222; border: 2px solid #444; position: relative; border-radius: 20px; margin: 20px auto; overflow: hidden; }
+        #mu-zone { position: absolute; width: 100%; height: 80px; background: rgba(76, 175, 80, 0.4); border-top: 2px solid #4caf50; border-bottom: 2px solid #4caf50; top: 85px; }
+        #mu-cursor { position: absolute; width: 30px; height: 30px; background: #fff; border-radius: 50%; left: 3px; top: 200px; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .mu-progress-container { width: 80%; height: 15px; background: #222; border-radius: 8px; margin-top: 20px; overflow: hidden; }
+        #mu-progress { width: 0%; height: 100%; background: #d32f2f; transition: width 0.1s; }
 
-        /* REVEAL */
-        #ascii-art {
-            font-size: 14px; line-height: 14px;
-            white-space: pre; text-align: left;
-            color: #ff6b81; text-shadow: 0 0 15px #ff6b81;
-            margin-top: 20px;
-            display: none;
-        }
-
-        @keyframes glitch {
-            0% { transform: translate(0) }
-            20% { transform: translate(-2px, 2px) }
-            40% { transform: translate(-2px, -2px) }
-            60% { transform: translate(2px, 2px) }
-            80% { transform: translate(2px, -2px) }
-            100% { transform: translate(0) }
-        }
+        /* WHITEBOARD (REVEAL) */
+        #whiteboard { background: #eee; color: #111; width: 90%; padding: 20px; border-radius: 5px; box-shadow: inset 0 0 20px rgba(0,0,0,0.1); border: 4px solid #ddd; text-align: left; display: none; }
+        .wb-title { font-family: 'Bebas Neue', cursive; font-size: 36px; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; text-align: center;}
+        .wb-line { font-size: 18px; margin-bottom: 15px; font-weight: bold; font-family: 'Courier New', monospace; }
+        .wb-reveal { font-family: 'Bebas Neue', cursive; font-size: 45px; color: #d32f2f; text-align: center; margin-top: 30px; transform: rotate(-3deg); }
     </style>
 </head>
 <body>
@@ -134,194 +118,246 @@
 
     <!-- INTRO -->
     <div id="intro-screen" class="screen active-screen">
-        <h1>>>> INITIALISATION <<<</h1>
-        <p>Connexion au serveur établie.</p>
-        <p>Statut du projet : <span style="color:#f00;">HORS LIGNE</span></p>
-        <button class="btn" onclick="startPhase1()">LANCER LE DEPLOIEMENT</button>
+        <h1>QUALIFICATION WOD</h1>
+        <p>Valide tes standards RX pour accéder au Whiteboard.</p>
+        <p style="font-size:12px; color:#aaa;">Épreuves : Erg (Pacing) / Snatch (Précision) / Muscle-Ups (Tension)</p>
+        <button class="btn" onclick="startPhase1()">START 3, 2, 1... GO !</button>
     </div>
 
-    <!-- PHASE 1 : BUG TRACKER -->
+    <!-- PHASE 1 : ERG ROWING -->
     <div id="phase1-screen" class="screen">
-        <h1>DEBUG_MODE</h1>
-        <p>Le code HTML/JS est instable !<br>Écrasez tous les bugs (Tapez dessus) !</p>
-        <div id="bug-zone"></div>
-        <p>Bugs restants : <span id="bug-count">10</span> | Temps : <span id="bug-timer">8.0</span>s</p>
-    </div>
-
-    <!-- PHASE 2 : FIRESTORE SYNC -->
-    <div id="phase2-screen" class="screen">
-        <h1>SYNC_FIRESTORE</h1>
-        <p>Upload de la base de données vers le cloud.<br>Martelez le bouton pour forcer le débit !</p>
-        <div id="sync-bar-container"><div id="sync-bar"></div></div>
-        <button class="btn" id="mash-btn" onclick="mashSync()">[ PUSH_DATA ]</button>
-    </div>
-
-    <!-- PHASE 3 : DEPLOIEMENT PWA -->
-    <div id="phase3-screen" class="screen">
-        <h1>DEPLOIEMENT_PWA</h1>
-        <div id="terminal-log">
-            > Authentification requise...<br>
-            > Entrez la séquence de prod :
+        <h2>BUY-IN : 20 CALORIES RAMEUR</h2>
+        <p>Tire sur le manche ! Mais attention à ton rythme cardiaque. S'il dépasse 190 BPM, c'est la congestion lactique !</p>
+        
+        <div class="dashboard">
+            <div class="stat-row">
+                <span>CALORIES:</span>
+                <span id="cal-count">0 / 20</span>
+            </div>
+            <div class="stat-row" style="color: #ccc; font-size: 22px;">
+                <span>HEART RATE:</span>
+                <span id="bpm-count">110 BPM</span>
+            </div>
+            <div class="bpm-bar-bg"><div id="bpm-bar"></div></div>
+            <div id="lactic-warning">⚠️ CONGESTION LACTIQUE ⚠️<br>Repos forcé...</div>
         </div>
-        <button class="cmd-btn" onclick="checkCmd(0)">1. git commit -m "Final Update"</button>
-        <button class="cmd-btn" onclick="checkCmd(1)">2. npm run build</button>
-        <button class="cmd-btn" onclick="checkCmd(2)">3. firebase deploy --only hosting</button>
+
+        <button class="btn" id="btn-row" onclick="pullErg()" style="background:#2196f3; box-shadow:0 6px 0 #1565c0;">TIRER (PULL)</button>
     </div>
 
-    <!-- REVEAL -->
-    <div id="reveal-screen" class="screen">
-        <h1 style="color: #fff; text-shadow: 0 0 10px #fff;">DEPLOIEMENT REUSSI</h1>
-        <p>Décryptage du payload final...</p>
-        <div id="ascii-art">
-   .d8888b.  
-  d88P  Y88b 
-  888    888 
-  888        
-  888  88888 
-  888    888 
-  Y88b  d88P 
-   "Y8888P88 
+    <!-- PHASE 2 : SNATCH -->
+    <div id="phase2-screen" class="screen">
+        <h2>1-RM OLYMPIC SNATCH</h2>
+        <p>Extension complète exigée. Tape sur "VERROUILLER" quand la barre est pile dans la zone verte.</p>
+        
+        <div id="snatch-meter">
+            <div id="snatch-sweet-spot"></div>
+            <div id="snatch-cursor"></div>
+        </div>
+        
+        <div id="snatch-reps">REPS: 0 / 3</div>
+        <button class="btn" id="btn-snatch" onclick="attemptSnatch()">VERROUILLER</button>
+    </div>
 
- >>> C'EST UNE FILLE ! <<<
+    <!-- PHASE 3 : MUSCLE UPS -->
+    <div id="phase3-screen" class="screen">
+        <h2>UNBROKEN MUSCLE-UPS</h2>
+        <p>Garde ta tension ! Tapote l'écran pour maintenir ton équilibre dans la zone verte pendant 5 secondes.</p>
+        
+        <div id="mu-container">
+            <div id="mu-zone"></div>
+            <div id="mu-cursor"></div>
+        </div>
+
+        <div class="mu-progress-container"><div id="mu-progress"></div></div>
+        <button class="btn" onpointerdown="tapMU()" style="margin-top:20px; width:100%; max-width:200px;">GAINAGE (TAP)</button>
+    </div>
+
+    <!-- WHITEBOARD REVEAL -->
+    <div id="reveal-screen" class="screen">
+        <div id="whiteboard">
+            <div class="wb-title">WOD OF THE DAY</div>
+            <div class="wb-line">ATHLETE : TOI</div>
+            <div class="wb-line">CATEGORY: RX</div>
+            <div class="wb-line">TIME : <span id="final-time">00:00</span></div>
+            <div class="wb-line">COACH NOTES :</div>
+            <div class="wb-reveal" style="display:none;" id="gender-reveal">C'EST UNE FILLE ! 🌸</div>
         </div>
     </div>
 
 </div>
 
 <script>
-    let activeInterval = null;
-    let timeoutId = null;
+    let activeLoop = null;
+    let globalStartTime = 0;
 
     function showScreen(id) {
+        if(activeLoop) { cancelAnimationFrame(activeLoop); clearInterval(activeLoop); activeLoop = null; }
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
         document.getElementById(id).classList.add('active-screen');
     }
 
-    function stopTimers() {
-        if(activeInterval) clearInterval(activeInterval);
-        if(timeoutId) clearTimeout(timeoutId);
-    }
-
-    // --- PHASE 1 : BUG TRACKER ---
-    let bugsLeft = 10;
-    let timeLeft = 8.0;
+    // --- PHASE 1 : ERG ROWING ---
+    let calories = 0;
+    let bpm = 110;
+    let isBurnout = false;
 
     function startPhase1() {
+        globalStartTime = Date.now();
         showScreen('phase1-screen');
-        let zone = document.getElementById('bug-zone');
-        zone.innerHTML = '';
-        bugsLeft = 10;
-        timeLeft = 8.0;
+        calories = 0; bpm = 110; isBurnout = false;
         
-        let errors = ["TypeError", "SyntaxError", "404_NotFound", "CORS_Error", "NullPointer"];
-
-        for(let i=0; i<10; i++) {
-            let bug = document.createElement('div');
-            bug.className = 'bug';
-            bug.innerText = errors[Math.floor(Math.random()*errors.length)];
-            bug.style.left = Math.random() * 70 + '%';
-            bug.style.top = Math.random() * 80 + '%';
-            
-            // Fait bouger les bugs de temps en temps
-            setInterval(() => {
-                if(bug.parentElement) {
-                    bug.style.left = Math.random() * 70 + '%';
-                    bug.style.top = Math.random() * 80 + '%';
-                }
-            }, 1000 + Math.random() * 1000);
-
-            bug.onpointerdown = function() {
-                this.remove();
-                bugsLeft--;
-                document.getElementById('bug-count').innerText = bugsLeft;
-                if(bugsLeft <= 0) {
-                    stopTimers();
-                    alert(">>> Code stabilisé ! Passage à l'étape suivante.");
-                    startPhase2();
-                }
-            };
-            zone.appendChild(bug);
-        }
-
-        activeInterval = setInterval(() => {
-            timeLeft -= 0.1;
-            document.getElementById('bug-timer').innerText = timeLeft.toFixed(1);
-            if(timeLeft <= 0) {
-                stopTimers();
-                alert("CRASH SYSTEME ! Le code n'était pas prêt.");
-                startPhase1();
+        activeLoop = setInterval(() => {
+            if(!isBurnout) {
+                bpm -= 3; // Récupération cardio
+                if(bpm < 110) bpm = 110;
+                updateErgUI();
             }
-        }, 100);
+        }, 300);
     }
 
-    // --- PHASE 2 : FIRESTORE SYNC ---
-    let syncProgress = 0;
+    function pullErg() {
+        if(isBurnout) return;
+        
+        calories += 1;
+        bpm += 14;
+        updateErgUI();
+
+        if(calories >= 20) {
+            clearInterval(activeLoop);
+            alert("Rameur terminé ! Transition vers l'haltérophilie.");
+            startPhase2();
+            return;
+        }
+
+        if(bpm > 190) {
+            isBurnout = true;
+            document.getElementById('btn-row').disabled = true;
+            document.getElementById('lactic-warning').style.opacity = 1;
+            document.getElementById('bpm-bar').style.background = '#f44336';
+            
+            // Temps de récupération pénalisant
+            setTimeout(() => {
+                bpm = 140;
+                isBurnout = false;
+                document.getElementById('btn-row').disabled = false;
+                document.getElementById('lactic-warning').style.opacity = 0;
+                updateErgUI();
+            }, 3000);
+        }
+    }
+
+    function updateErgUI() {
+        document.getElementById('cal-count').innerText = `${calories} / 20`;
+        document.getElementById('bpm-count').innerText = `${bpm} BPM`;
+        let pct = ((bpm - 100) / 100) * 100;
+        let bar = document.getElementById('bpm-bar');
+        bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+        
+        if(!isBurnout) {
+            if(bpm < 150) bar.style.background = '#4caf50';
+            else if(bpm < 180) bar.style.background = '#ff9800';
+            else bar.style.background = '#f44336';
+        }
+    }
+
+    // --- PHASE 2 : SNATCH ---
+    let snatchPos = 0;
+    let snatchDir = 1;
+    let snatchReps = 0;
+    let snatchSpeed = 3;
 
     function startPhase2() {
         showScreen('phase2-screen');
-        syncProgress = 0;
-        updateSyncBar();
+        snatchReps = 0;
+        document.getElementById('snatch-reps').innerText = `REPS: ${snatchReps} / 3`;
         
-        // La barre se vide toute seule
-        activeInterval = setInterval(() => {
-            syncProgress -= 2;
-            if(syncProgress < 0) syncProgress = 0;
-            updateSyncBar();
-        }, 100);
-    }
-
-    function mashSync() {
-        syncProgress += 8; // Chaque clic ajoute 8%
-        updateSyncBar();
-        
-        if(syncProgress >= 100) {
-            stopTimers();
-            alert(">>> Base de données synchronisée !");
-            startPhase3();
+        function loop() {
+            snatchPos += snatchSpeed * snatchDir;
+            if(snatchPos > 95 || snatchPos < 0) snatchDir *= -1;
+            document.getElementById('snatch-cursor').style.left = `${snatchPos}%`;
+            activeLoop = requestAnimationFrame(loop);
         }
+        loop();
     }
 
-    function updateSyncBar() {
-        document.getElementById('sync-bar').style.width = Math.min(100, syncProgress) + '%';
-    }
-
-    // --- PHASE 3 : TERMINAL PWA ---
-    let expectedStep = 0;
-    
-    function startPhase3() {
-        showScreen('phase3-screen');
-        expectedStep = 0;
-        document.getElementById('terminal-log').innerHTML = "> Authentification requise...<br>> Entrez la séquence de prod :";
-    }
-
-    function checkCmd(step) {
-        let log = document.getElementById('terminal-log');
-        let commands = [
-            "git commit -m 'Final Update'",
-            "npm run build",
-            "firebase deploy --only hosting"
-        ];
-
-        if(step === expectedStep) {
-            log.innerHTML += `<br><span style="color:#0f0">> ${commands[step]} [OK]</span>`;
-            expectedStep++;
-            if(expectedStep === 3) {
-                log.innerHTML += `<br><span style="color:#fff">> DEPLOIEMENT EN COURS...</span>`;
-                setTimeout(startReveal, 1500);
+    function attemptSnatch() {
+        // La zone verte est entre 40% et 60%
+        if(snatchPos >= 38 && snatchPos <= 60) {
+            snatchReps++;
+            document.getElementById('snatch-reps').innerText = `REPS: ${snatchReps} / 3`;
+            snatchSpeed += 1.5; // Devient plus rapide/dur
+            document.getElementById('snatch-meter').style.borderColor = '#4caf50';
+            setTimeout(() => document.getElementById('snatch-meter').style.borderColor = '#555', 300);
+            
+            if(snatchReps >= 3) {
+                cancelAnimationFrame(activeLoop);
+                alert("BARRE VALIDÉE ! En route pour les Muscle-Ups.");
+                startPhase3();
             }
         } else {
-            log.innerHTML += `<br><span style="color:#f00">> ERREUR FATALE. Séquence corrompue.</span>`;
-            setTimeout(startPhase3, 1500);
+            document.getElementById('snatch-meter').style.borderColor = '#f44336';
+            setTimeout(() => document.getElementById('snatch-meter').style.borderColor = '#555', 300);
+            alert("NO REP ! Mauvais timing d'extension.");
         }
-        log.scrollTop = log.scrollHeight; // Scroll auto vers le bas
     }
 
-    // --- REVEAL FINAL ---
+    // --- PHASE 3 : MUSCLE UPS ---
+    let muPos = 200; // Position du curseur (bas)
+    let muProgress = 0; // Jauge de victoire
+
+    function startPhase3() {
+        showScreen('phase3-screen');
+        muPos = 200;
+        muProgress = 0;
+        document.getElementById('mu-cursor').style.top = `${muPos}px`;
+        document.getElementById('mu-progress').style.width = `0%`;
+
+        activeLoop = setInterval(() => {
+            // Gravité (le curseur tombe)
+            muPos += 6; 
+            if(muPos > 220) muPos = 220;
+            document.getElementById('mu-cursor').style.top = `${muPos}px`;
+
+            // Vérifier si le curseur est dans la zone verte (entre 85 et 165px)
+            if(muPos >= 85 && muPos <= 155) {
+                muProgress += 2; // Gagne du temps
+                document.getElementById('mu-zone').style.background = 'rgba(76, 175, 80, 0.8)';
+            } else {
+                muProgress -= 3; // Perd l'équilibre
+                document.getElementById('mu-zone').style.background = 'rgba(76, 175, 80, 0.2)';
+            }
+
+            if(muProgress < 0) muProgress = 0;
+            document.getElementById('mu-progress').style.width = `${Math.min(100, muProgress)}%`;
+
+            if(muProgress >= 100) {
+                clearInterval(activeLoop);
+                startReveal();
+            }
+        }, 50);
+    }
+
+    function tapMU() {
+        // Un tap fait remonter le curseur (contre la gravité)
+        muPos -= 35;
+        if(muPos < 0) muPos = 0;
+    }
+
+    // --- WHITEBOARD REVEAL ---
     function startReveal() {
         showScreen('reveal-screen');
+        let totalMs = Date.now() - globalStartTime;
+        let mins = Math.floor(totalMs / 60000);
+        let secs = Math.floor((totalMs % 60000) / 1000);
+        document.getElementById('final-time').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        
+        document.getElementById('whiteboard').style.display = 'block';
+        
+        // Suspense avant l'affichage du sexe
         setTimeout(() => {
-            document.getElementById('ascii-art').style.display = 'block';
-        }, 2000); // Fait apparaitre le texte rose après 2 secondes de suspense
+            document.getElementById('gender-reveal').style.display = 'block';
+        }, 2000);
     }
 </script>
 </body>
