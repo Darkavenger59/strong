@@ -21,12 +21,11 @@
             -webkit-user-select: none;
         }
 
-        /* Effet "Grit" (grain léger de salle de sport) */
         body::before {
             content: "";
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.05"/></svg>');
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.06"/></svg>');
             pointer-events: none;
             z-index: 0;
         }
@@ -45,7 +44,7 @@
             justify-content: center;
             align-items: center;
             z-index: 1;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            box-shadow: 0 0 40px rgba(0,0,0,0.9);
         }
 
         .screen {
@@ -56,15 +55,15 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 20px;
+            padding: 25px;
             box-sizing: border-box;
         }
 
         .active-screen { display: flex; }
 
-        h1 { font-family: 'Bebas Neue', cursive; font-size: 50px; margin: 0 0 5px 0; color: #fff; letter-spacing: 2px;}
-        h2 { font-family: 'Bebas Neue', cursive; font-size: 30px; margin: 0 0 15px 0; color: #d32f2f; }
-        p { font-size: 16px; margin: 10px 0; color: #ccc; line-height: 1.5;}
+        h1 { font-family: 'Bebas Neue', cursive; font-size: 55px; margin: 0 0 5px 0; color: #fff; letter-spacing: 2px;}
+        h2 { font-family: 'Bebas Neue', cursive; font-size: 32px; margin: 0 0 15px 0; color: #d32f2f; }
+        p { font-size: 15px; margin: 10px 0; color: #bbb; line-height: 1.6;}
         
         .btn {
             background-color: #d32f2f;
@@ -75,41 +74,47 @@
             font-family: 'Bebas Neue', cursive;
             font-size: 26px;
             cursor: pointer;
-            margin-top: 25px;
+            margin-top: 30px;
             text-transform: uppercase;
             box-shadow: 0 6px 0 #9a0007;
             transition: 0.1s;
-            width: 80%;
-            max-width: 300px;
+            width: 85%;
+            max-width: 320px;
         }
         .btn:active { transform: translateY(6px); box-shadow: none; }
-        .btn:disabled { background-color: #555; box-shadow: 0 6px 0 #333; color: #888; cursor: not-allowed; }
+        .btn:disabled { background-color: #444; box-shadow: 0 6px 0 #222; color: #777; cursor: not-allowed; }
+
+        /* WOD INFO */
+        .wod-box { border: 2px dashed #555; padding: 15px; border-radius: 5px; background: rgba(255,255,255,0.05); margin-bottom: 20px; text-align: left; width: 80%;}
+        .wod-box span { display: block; font-family: 'Bebas Neue', cursive; font-size: 22px; color: #ddd; }
 
         /* PHASE 1: RAMEUR */
-        .dashboard { background: #000; border: 2px solid #444; padding: 20px; border-radius: 8px; width: 80%; margin-top: 20px; }
-        .stat-row { display: flex; justify-content: space-between; font-family: 'Bebas Neue', cursive; font-size: 28px; margin-bottom: 10px; }
-        .bpm-bar-bg { width: 100%; height: 20px; background: #222; border-radius: 10px; overflow: hidden; margin-top: 10px; }
-        #bpm-bar { width: 40%; height: 100%; background: #4caf50; transition: width 0.1s, background 0.3s; }
-        #lactic-warning { color: #f44336; font-weight: bold; font-size: 14px; opacity: 0; transition: opacity 0.2s; margin-top: 5px; }
+        .dashboard { background: #0a0a0a; border: 3px solid #333; padding: 25px; border-radius: 10px; width: 85%; margin-top: 15px; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);}
+        .stat-row { display: flex; justify-content: space-between; font-family: 'Bebas Neue', cursive; font-size: 30px; margin-bottom: 12px; }
+        .bpm-bar-bg { width: 100%; height: 24px; background: #222; border-radius: 12px; overflow: hidden; margin-top: 15px; border: 1px solid #444;}
+        #bpm-bar { width: 30%; height: 100%; background: #4caf50; transition: width 0.15s, background 0.3s; }
+        #lactic-warning { color: #f44336; font-weight: bold; font-size: 15px; opacity: 0; transition: opacity 0.2s; margin-top: 10px; }
 
         /* PHASE 2: SNATCH */
-        #snatch-meter { width: 90%; height: 40px; background: #222; border: 2px solid #555; position: relative; margin: 30px 0; border-radius: 20px; overflow: hidden; }
-        #snatch-sweet-spot { position: absolute; width: 20%; height: 100%; background: #4caf50; left: 40%; top: 0; }
-        #snatch-cursor { position: absolute; width: 6px; height: 100%; background: #fff; left: 0%; top: 0; transition: left 0.05s linear; }
-        #snatch-reps { font-family: 'Bebas Neue', cursive; font-size: 30px; margin-top: 10px; color: #fff;}
+        #snatch-meter { width: 95%; height: 45px; background: #222; border: 3px solid #555; position: relative; margin: 35px 0; border-radius: 25px; overflow: hidden; }
+        /* Zone verte très large (30% à 70%) pour plus de facilité */
+        #snatch-sweet-spot { position: absolute; width: 40%; height: 100%; background: rgba(76, 175, 80, 0.6); left: 30%; top: 0; border-left: 2px solid #4caf50; border-right: 2px solid #4caf50;}
+        #snatch-cursor { position: absolute; width: 8px; height: 100%; background: #fff; left: 0%; top: 0; box-shadow: 0 0 10px #fff;}
+        #snatch-reps { font-family: 'Bebas Neue', cursive; font-size: 36px; margin-top: 10px; color: #fff;}
+        #no-rep-msg { color: #f44336; font-weight: bold; font-size: 20px; opacity: 0; position: absolute; top: 130px; font-family: 'Bebas Neue', cursive; letter-spacing: 1px;}
 
         /* PHASE 3: MUSCLE UPS */
-        #mu-container { width: 40px; height: 250px; background: #222; border: 2px solid #444; position: relative; border-radius: 20px; margin: 20px auto; overflow: hidden; }
-        #mu-zone { position: absolute; width: 100%; height: 80px; background: rgba(76, 175, 80, 0.4); border-top: 2px solid #4caf50; border-bottom: 2px solid #4caf50; top: 85px; }
-        #mu-cursor { position: absolute; width: 30px; height: 30px; background: #fff; border-radius: 50%; left: 3px; top: 200px; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
-        .mu-progress-container { width: 80%; height: 15px; background: #222; border-radius: 8px; margin-top: 20px; overflow: hidden; }
+        #mu-container { width: 50px; height: 280px; background: #1a1a1a; border: 3px solid #555; position: relative; border-radius: 25px; margin: 20px auto; overflow: hidden; }
+        #mu-zone { position: absolute; width: 100%; height: 100px; background: rgba(76, 175, 80, 0.3); border-top: 3px solid #4caf50; border-bottom: 3px solid #4caf50; top: 90px; }
+        #mu-cursor { position: absolute; width: 36px; height: 36px; background: #fff; border-radius: 50%; left: 4px; top: 230px; box-shadow: 0 0 15px rgba(255,255,255,0.7); transition: top 0.05s linear; }
+        .mu-progress-container { width: 85%; height: 20px; background: #222; border-radius: 10px; margin-top: 25px; overflow: hidden; border: 2px solid #444;}
         #mu-progress { width: 0%; height: 100%; background: #d32f2f; transition: width 0.1s; }
 
         /* WHITEBOARD (REVEAL) */
-        #whiteboard { background: #eee; color: #111; width: 90%; padding: 20px; border-radius: 5px; box-shadow: inset 0 0 20px rgba(0,0,0,0.1); border: 4px solid #ddd; text-align: left; display: none; }
-        .wb-title { font-family: 'Bebas Neue', cursive; font-size: 36px; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; text-align: center;}
-        .wb-line { font-size: 18px; margin-bottom: 15px; font-weight: bold; font-family: 'Courier New', monospace; }
-        .wb-reveal { font-family: 'Bebas Neue', cursive; font-size: 45px; color: #d32f2f; text-align: center; margin-top: 30px; transform: rotate(-3deg); }
+        #whiteboard { background: #fdfdfd; color: #111; width: 90%; padding: 25px; border-radius: 4px; box-shadow: inset 0 0 30px rgba(0,0,0,0.15); border: 5px solid #ccc; text-align: left; display: none; }
+        .wb-title { font-family: 'Bebas Neue', cursive; font-size: 40px; border-bottom: 3px solid #333; padding-bottom: 10px; margin-bottom: 20px; text-align: center;}
+        .wb-line { font-size: 20px; margin-bottom: 15px; font-weight: bold; font-family: 'Courier New', monospace; color: #222; }
+        .wb-reveal { font-family: 'Bebas Neue', cursive; font-size: 48px; color: #d32f2f; text-align: center; margin-top: 35px; transform: rotate(-4deg); }
     </style>
 </head>
 <body>
@@ -118,51 +123,58 @@
 
     <!-- INTRO -->
     <div id="intro-screen" class="screen active-screen">
-        <h1>QUALIFICATION WOD</h1>
-        <p>Valide tes standards RX pour accéder au Whiteboard.</p>
-        <p style="font-size:12px; color:#aaa;">Épreuves : Erg (Pacing) / Snatch (Précision) / Muscle-Ups (Tension)</p>
+        <h1>CHIPPER WOD</h1>
+        <div class="wod-box">
+            <span>FOR TIME :</span>
+            <span>- 50 Cal Row</span>
+            <span>- 15 Power Snatches</span>
+            <span>- Accumulate Ring Hold</span>
+        </div>
+        <p>Gère ton souffle, valide tes reps proprement et accède au Whiteboard.</p>
         <button class="btn" onclick="startPhase1()">START 3, 2, 1... GO !</button>
     </div>
 
-    <!-- PHASE 1 : ERG ROWING -->
+    <!-- PHASE 1 : ERG ROWING (50 CALS) -->
     <div id="phase1-screen" class="screen">
-        <h2>BUY-IN : 20 CALORIES RAMEUR</h2>
-        <p>Tire sur le manche ! Mais attention à ton rythme cardiaque. S'il dépasse 190 BPM, c'est la congestion lactique !</p>
+        <h2>BUY-IN : 50 CALORIES RAMEUR</h2>
+        <p>Trouve ton rythme ! Si ton cardio dépasse 190 BPM, tu devras lâcher le manche pour récupérer.</p>
         
         <div class="dashboard">
             <div class="stat-row">
                 <span>CALORIES:</span>
-                <span id="cal-count">0 / 20</span>
+                <span id="cal-count" style="color: #4caf50;">0 / 50</span>
             </div>
-            <div class="stat-row" style="color: #ccc; font-size: 22px;">
+            <div class="stat-row" style="color: #ccc; font-size: 24px;">
                 <span>HEART RATE:</span>
-                <span id="bpm-count">110 BPM</span>
+                <span id="bpm-count">90 BPM</span>
             </div>
             <div class="bpm-bar-bg"><div id="bpm-bar"></div></div>
-            <div id="lactic-warning">⚠️ CONGESTION LACTIQUE ⚠️<br>Repos forcé...</div>
+            <div id="lactic-warning">⚠️ ZONE ROUGE : REPOS FORCÉ ⚠️</div>
         </div>
 
         <button class="btn" id="btn-row" onclick="pullErg()" style="background:#2196f3; box-shadow:0 6px 0 #1565c0;">TIRER (PULL)</button>
     </div>
 
-    <!-- PHASE 2 : SNATCH -->
+    <!-- PHASE 2 : SNATCH (15 REPS) -->
     <div id="phase2-screen" class="screen">
-        <h2>1-RM OLYMPIC SNATCH</h2>
-        <p>Extension complète exigée. Tape sur "VERROUILLER" quand la barre est pile dans la zone verte.</p>
+        <h2>15 POWER SNATCHES</h2>
+        <p>Enchaîne tes reps. La zone de validation est large, mais ne te précipite pas pour éviter les "No Rep".</p>
         
+        <div id="no-rep-msg">NO REP !</div>
+
         <div id="snatch-meter">
             <div id="snatch-sweet-spot"></div>
             <div id="snatch-cursor"></div>
         </div>
         
-        <div id="snatch-reps">REPS: 0 / 3</div>
-        <button class="btn" id="btn-snatch" onclick="attemptSnatch()">VERROUILLER</button>
+        <div id="snatch-reps">REPS: 0 / 15</div>
+        <button class="btn" id="btn-snatch" onclick="attemptSnatch()">EXTENSION / VERROUILLER</button>
     </div>
 
-    <!-- PHASE 3 : MUSCLE UPS -->
+    <!-- PHASE 3 : MUSCLE UPS (TIME UNDER TENSION) -->
     <div id="phase3-screen" class="screen">
-        <h2>UNBROKEN MUSCLE-UPS</h2>
-        <p>Garde ta tension ! Tapote l'écran pour maintenir ton équilibre dans la zone verte pendant 5 secondes.</p>
+        <h2>TIME UNDER TENSION</h2>
+        <p>Maintiens ton appui sur les anneaux. Tapote l'écran pour rester dans la zone verte et accumuler le temps de travail.</p>
         
         <div id="mu-container">
             <div id="mu-zone"></div>
@@ -170,16 +182,18 @@
         </div>
 
         <div class="mu-progress-container"><div id="mu-progress"></div></div>
-        <button class="btn" onpointerdown="tapMU()" style="margin-top:20px; width:100%; max-width:200px;">GAINAGE (TAP)</button>
+        <p style="font-size: 12px; margin-top:5px; color:#aaa;">Jauge de validation musculaire</p>
+        
+        <button class="btn" onpointerdown="tapMU()" style="margin-top:15px; width:100%; max-width:220px;">APPUI (TAP)</button>
     </div>
 
     <!-- WHITEBOARD REVEAL -->
     <div id="reveal-screen" class="screen">
         <div id="whiteboard">
-            <div class="wb-title">WOD OF THE DAY</div>
+            <div class="wb-title">WHITEBOARD</div>
             <div class="wb-line">ATHLETE : TOI</div>
             <div class="wb-line">CATEGORY: RX</div>
-            <div class="wb-line">TIME : <span id="final-time">00:00</span></div>
+            <div class="wb-line">SCORE : <span id="final-time" style="color:#d32f2f;">00:00</span></div>
             <div class="wb-line">COACH NOTES :</div>
             <div class="wb-reveal" style="display:none;" id="gender-reveal">C'EST UNE FILLE ! 🌸</div>
         </div>
@@ -199,33 +213,33 @@
 
     // --- PHASE 1 : ERG ROWING ---
     let calories = 0;
-    let bpm = 110;
+    let bpm = 90;
     let isBurnout = false;
 
     function startPhase1() {
         globalStartTime = Date.now();
         showScreen('phase1-screen');
-        calories = 0; bpm = 110; isBurnout = false;
+        calories = 0; bpm = 90; isBurnout = false;
         
         activeLoop = setInterval(() => {
             if(!isBurnout) {
-                bpm -= 3; // Récupération cardio
-                if(bpm < 110) bpm = 110;
+                bpm -= 2; // Récupération passive plus douce
+                if(bpm < 90) bpm = 90;
                 updateErgUI();
             }
-        }, 300);
+        }, 400); // Check un peu plus lent
     }
 
     function pullErg() {
         if(isBurnout) return;
         
         calories += 1;
-        bpm += 14;
+        bpm += 8; // Monte moins vite qu'avant pour simuler l'endurance
         updateErgUI();
 
-        if(calories >= 20) {
+        if(calories >= 50) { // Objectif rallongé à 50
             clearInterval(activeLoop);
-            alert("Rameur terminé ! Transition vers l'haltérophilie.");
+            alert("50 Calories atteintes ! On passe à la barre.");
             startPhase2();
             return;
         }
@@ -236,9 +250,9 @@
             document.getElementById('lactic-warning').style.opacity = 1;
             document.getElementById('bpm-bar').style.background = '#f44336';
             
-            // Temps de récupération pénalisant
+            // Temps de récupération (3 secondes)
             setTimeout(() => {
-                bpm = 140;
+                bpm = 130; // Redescend à 130 pour repartir
                 isBurnout = false;
                 document.getElementById('btn-row').disabled = false;
                 document.getElementById('lactic-warning').style.opacity = 0;
@@ -248,83 +262,104 @@
     }
 
     function updateErgUI() {
-        document.getElementById('cal-count').innerText = `${calories} / 20`;
+        document.getElementById('cal-count').innerText = `${calories} / 50`;
         document.getElementById('bpm-count').innerText = `${bpm} BPM`;
-        let pct = ((bpm - 100) / 100) * 100;
+        
+        let pct = ((bpm - 80) / 110) * 100; // Jauge entre 80 et 190
         let bar = document.getElementById('bpm-bar');
         bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
         
         if(!isBurnout) {
-            if(bpm < 150) bar.style.background = '#4caf50';
-            else if(bpm < 180) bar.style.background = '#ff9800';
-            else bar.style.background = '#f44336';
+            if(bpm < 140) bar.style.background = '#4caf50'; // Vert
+            else if(bpm < 175) bar.style.background = '#ff9800'; // Orange
+            else bar.style.background = '#f44336'; // Rouge
         }
     }
 
-    // --- PHASE 2 : SNATCH ---
+    // --- PHASE 2 : SNATCH (Plus de reps, plus facile) ---
     let snatchPos = 0;
     let snatchDir = 1;
     let snatchReps = 0;
-    let snatchSpeed = 3;
+    let snatchSpeed = 1.5; // Vitesse initiale très gérable
 
     function startPhase2() {
         showScreen('phase2-screen');
         snatchReps = 0;
-        document.getElementById('snatch-reps').innerText = `REPS: ${snatchReps} / 3`;
+        document.getElementById('snatch-reps').innerText = `REPS: ${snatchReps} / 15`;
         
-        function loop() {
-            snatchPos += snatchSpeed * snatchDir;
-            if(snatchPos > 95 || snatchPos < 0) snatchDir *= -1;
+        let lastTime = 0;
+        function loop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            // Vitesse constante basée sur le temps pour être fluide sur tous les écrans
+            snatchPos += snatchSpeed * snatchDir; 
+            if(snatchPos > 95) { snatchPos = 95; snatchDir = -1; }
+            if(snatchPos < 0) { snatchPos = 0; snatchDir = 1; }
+            
             document.getElementById('snatch-cursor').style.left = `${snatchPos}%`;
             activeLoop = requestAnimationFrame(loop);
         }
-        loop();
+        activeLoop = requestAnimationFrame(loop);
     }
 
     function attemptSnatch() {
-        // La zone verte est entre 40% et 60%
-        if(snatchPos >= 38 && snatchPos <= 60) {
+        // Zone verte très large : 30% à 70%
+        if(snatchPos >= 28 && snatchPos <= 72) {
             snatchReps++;
-            document.getElementById('snatch-reps').innerText = `REPS: ${snatchReps} / 3`;
-            snatchSpeed += 1.5; // Devient plus rapide/dur
-            document.getElementById('snatch-meter').style.borderColor = '#4caf50';
-            setTimeout(() => document.getElementById('snatch-meter').style.borderColor = '#555', 300);
+            document.getElementById('snatch-reps').innerText = `REPS: ${snatchReps} / 15`;
             
-            if(snatchReps >= 3) {
+            // Accélération très légère pour garder le rythme
+            if (snatchSpeed < 2.5) snatchSpeed += 0.05; 
+            
+            document.getElementById('snatch-meter').style.borderColor = '#4caf50';
+            setTimeout(() => document.getElementById('snatch-meter').style.borderColor = '#555', 200);
+            
+            if(snatchReps >= 15) {
                 cancelAnimationFrame(activeLoop);
-                alert("BARRE VALIDÉE ! En route pour les Muscle-Ups.");
+                alert("15 REPS VALIDÉES ! Dernier effort sur les anneaux.");
                 startPhase3();
             }
         } else {
+            // Pénalité visuelle : NO REP
+            let noRep = document.getElementById('no-rep-msg');
+            noRep.style.opacity = 1;
             document.getElementById('snatch-meter').style.borderColor = '#f44336';
-            setTimeout(() => document.getElementById('snatch-meter').style.borderColor = '#555', 300);
-            alert("NO REP ! Mauvais timing d'extension.");
+            
+            setTimeout(() => {
+                noRep.style.opacity = 0;
+                document.getElementById('snatch-meter').style.borderColor = '#555';
+            }, 500);
         }
     }
 
-    // --- PHASE 3 : MUSCLE UPS ---
-    let muPos = 200; // Position du curseur (bas)
-    let muProgress = 0; // Jauge de victoire
+    // --- PHASE 3 : TIME UNDER TENSION ---
+    let muPos = 240; 
+    let muProgress = 0; 
+    let muVelocity = 0;
 
     function startPhase3() {
         showScreen('phase3-screen');
-        muPos = 200;
+        muPos = 240;
         muProgress = 0;
+        muVelocity = 0;
         document.getElementById('mu-cursor').style.top = `${muPos}px`;
         document.getElementById('mu-progress').style.width = `0%`;
 
         activeLoop = setInterval(() => {
-            // Gravité (le curseur tombe)
-            muPos += 6; 
-            if(muPos > 220) muPos = 220;
+            // Gravité fluide
+            muVelocity += 1.5; 
+            muPos += muVelocity; 
+            
+            if(muPos > 240) { muPos = 240; muVelocity = 0; } // Bloqué en bas
+            if(muPos < 0) { muPos = 0; muVelocity = 0; } // Bloqué en haut
+            
             document.getElementById('mu-cursor').style.top = `${muPos}px`;
 
-            // Vérifier si le curseur est dans la zone verte (entre 85 et 165px)
-            if(muPos >= 85 && muPos <= 155) {
-                muProgress += 2; // Gagne du temps
-                document.getElementById('mu-zone').style.background = 'rgba(76, 175, 80, 0.8)';
+            // Zone verte large (90px à 190px)
+            if(muPos >= 85 && muPos <= 195) {
+                muProgress += 1.2; // Accumulation lente (effort d'endurance)
+                document.getElementById('mu-zone').style.background = 'rgba(76, 175, 80, 0.6)';
             } else {
-                muProgress -= 3; // Perd l'équilibre
+                muProgress -= 0.5; // Perte très faible si on sort, on ne punit pas trop
                 document.getElementById('mu-zone').style.background = 'rgba(76, 175, 80, 0.2)';
             }
 
@@ -335,13 +370,12 @@
                 clearInterval(activeLoop);
                 startReveal();
             }
-        }, 50);
+        }, 30); // Loop plus rapide pour fluidité
     }
 
     function tapMU() {
-        // Un tap fait remonter le curseur (contre la gravité)
-        muPos -= 35;
-        if(muPos < 0) muPos = 0;
+        // Impulsion douce vers le haut
+        muVelocity -= 8;
     }
 
     // --- WHITEBOARD REVEAL ---
@@ -354,10 +388,10 @@
         
         document.getElementById('whiteboard').style.display = 'block';
         
-        // Suspense avant l'affichage du sexe
+        // Suspense de 3 secondes avant d'afficher le résultat
         setTimeout(() => {
             document.getElementById('gender-reveal').style.display = 'block';
-        }, 2000);
+        }, 3000);
     }
 </script>
 </body>
