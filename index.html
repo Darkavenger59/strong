@@ -1,14 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>>>> COMMIT_TO_PROD.sh <<<</title>
+    <title>TERMINAL_ROOT // DEPLOY</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #000;
+            background-color: #050505;
             color: #0f0;
             font-family: 'VT323', monospace;
             display: flex;
@@ -18,354 +17,312 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
-            text-shadow: 0 0 5px #0f0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Effet d'écran cathodique (CRT) superposé */
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 999;
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
         }
 
         #game-container {
-            width: 640px;
-            height: 480px;
-            border: 4px solid #0f0;
+            width: 100%;
+            max-width: 600px;
+            height: 100vh;
+            max-height: 800px;
             position: relative;
-            overflow: hidden;
             background: radial-gradient(circle, #111 0%, #000 100%);
-            box-shadow: 0 0 20px rgba(0,255,0,0.3);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            box-shadow: inset 0 0 50px rgba(0, 255, 0, 0.1);
         }
 
         .screen {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 40px;
+            padding: 20px;
             box-sizing: border-box;
         }
 
-        .active-screen {
-            display: flex;
-        }
+        .active-screen { display: flex; }
 
-        h1 { font-size: 48px; margin: 0 0 10px 0; }
-        p { font-size: 24px; margin: 10px 0; }
+        h1 { font-size: 32px; margin: 0 0 10px 0; text-shadow: 0 0 10px #0f0; letter-spacing: 2px;}
+        p { font-size: 20px; margin: 10px 0; text-shadow: 0 0 5px #0f0;}
+        
         .btn {
-            background-color: #000;
+            background-color: transparent;
             color: #0f0;
             border: 2px solid #0f0;
-            padding: 10px 20px;
+            padding: 15px 30px;
             font-family: 'VT323', monospace;
             font-size: 24px;
             cursor: pointer;
-            margin-top: 30px;
-            transition: all 0.1s;
-        }
-        .btn:hover { background-color: #0f0; color: #000; box-shadow: 0 0 10px #0f0;}
-
-        /* --- PHASE 1: DEBUG --- */
-        #maze-grid {
-            display: grid;
-            grid-template-columns: repeat(20, 20px);
-            grid-template-rows: repeat(15, 20px);
-            gap: 2px;
             margin-top: 20px;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px rgba(0,255,0,0.2);
+            transition: 0.1s;
         }
-        .cell { width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; font-size: 14px; color: #333; }
-        .wall { background-color: #030; }
-        .path { cursor: pointer; }
-        #cursor {
+        .btn:active { background-color: #0f0; color: #000; }
+
+        /* PHASE 1: BUGS */
+        #bug-zone {
+            width: 100%; height: 300px;
+            position: relative;
+            border: 1px dashed #0f0;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .bug {
             position: absolute;
-            width: 16px; height: 16px;
-            background-color: #0f0;
-            border-radius: 2px;
-            box-shadow: 0 0 10px #0f0;
-            pointer-events: none;
-            transition: transform 0.1s;
-        }
-        #goal { font-size: 24px; color: #ff0; }
-
-        /* --- PHASE 2: COMPILE --- */
-        #compile-bar-container {
-            width: 400px; height: 30px;
-            border: 2px solid #0f0;
-            margin-top: 30px;
-            padding: 2px;
-        }
-        #compile-bar {
-            width: 0%; height: 100%;
-            background-color: #0f0;
-            transition: width 0.1s linear;
-        }
-        #keys-prompt { font-size: 40px; margin-top: 40px; letter-spacing: 10px;}
-
-        /* --- PHASE 3: DEPLOY --- */
-        #command-line { font-size: 28px; margin-top: 20px; min-height: 1.2em;}
-        #input-cursor {
-            display: inline-block; width: 10px; height: 1.2em;
-            background-color: #0f0; animation: blink 1s infinite;
+            background: #f00; color: #fff;
+            padding: 5px 10px; font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 0 10px #f00;
+            animation: glitch 0.2s infinite;
         }
 
-        /* --- REVEAL SCREEN --- */
-        #reveal-container {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 13px; line-height: 16px;
-            white-space: pre-wrap;
-            color: #0f0;
+        /* PHASE 2: FIRESTORE SYNC */
+        #sync-bar-container { width: 90%; height: 40px; border: 3px solid #0f0; padding: 3px; margin: 20px 0; }
+        #sync-bar { width: 0%; height: 100%; background-color: #0f0; box-shadow: 0 0 15px #0f0; }
+        #mash-btn { font-size: 36px; padding: 20px 50px; border-radius: 10px; background: rgba(0,255,0,0.1); }
+
+        /* PHASE 3: TERMINAL */
+        .cmd-btn { display: block; width: 80%; margin: 10px auto; padding: 15px; background: #111; color: #0f0; border: 1px solid #0f0; text-align: left; cursor: pointer; }
+        .cmd-btn:active { background: #0f0; color: #000; }
+        #terminal-log { width: 80%; height: 120px; text-align: left; font-size: 14px; color: #aaa; margin-bottom: 20px; border-left: 2px solid #0f0; padding-left: 10px; }
+
+        /* REVEAL */
+        #ascii-art {
+            font-size: 14px; line-height: 14px;
+            white-space: pre; text-align: left;
+            color: #ff6b81; text-shadow: 0 0 15px #ff6b81;
+            margin-top: 20px;
             display: none;
-            text-align: left;
         }
-        .pink-text { color: #ff6b81; font-weight: bold; }
 
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
     </style>
 </head>
 <body>
 
 <div id="game-container">
 
-    <!-- INTRODUCTION -->
+    <!-- INTRO -->
     <div id="intro-screen" class="screen active-screen">
-        <h1>>>> COMMIT_TO_PROD.sh <<<</h1>
-        <p>Bienvenue, DEV.</p>
-        <p>Votre tâche : pousser le code en production.</p>
-        <button class="btn" onclick="startPhase1()">[ EXECUTER ]</button>
+        <h1>>>> INITIALISATION <<<</h1>
+        <p>Connexion au serveur établie.</p>
+        <p>Statut du projet : <span style="color:#f00;">HORS LIGNE</span></p>
+        <button class="btn" onclick="startPhase1()">LANCER LE DEPLOIEMENT</button>
     </div>
 
-    <!-- PHASE 1: DEBUG (Le Labyrinthe) -->
+    <!-- PHASE 1 : BUG TRACKER -->
     <div id="phase1-screen" class="screen">
-        <h1>DEBUG_CRITIQUE</h1>
-        <p>Le projet est corrompu. Guidez votre curseur vers le FIX avant le TIME_OUT.</p>
-        <div id="maze-grid" onmousemove="moveCursor(event)"></div>
-        <div id="cursor"></div>
+        <h1>DEBUG_MODE</h1>
+        <p>Le code HTML/JS est instable !<br>Écrasez tous les bugs (Tapez dessus) !</p>
+        <div id="bug-zone"></div>
+        <p>Bugs restants : <span id="bug-count">10</span> | Temps : <span id="bug-timer">8.0</span>s</p>
     </div>
 
-    <!-- PHASE 2: COMPILE (Le Rythme) -->
+    <!-- PHASE 2 : FIRESTORE SYNC -->
     <div id="phase2-screen" class="screen">
-        <h1>COMPILE_PROD_V2.0</h1>
-        <p>Compilation en cours... Appuyez sur les touches indiquées en rythme.</p>
-        <div id="keys-prompt"></div>
-        <div id="compile-bar-container"><div id="compile-bar"></div></div>
+        <h1>SYNC_FIRESTORE</h1>
+        <p>Upload de la base de données vers le cloud.<br>Martelez le bouton pour forcer le débit !</p>
+        <div id="sync-bar-container"><div id="sync-bar"></div></div>
+        <button class="btn" id="mash-btn" onclick="mashSync()">[ PUSH_DATA ]</button>
     </div>
 
-    <!-- PHASE 3: DEPLOY (Le Hacking) -->
+    <!-- PHASE 3 : DEPLOIEMENT PWA -->
     <div id="phase3-screen" class="screen">
-        <h1>DEPLOYEMENT_FORCE_UNIT7</h1>
-        <p>Session bloquée par le pare-feu ! Entrez les commandes d'urgence.</p>
-        <div id="command-line">root@prod_unit7:~$ <span id="cmd-text"></span><span id="input-cursor"></span></div>
+        <h1>DEPLOIEMENT_PWA</h1>
+        <div id="terminal-log">
+            > Authentification requise...<br>
+            > Entrez la séquence de prod :
+        </div>
+        <button class="cmd-btn" onclick="checkCmd(0)">1. git commit -m "Final Update"</button>
+        <button class="cmd-btn" onclick="checkCmd(1)">2. npm run build</button>
+        <button class="cmd-btn" onclick="checkCmd(2)">3. firebase deploy --only hosting</button>
     </div>
 
-    <!-- REVEAL SCREEN (L'Annonce) -->
+    <!-- REVEAL -->
     <div id="reveal-screen" class="screen">
-        <div id="reveal-container"></div>
+        <h1 style="color: #fff; text-shadow: 0 0 10px #fff;">DEPLOIEMENT REUSSI</h1>
+        <p>Décryptage du payload final...</p>
+        <div id="ascii-art">
+   .d8888b.  
+  d88P  Y88b 
+  888    888 
+  888        
+  888  88888 
+  888    888 
+  Y88b  d88P 
+   "Y8888P88 
+
+ >>> C'EST UNE FILLE ! <<<
+        </div>
     </div>
 
 </div>
 
 <script>
     let activeInterval = null;
-    let gameContainer = document.getElementById('game-container');
+    let timeoutId = null;
 
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
         document.getElementById(id).classList.add('active-screen');
     }
 
-    // --- PHASE 1: DEBUG ---
-    let maze = [
-        "XXXXXXXXXXXXXXXXXXXX",
-        "X..X.XXX.XXXXX.XXX.X",
-        "X..X.X...X.....X...X",
-        "X..X.XXX.XXX...X.XXX",
-        "X..X.X.....X...X...X",
-        "X....X.XXXXX...XXXXX",
-        "XXXXXX.............X",
-        "X....XXXXXX.XXXXXX.X",
-        "X.XX.X....X.X....X.X",
-        "X.XX.X.XX.XXX.XX.X.X",
-        "X....X.XX.....XX.X.X",
-        "XXXX.X.XXXXXXXXX.X.X",
-        "X....X.............X",
-        "X.XXXX.XXXXXXXXXXXXX",
-        "XXXXXXXXXXXXXXXXXXXX"
-    ];
-    let mazeGrid = document.getElementById('maze-grid');
-    let cursor = document.getElementById('cursor');
-    let curX = 0, curY = 0;
-    let phase1Timer = null;
+    function stopTimers() {
+        if(activeInterval) clearInterval(activeInterval);
+        if(timeoutId) clearTimeout(timeoutId);
+    }
+
+    // --- PHASE 1 : BUG TRACKER ---
+    let bugsLeft = 10;
+    let timeLeft = 8.0;
 
     function startPhase1() {
         showScreen('phase1-screen');
-        mazeGrid.innerHTML = '';
-        for(let y=0; y<maze.length; y++) {
-            for(let x=0; x<maze[y].length; x++) {
-                let cell = document.createElement('div');
-                cell.className = maze[y][x] === 'X' ? 'cell wall' : 'cell path';
-                cell.id = `cell-${x}-${y}`;
-                if(x === 1 && y === 1) { cell.innerText = 'FIX'; cell.id = 'goal'; }
-                if(x === 18 && y === 13) { 
-                    cursor.style.left = '364px'; 
-                    cursor.style.top = '264px'; 
+        let zone = document.getElementById('bug-zone');
+        zone.innerHTML = '';
+        bugsLeft = 10;
+        timeLeft = 8.0;
+        
+        let errors = ["TypeError", "SyntaxError", "404_NotFound", "CORS_Error", "NullPointer"];
+
+        for(let i=0; i<10; i++) {
+            let bug = document.createElement('div');
+            bug.className = 'bug';
+            bug.innerText = errors[Math.floor(Math.random()*errors.length)];
+            bug.style.left = Math.random() * 70 + '%';
+            bug.style.top = Math.random() * 80 + '%';
+            
+            // Fait bouger les bugs de temps en temps
+            setInterval(() => {
+                if(bug.parentElement) {
+                    bug.style.left = Math.random() * 70 + '%';
+                    bug.style.top = Math.random() * 80 + '%';
                 }
-                mazeGrid.appendChild(cell);
+            }, 1000 + Math.random() * 1000);
+
+            bug.onpointerdown = function() {
+                this.remove();
+                bugsLeft--;
+                document.getElementById('bug-count').innerText = bugsLeft;
+                if(bugsLeft <= 0) {
+                    stopTimers();
+                    alert(">>> Code stabilisé ! Passage à l'étape suivante.");
+                    startPhase2();
+                }
+            };
+            zone.appendChild(bug);
+        }
+
+        activeInterval = setInterval(() => {
+            timeLeft -= 0.1;
+            document.getElementById('bug-timer').innerText = timeLeft.toFixed(1);
+            if(timeLeft <= 0) {
+                stopTimers();
+                alert("CRASH SYSTEME ! Le code n'était pas prêt.");
+                startPhase1();
             }
-        }
-        phase1Timer = setTimeout(() => {
-            alert("TIME_OUT. Le fix n'a pas été appliqué à temps.");
-            startPhase1();
-        }, 12000);
+        }, 100);
     }
 
-    function moveCursor(e) {
-        if (e.target.classList.contains('wall')) return;
-        if (e.target.id === 'goal') {
-            clearTimeout(phase1Timer);
-            setTimeout(startPhase2, 300);
-            return;
-        }
-        let rect = mazeGrid.getBoundingClientRect();
-        cursor.style.left = (e.clientX - rect.left - 8) + 'px';
-        cursor.style.top = (e.clientY - rect.top - 8) + 'px';
-    }
-
-    // --- PHASE 2: COMPILE ---
-    let compileProgress = 0;
-    let compileBar = document.getElementById('compile-bar');
-    let keysPrompt = document.getElementById('keys-prompt');
-    let allowedKeys = ['a', 'z', 'e', 'r', 't'];
-    let phase2Interval = null;
+    // --- PHASE 2 : FIRESTORE SYNC ---
+    let syncProgress = 0;
 
     function startPhase2() {
         showScreen('phase2-screen');
-        compileProgress = 0;
-        compileBar.style.width = '0%';
-        setNextKey();
-        phase2Interval = setInterval(compileTick, 50);
+        syncProgress = 0;
+        updateSyncBar();
+        
+        // La barre se vide toute seule
+        activeInterval = setInterval(() => {
+            syncProgress -= 2;
+            if(syncProgress < 0) syncProgress = 0;
+            updateSyncBar();
+        }, 100);
     }
 
-    function compileTick() {
-        compileProgress -= 0.3;
-        if (compileProgress < 0) compileProgress = 0;
-        updateCompileBar();
-    }
-
-    function updateCompileBar() {
-        compileBar.style.width = compileProgress + '%';
-        if (compileProgress >= 100) {
-            clearInterval(phase2Interval);
-            window.onkeydown = null;
-            setTimeout(startPhase3, 500);
+    function mashSync() {
+        syncProgress += 8; // Chaque clic ajoute 8%
+        updateSyncBar();
+        
+        if(syncProgress >= 100) {
+            stopTimers();
+            alert(">>> Base de données synchronisée !");
+            startPhase3();
         }
     }
 
-    function setNextKey() {
-        let k = allowedKeys[Math.floor(Math.random() * allowedKeys.length)];
-        keysPrompt.innerText = k;
+    function updateSyncBar() {
+        document.getElementById('sync-bar').style.width = Math.min(100, syncProgress) + '%';
     }
 
-    window.onkeydown = function(e) {
-        if(document.getElementById('phase2-screen').classList.contains('active-screen')) {
-             if(e.key.toLowerCase() === keysPrompt.innerText) {
-                 compileProgress += 8;
-                 updateCompileBar();
-                 setNextKey();
-             } else {
-                 compileProgress -= 5;
-                 updateCompileBar();
-             }
-        }
-    }
-
-    // --- PHASE 3: DEPLOY ---
-    let commands = ['git push', 'make deploy', 'sudo ./install.sh'];
-    let currentCmdIndex = 0;
-    let typedText = "";
-    let cmdTextSpan = document.getElementById('cmd-text');
-
+    // --- PHASE 3 : TERMINAL PWA ---
+    let expectedStep = 0;
+    
     function startPhase3() {
         showScreen('phase3-screen');
-        currentCmdIndex = 0;
-        typedText = "";
-        cmdTextSpan.innerText = "";
-        window.onkeydown = handleDeployKeys;
+        expectedStep = 0;
+        document.getElementById('terminal-log').innerHTML = "> Authentification requise...<br>> Entrez la séquence de prod :";
     }
 
-    function handleDeployKeys(e) {
-        if(document.getElementById('phase3-screen').classList.contains('active-screen')) {
-            if (e.key.length === 1) {
-                 typedText += e.key;
-                 cmdTextSpan.innerText = typedText;
-                 checkCommand();
-            } else if (e.key === 'Backspace') {
-                 typedText = typedText.slice(0, -1);
-                 cmdTextSpan.innerText = typedText;
+    function checkCmd(step) {
+        let log = document.getElementById('terminal-log');
+        let commands = [
+            "git commit -m 'Final Update'",
+            "npm run build",
+            "firebase deploy --only hosting"
+        ];
+
+        if(step === expectedStep) {
+            log.innerHTML += `<br><span style="color:#0f0">> ${commands[step]} [OK]</span>`;
+            expectedStep++;
+            if(expectedStep === 3) {
+                log.innerHTML += `<br><span style="color:#fff">> DEPLOIEMENT EN COURS...</span>`;
+                setTimeout(startReveal, 1500);
             }
+        } else {
+            log.innerHTML += `<br><span style="color:#f00">> ERREUR FATALE. Séquence corrompue.</span>`;
+            setTimeout(startPhase3, 1500);
         }
+        log.scrollTop = log.scrollHeight; // Scroll auto vers le bas
     }
 
-    function checkCommand() {
-        if (typedText === commands[currentCmdIndex]) {
-            currentCmdIndex++;
-            typedText = "";
-            cmdTextSpan.innerText = "";
-            if (currentCmdIndex >= commands.length) {
-                 window.onkeydown = null;
-                 setTimeout(startReveal, 500);
-            }
-        }
-    }
-
-    // --- REVEAL SCREEN ---
+    // --- REVEAL FINAL ---
     function startReveal() {
         showScreen('reveal-screen');
-        let revealContainer = document.getElementById('reveal-container');
-        let finalMessage = `==============================================
->> DEPLOIEMENT_REUSSI : UNITE 7 <<
-==============================================
-
-Félicitations, DEV. Le système est en ligne.
-La base de données a répondu :
-
-> Statut : [ <span class="pink-text">CRITICAL_INFORMATION_PENDING</span> ]
-
-Veuillez décrypter le message de confirmation
-pour fermer cette session.
-
->>>>>>>>>>>>> [ INIT_ANNOUNCEMENT ] >>>>>>>>>>
-
-----------------------------------------------
-SYSTEM.OUT.PRINTLN("C'EST UNE FILLE !");
-----------------------------------------------
-
-Fermeture du terminal... Au revoir.`;
-
-        revealContainer.style.display = 'block';
-        revealContainer.innerHTML = "";
-        let i = 0;
-        
-        function typeWriter() {
-            if (i < finalMessage.length) {
-                if (finalMessage.charAt(i) === '<') {
-                    let closeIdx = finalMessage.indexOf('>', i);
-                    revealContainer.innerHTML += finalMessage.substring(i, closeIdx + 1);
-                    i = closeIdx + 1;
-                } else {
-                    revealContainer.innerHTML += finalMessage.charAt(i);
-                    i++;
-                }
-                setTimeout(typeWriter, 15);
-            }
-        }
-        typeWriter();
+        setTimeout(() => {
+            document.getElementById('ascii-art').style.display = 'block';
+        }, 2000); // Fait apparaitre le texte rose après 2 secondes de suspense
     }
 </script>
 </body>
 </html>
-
-```
