@@ -65,6 +65,23 @@
         h2 { font-family: 'Bebas Neue', cursive; font-size: 32px; margin: 0 0 15px 0; color: #d32f2f; }
         p { font-size: 15px; margin: 10px 0; color: #bbb; line-height: 1.6;}
         
+        input[type="text"], input[type="password"], input[type="number"] {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid #555;
+            color: #fff;
+            font-family: 'Bebas Neue', cursive;
+            font-size: 24px;
+            padding: 10px;
+            text-align: center;
+            border-radius: 4px;
+            width: 80%;
+            max-width: 250px;
+            margin-top: 15px;
+            outline: none;
+        }
+        
+        input[type="text"]:focus, input[type="number"]:focus { border-color: #d32f2f; }
+
         .btn {
             background-color: #d32f2f;
             color: #fff;
@@ -74,7 +91,7 @@
             font-family: 'Bebas Neue', cursive;
             font-size: 26px;
             cursor: pointer;
-            margin-top: 30px;
+            margin-top: 20px;
             text-transform: uppercase;
             box-shadow: 0 6px 0 #9a0007;
             transition: 0.1s;
@@ -97,7 +114,6 @@
 
         /* PHASE 2: SNATCH */
         #snatch-meter { width: 95%; height: 45px; background: #222; border: 3px solid #555; position: relative; margin: 35px 0; border-radius: 25px; overflow: hidden; }
-        /* Zone verte très large (30% à 70%) pour plus de facilité */
         #snatch-sweet-spot { position: absolute; width: 40%; height: 100%; background: rgba(76, 175, 80, 0.6); left: 30%; top: 0; border-left: 2px solid #4caf50; border-right: 2px solid #4caf50;}
         #snatch-cursor { position: absolute; width: 8px; height: 100%; background: #fff; left: 0%; top: 0; box-shadow: 0 0 10px #fff;}
         #snatch-reps { font-family: 'Bebas Neue', cursive; font-size: 36px; margin-top: 10px; color: #fff;}
@@ -110,11 +126,42 @@
         .mu-progress-container { width: 85%; height: 20px; background: #222; border-radius: 10px; margin-top: 25px; overflow: hidden; border: 2px solid #444;}
         #mu-progress { width: 0%; height: 100%; background: #d32f2f; transition: width 0.1s; }
 
-        /* WHITEBOARD (REVEAL) */
-        #whiteboard { background: #fdfdfd; color: #111; width: 90%; padding: 25px; border-radius: 4px; box-shadow: inset 0 0 30px rgba(0,0,0,0.15); border: 5px solid #ccc; text-align: left; display: none; }
+        /* WHITEBOARD */
+        #whiteboard { background: #fdfdfd; color: #111; width: 90%; padding: 25px; border-radius: 4px; box-shadow: inset 0 0 30px rgba(0,0,0,0.15); border: 5px solid #ccc; text-align: left; }
         .wb-title { font-family: 'Bebas Neue', cursive; font-size: 40px; border-bottom: 3px solid #333; padding-bottom: 10px; margin-bottom: 20px; text-align: center;}
         .wb-line { font-size: 20px; margin-bottom: 15px; font-weight: bold; font-family: 'Courier New', monospace; color: #222; }
-        .wb-reveal { font-family: 'Bebas Neue', cursive; font-size: 48px; color: #d32f2f; text-align: center; margin-top: 35px; transform: rotate(-4deg); }
+        
+        .padlock-box { background: #eee; border: 2px solid #333; padding: 15px; margin-top: 20px; text-align: center; border-radius: 5px;}
+        .padlock-box p { color: #333; font-weight: bold; margin: 0 0 10px 0; font-family: 'Bebas Neue', cursive; font-size: 22px;}
+        .padlock-box input { color: #111; border: 2px solid #999; background: #fff; width: 120px; letter-spacing: 5px;}
+
+        /* FULL SCREEN REVEAL */
+        #full-reveal-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ff6b81;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            animation: popIn 0.5s ease-out forwards;
+        }
+        
+        #full-reveal-screen h1 {
+            font-size: 15vw; /* S'adapte à la taille de l'écran */
+            color: white;
+            text-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -130,7 +177,8 @@
             <span>- 15 Power Snatches</span>
             <span>- Accumulate Ring Hold</span>
         </div>
-        <p>Gère ton souffle, valide tes reps proprement et accède au Whiteboard.</p>
+        <p>Inscris ton nom au tableau avant de commencer :</p>
+        <input type="text" id="player-name" placeholder="TON NOM..." autocomplete="off">
         <button class="btn" onclick="startPhase1()">START 3, 2, 1... GO !</button>
     </div>
 
@@ -187,23 +235,33 @@
         <button class="btn" onpointerdown="tapMU()" style="margin-top:15px; width:100%; max-width:220px;">APPUI (TAP)</button>
     </div>
 
-    <!-- WHITEBOARD REVEAL -->
+    <!-- WHITEBOARD -->
     <div id="reveal-screen" class="screen">
         <div id="whiteboard">
             <div class="wb-title">WHITEBOARD</div>
-            <div class="wb-line">ATHLETE : TOI</div>
-            <div class="wb-line">CATEGORY: RX</div>
-            <div class="wb-line">SCORE : <span id="final-time" style="color:#d32f2f;">00:00</span></div>
-            <div class="wb-line">COACH NOTES :</div>
-            <div class="wb-reveal" style="display:none;" id="gender-reveal">C'EST UNE FILLE ! 🌸</div>
+            <div class="wb-line">ATHLÈTE : <span id="wb-name" style="color:#d32f2f;"></span></div>
+            <div class="wb-line">TEMPS : <span id="final-time"></span></div>
+            <div class="wb-line">SCORE CUMULÉ : <span id="final-score" style="color:#4caf50;"></span></div>
+            
+            <div class="padlock-box">
+                <p>🔒 ENTRER LE CODE D'ACCÈS :</p>
+                <input type="number" id="secret-code" placeholder="----">
+                <button class="btn" style="font-size: 18px; padding: 10px; margin-top: 10px; width: 100%; box-shadow: 0 4px 0 #9a0007;" onclick="checkCode()">DÉVERROUILLER</button>
+            </div>
         </div>
     </div>
 
 </div>
 
+<!-- FULL SCREEN REVEAL (Hors du conteneur du jeu) -->
+<div id="full-reveal-screen">
+    <h1>C'EST<br>UNE<br>FILLE !<br>🌸</h1>
+</div>
+
 <script>
     let activeLoop = null;
     let globalStartTime = 0;
+    let playerName = "";
 
     function showScreen(id) {
         if(activeLoop) { cancelAnimationFrame(activeLoop); clearInterval(activeLoop); activeLoop = null; }
@@ -217,27 +275,30 @@
     let isBurnout = false;
 
     function startPhase1() {
+        let nameInput = document.getElementById('player-name').value.trim();
+        playerName = nameInput === "" ? "INCONNU" : nameInput.toUpperCase();
+        
         globalStartTime = Date.now();
         showScreen('phase1-screen');
         calories = 0; bpm = 90; isBurnout = false;
         
         activeLoop = setInterval(() => {
             if(!isBurnout) {
-                bpm -= 2; // Récupération passive plus douce
+                bpm -= 2;
                 if(bpm < 90) bpm = 90;
                 updateErgUI();
             }
-        }, 400); // Check un peu plus lent
+        }, 400); 
     }
 
     function pullErg() {
         if(isBurnout) return;
         
         calories += 1;
-        bpm += 8; // Monte moins vite qu'avant pour simuler l'endurance
+        bpm += 8; 
         updateErgUI();
 
-        if(calories >= 50) { // Objectif rallongé à 50
+        if(calories >= 50) {
             clearInterval(activeLoop);
             alert("50 Calories atteintes ! On passe à la barre.");
             startPhase2();
@@ -250,9 +311,8 @@
             document.getElementById('lactic-warning').style.opacity = 1;
             document.getElementById('bpm-bar').style.background = '#f44336';
             
-            // Temps de récupération (3 secondes)
             setTimeout(() => {
-                bpm = 130; // Redescend à 130 pour repartir
+                bpm = 130; 
                 isBurnout = false;
                 document.getElementById('btn-row').disabled = false;
                 document.getElementById('lactic-warning').style.opacity = 0;
@@ -265,22 +325,22 @@
         document.getElementById('cal-count').innerText = `${calories} / 50`;
         document.getElementById('bpm-count').innerText = `${bpm} BPM`;
         
-        let pct = ((bpm - 80) / 110) * 100; // Jauge entre 80 et 190
+        let pct = ((bpm - 80) / 110) * 100;
         let bar = document.getElementById('bpm-bar');
         bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
         
         if(!isBurnout) {
-            if(bpm < 140) bar.style.background = '#4caf50'; // Vert
-            else if(bpm < 175) bar.style.background = '#ff9800'; // Orange
-            else bar.style.background = '#f44336'; // Rouge
+            if(bpm < 140) bar.style.background = '#4caf50'; 
+            else if(bpm < 175) bar.style.background = '#ff9800'; 
+            else bar.style.background = '#f44336';
         }
     }
 
-    // --- PHASE 2 : SNATCH (Plus de reps, plus facile) ---
+    // --- PHASE 2 : SNATCH ---
     let snatchPos = 0;
     let snatchDir = 1;
     let snatchReps = 0;
-    let snatchSpeed = 1.5; // Vitesse initiale très gérable
+    let snatchSpeed = 1.5; 
 
     function startPhase2() {
         showScreen('phase2-screen');
@@ -290,7 +350,6 @@
         let lastTime = 0;
         function loop(timestamp) {
             if (!lastTime) lastTime = timestamp;
-            // Vitesse constante basée sur le temps pour être fluide sur tous les écrans
             snatchPos += snatchSpeed * snatchDir; 
             if(snatchPos > 95) { snatchPos = 95; snatchDir = -1; }
             if(snatchPos < 0) { snatchPos = 0; snatchDir = 1; }
@@ -302,12 +361,10 @@
     }
 
     function attemptSnatch() {
-        // Zone verte très large : 30% à 70%
         if(snatchPos >= 28 && snatchPos <= 72) {
             snatchReps++;
             document.getElementById('snatch-reps').innerText = `REPS: ${snatchReps} / 15`;
             
-            // Accélération très légère pour garder le rythme
             if (snatchSpeed < 2.5) snatchSpeed += 0.05; 
             
             document.getElementById('snatch-meter').style.borderColor = '#4caf50';
@@ -319,7 +376,6 @@
                 startPhase3();
             }
         } else {
-            // Pénalité visuelle : NO REP
             let noRep = document.getElementById('no-rep-msg');
             noRep.style.opacity = 1;
             document.getElementById('snatch-meter').style.borderColor = '#f44336';
@@ -345,21 +401,19 @@
         document.getElementById('mu-progress').style.width = `0%`;
 
         activeLoop = setInterval(() => {
-            // Gravité fluide
             muVelocity += 1.5; 
             muPos += muVelocity; 
             
-            if(muPos > 240) { muPos = 240; muVelocity = 0; } // Bloqué en bas
-            if(muPos < 0) { muPos = 0; muVelocity = 0; } // Bloqué en haut
+            if(muPos > 240) { muPos = 240; muVelocity = 0; }
+            if(muPos < 0) { muPos = 0; muVelocity = 0; } 
             
             document.getElementById('mu-cursor').style.top = `${muPos}px`;
 
-            // Zone verte large (90px à 190px)
             if(muPos >= 85 && muPos <= 195) {
-                muProgress += 1.2; // Accumulation lente (effort d'endurance)
+                muProgress += 1.2; 
                 document.getElementById('mu-zone').style.background = 'rgba(76, 175, 80, 0.6)';
             } else {
-                muProgress -= 0.5; // Perte très faible si on sort, on ne punit pas trop
+                muProgress -= 0.5; 
                 document.getElementById('mu-zone').style.background = 'rgba(76, 175, 80, 0.2)';
             }
 
@@ -368,30 +422,41 @@
 
             if(muProgress >= 100) {
                 clearInterval(activeLoop);
-                startReveal();
+                startRevealBoard();
             }
-        }, 30); // Loop plus rapide pour fluidité
+        }, 30); 
     }
 
     function tapMU() {
-        // Impulsion douce vers le haut
         muVelocity -= 8;
     }
 
-    // --- WHITEBOARD REVEAL ---
-    function startReveal() {
+    // --- WHITEBOARD & CODE ---
+    function startRevealBoard() {
         showScreen('reveal-screen');
+        
         let totalMs = Date.now() - globalStartTime;
-        let mins = Math.floor(totalMs / 60000);
-        let secs = Math.floor((totalMs % 60000) / 1000);
+        let totalSeconds = Math.floor(totalMs / 1000);
+        let mins = Math.floor(totalSeconds / 60);
+        let secs = totalSeconds % 60;
+        
+        // Calcul du score (base de 10 000 points, pénalité de 20 pts par seconde écoulée)
+        let finalScore = Math.max(0, 10000 - (totalSeconds * 20));
+
+        document.getElementById('wb-name').innerText = playerName;
         document.getElementById('final-time').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-        
-        document.getElementById('whiteboard').style.display = 'block';
-        
-        // Suspense de 3 secondes avant d'afficher le résultat
-        setTimeout(() => {
-            document.getElementById('gender-reveal').style.display = 'block';
-        }, 3000);
+        document.getElementById('final-score').innerText = `${finalScore} PTS`;
+    }
+
+    function checkCode() {
+        let code = document.getElementById('secret-code').value;
+        if(code === "2810") {
+            // Affichage de l'annonce en plein écran
+            document.getElementById('full-reveal-screen').style.display = 'flex';
+        } else {
+            alert("CODE INCORRECT. Accès refusé.");
+            document.getElementById('secret-code').value = "";
+        }
     }
 </script>
 </body>
