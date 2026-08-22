@@ -3,728 +3,364 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centre de Rééduc' - Ultimate Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <title>>>> COMMIT_TO_PROD.sh <<<</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
-        body { 
-            background: #1a1a24; 
-            color: white; 
-            font-family: 'Press Start 2P', monospace; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            margin: 0; 
+        body {
+            background-color: #000;
+            color: #0f0;
+            font-family: 'VT323', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
             overflow: hidden;
-            touch-action: none;
+            cursor: none;
+            text-shadow: 0 0 5px #0f0;
         }
-        #game-container { 
-            width: 420px; 
-            height: 580px; 
-            border: 4px solid #fff; 
-            position: relative; 
-            overflow: hidden; 
-            background: #2c3e50; 
-            box-shadow: 0 0 25px rgba(255,255,255,0.25);
+
+        #game-container {
+            width: 640px;
+            height: 480px;
+            border: 4px solid #0f0;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle, #111 0%, #000 100%);
+            box-shadow: 0 0 20px rgba(0,255,0,0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
-        .screen { 
-            position: absolute; 
-            width: 100%; 
-            height: 100%; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            text-align: center; 
-            padding: 15px;
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
             box-sizing: border-box;
         }
-        h2 { font-size: 11px; line-height: 1.5; margin-bottom: 8px; }
-        p { font-size: 8px; line-height: 1.5; margin-bottom: 10px; }
-        .btn { 
-            background: #e74c3c; 
-            color: white; 
-            border: none; 
-            padding: 10px 14px; 
-            margin: 5px; 
-            cursor: pointer; 
-            font-family: inherit; 
-            font-size: 8px; 
-            box-shadow: 0 4px 0 #c0392b;
-            width: 240px;
+
+        .active-screen {
+            display: flex;
         }
-        .btn:active { transform: translateY(4px); box-shadow: none; }
-        
-        .progress-bar-container { width: 85%; height: 16px; border: 2px solid #fff; margin: 8px 0; background: #111; }
-        #progress-fill { width: 0%; height: 100%; background: #2ecc71; transition: width 0.05s; }
 
-        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%; max-width: 360px; }
-        canvas { background: #111; border: 2px solid #fff; display: block; margin: 5px auto; }
+        h1 { font-size: 48px; margin: 0 0 10px 0; }
+        p { font-size: 24px; margin: 10px 0; }
+        .btn {
+            background-color: #000;
+            color: #0f0;
+            border: 2px solid #0f0;
+            padding: 10px 20px;
+            font-family: 'VT323', monospace;
+            font-size: 24px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: all 0.1s;
+        }
+        .btn:hover { background-color: #0f0; color: #000; box-shadow: 0 0 10px #0f0;}
 
-        .workbench { width: 380px; height: 280px; border: 2px dashed #fff; position: relative; background: #34495e; margin: 5px auto; }
-        .part { position: absolute; cursor: grab; user-select: none; font-size: 22px; padding: 6px; background: rgba(0,0,0,0.6); border: 2px solid #fff; border-radius: 4px; }
-        
-        .slot { position: absolute; border: 2px dashed #f1c40f; background: rgba(241, 196, 15, 0.1); display: flex; align-items: center; justify-content: center; font-size: 7px; color: #f1c40f; }
+        /* --- PHASE 1: DEBUG --- */
+        #maze-grid {
+            display: grid;
+            grid-template-columns: repeat(20, 20px);
+            grid-template-rows: repeat(15, 20px);
+            gap: 2px;
+            margin-top: 20px;
+        }
+        .cell { width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; font-size: 14px; color: #333; }
+        .wall { background-color: #030; }
+        .path { cursor: pointer; }
+        #cursor {
+            position: absolute;
+            width: 16px; height: 16px;
+            background-color: #0f0;
+            border-radius: 2px;
+            box-shadow: 0 0 10px #0f0;
+            pointer-events: none;
+            transition: transform 0.1s;
+        }
+        #goal { font-size: 24px; color: #ff0; }
 
-        #mystery-gift { cursor: pointer; font-size: 50px; margin-top: 15px; animation: bounce 1s infinite alternate; }
-        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+        /* --- PHASE 2: COMPILE --- */
+        #compile-bar-container {
+            width: 400px; height: 30px;
+            border: 2px solid #0f0;
+            margin-top: 30px;
+            padding: 2px;
+        }
+        #compile-bar {
+            width: 0%; height: 100%;
+            background-color: #0f0;
+            transition: width 0.1s linear;
+        }
+        #keys-prompt { font-size: 40px; margin-top: 40px; letter-spacing: 10px;}
+
+        /* --- PHASE 3: DEPLOY --- */
+        #command-line { font-size: 28px; margin-top: 20px; min-height: 1.2em;}
+        #input-cursor {
+            display: inline-block; width: 10px; height: 1.2em;
+            background-color: #0f0; animation: blink 1s infinite;
+        }
+
+        /* --- REVEAL SCREEN --- */
+        #reveal-container {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 10px; line-height: 10px;
+            white-space: pre;
+            color: #0f0;
+            display: none;
+        }
+        .pink-text { color: #ff6b81; }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    
-    <!-- 1. MENU PRINCIPAL -->
-    <div id="menu-screen" class="screen">
-        <h2>CENTRE DE<br>RÉÉDUCATION</h2>
-        <p>Choisis ton métier !</p>
-        <div class="menu-grid">
-            <button class="btn" style="background:#3498db; width:100%;" onclick="openRules('kine')">1. KINÉ</button>
-            <button class="btn" style="background:#e67e22; width:100%;" onclick="openRules('ergo')">2. ERGO</button>
-            <button class="btn" style="background:#2ecc71; width:100%;" onclick="openRules('eapa')">3. EAPA</button>
-            <button class="btn" style="background:#9b59b6; width:100%;" onclick="openRules('brancardier')">4. BRANCARDIER</button>
-        </div>
+
+    <!-- INTRODUCTION -->
+    <div id="intro-screen" class="screen active-screen">
+        <h1>>>> COMMIT_TO_PROD.sh <<<</h1>
+        <p>Bienvenue, DEV.</p>
+        <p>Votre tâche : pousser le code en production.</p>
+        <button class="btn" onclick="startPhase1()">[ EXECUTER ]</button>
     </div>
 
-    <!-- RÈGLEMENT DU JEU -->
-    <div id="rules-screen" class="screen" style="display:none;">
-        <h2>RÈGLEMENT DU JEU</h2>
-        <p id="rules-text" style="font-size: 7px; line-height: 1.8; margin: 15px 0;"></p>
-        <button class="btn" onclick="startCurrentGame()">JOUER</button>
-        <button class="btn" style="background:#7f8c8d; box-shadow:0 4px 0 #2c3e50;" onclick="showScreen('menu-screen')">RETOUR</button>
+    <!-- PHASE 1: DEBUG (Le Labyrinthe) -->
+    <div id="phase1-screen" class="screen">
+        <h1>DEBUG_CRITIQUE</h1>
+        <p>Le projet est corrompu. Guidez votre curseur vers le FIX avant le TIME_OUT.</p>
+        <div id="maze-grid" onmousemove="moveCursor(event)"></div>
+        <div id="cursor"></div>
     </div>
 
-    <!-- 2A-1. KINÉ : Massage -->
-    <div id="kine-massage-screen" class="screen" style="display:none;">
-        <h2>MASSAGE DE VITESSE (3 MAMIES)</h2>
-        <p id="mamie-txt">Mamie 1/3 - Frotte de PLUS EN PLUS VITE !</p>
-        <div id="massage-zone" style="width:340px; height:120px; background:#34495e; border:2px dashed #fff; margin:15px auto; display:flex; align-items:center; justify-content:center; font-size:40px; touch-action:none;">👵</div>
-        <div class="progress-bar-container"><div id="progress-fill"></div></div>
-        <p style="font-size:7px; color:#f1c40f;">Progression : <span id="swipe-count">0</span>%</p>
+    <!-- PHASE 2: COMPILE (Le Rythme) -->
+    <div id="phase2-screen" class="screen">
+        <h1>COMPILE_PROD_V2.0</h1>
+        <p>Compilation en cours... Appuyez sur les touches indiquées en rythme.</p>
+        <div id="keys-prompt"></div>
+        <div id="compile-bar-container"><div id="compile-bar"></div></div>
     </div>
 
-    <!-- 2A-2. KINÉ : Goniomètre classique -->
-    <div id="kine-gonio-screen" class="screen" style="display:none;">
-        <h2>GONIOMÈTRE CLASSIQUE</h2>
-        <p>Ajuste l'angle à 30° depuis le pivot inférieur !</p>
-        <canvas id="gonio-canvas" width="240" height="200"></canvas>
-        <button class="btn" onclick="validateClassicGoniometer()">VALIDER L'ANGLE</button>
+    <!-- PHASE 3: DEPLOY (Le Hacking) -->
+    <div id="phase3-screen" class="screen">
+        <h1>DEPLOYEMENT_FORCE_UNIT7</h1>
+        <p>Session bloquée par le pare-feu ! Entrez les commandes d'urgence.</p>
+        <div id="command-line">root@prod_unit7:~$ <span id="cmd-text"></span><span id="input-cursor"></span></div>
     </div>
 
-    <!-- 2A-3. KINÉ : Plateau Technique (8 Boxs) -->
-    <div id="kine-cooking-screen" class="screen" style="display:none;">
-        <h2>PLATEAU 8 BOXS (HARDCORE)</h2>
-        <p>Libère en < 1.5s dès que c'est prêt !</p>
-        <canvas id="cooking-canvas" width="400" height="340"></canvas>
-        <p style="font-size:7px; color:#f1c40f;">Guéris : <span id="cook-score">0</span>/15</p>
-    </div>
-
-    <!-- 2B-1. ERGO : Réparation Réaliste (Vissage) -->
-    <div id="ergo-repair1-screen" class="screen" style="display:none;">
-        <h2>ATELIER MÉCANIQUE (1/2)</h2>
-        <p id="ergo-txt1">Place les pièces dans les emplacements puis MAINTIENZ pour VISSER !</p>
-        <div class="workbench" id="workbench1">
-            <div class="slot" id="slot-base1" style="top:110px; left:130px; width:100px; height:80px;">Châssis</div>
-            <div class="slot" id="slot-wheel1-1" style="top:110px; left:20px; width:70px; height:80px;">Roue G</div>
-            <div class="slot" id="slot-wheel2-1" style="top:110px; left:270px; width:70px; height:80px;">Roue D</div>
-            <div class="slot" id="slot-cushion1" style="top:25px; left:130px; width:100px; height:60px;">Assise</div>
-
-            <div id="part-base1" class="part" style="top:210px; left:20px;">🦽 Châssis</div>
-            <div id="part-wheel1-1" class="part" style="top:210px; left:130px;">⚙️ Roue G</div>
-            <div id="part-wheel2-1" class="part" style="top:210px; left:200px;">⚙️ Roue D</div>
-            <div id="part-cushion1" class="part" style="top:210px; left:280px;">🛋️ Coussin</div>
-        </div>
-        <p style="font-size:7px; color:#f1c40f;" id="ergo-status1">Vis serrées : 0/4</p>
-    </div>
-
-    <!-- 2B-2. ERGO : Labyrinthe étroit & complexe -->
-    <div id="ergo-maze-screen" class="screen" style="display:none;">
-        <h2>LABYRINTHE DE DEXTÉRITÉ COMPLEXE</h2>
-        <p>Guide ton doigt du VERT vers le BLEU sans toucher les murs noirs !</p>
-        <canvas id="maze-canvas" width="380" height="320"></canvas>
-    </div>
-
-    <!-- 2B-3. ERGO : Re-réparation Réaliste -->
-    <div id="ergo-repair2-screen" class="screen" style="display:none;">
-        <h2>RE-ATELIER MÉCANIQUE (2/2)</h2>
-        <p id="ergo-txt2">Re-place et visse tout après le parcours !</p>
-        <div class="workbench" id="workbench2">
-            <div class="slot" id="slot-base2" style="top:110px; left:130px; width:100px; height:80px;">Châssis</div>
-            <div class="slot" id="slot-wheel1-2" style="top:110px; left:20px; width:70px; height:80px;">Roue G</div>
-            <div class="slot" id="slot-wheel2-2" style="top:110px; left:270px; width:70px; height:80px;">Roue D</div>
-            <div class="slot" id="slot-cushion2" style="top:25px; left:130px; width:100px; height:60px;">Assise</div>
-
-            <div id="part-base2" class="part" style="top:210px; left:20px;">🦽 Châssis</div>
-            <div id="part-wheel1-2" class="part" style="top:210px; left:130px;">⚙️ Roue G</div>
-            <div id="part-wheel2-2" class="part" style="top:210px; left:200px;">⚙️ Roue D</div>
-            <div id="part-cushion2" class="part" style="top:210px; left:280px;">🛋️ Coussin</div>
-        </div>
-        <p style="font-size:7px; color:#f1c40f;" id="ergo-status2">Vis serrées : 0/4</p>
-    </div>
-
-    <!-- 2C-1. EAPA : Temple Run -->
-    <div id="eapa-runner-screen" class="screen" style="display:none;">
-        <h2>TEMPLE RUN : EAPA</h2>
-        <p>Swipe ou clique GAUCHE / DROITE !</p>
-        <canvas id="eapa-temple-canvas" width="300" height="400"></canvas>
-        <p style="font-size:7px; color:#f1c40f;" id="eapa-temple-score">Ballons : 0/8</p>
-    </div>
-
-    <!-- 2C-2. EAPA : Balle à déplacer dans 18 trous (Timer 0.5s par trou) -->
-    <div id="eapa-ball-screen" class="screen" style="display:none;">
-        <h2>PROPRIOCEPTION : GUIDAGE DE BALLE</h2>
-        <p>Amène la balle dans les trous (Attention : 0.5s max par trou ou retour à 0 !)</p>
-        <canvas id="ball-canvas" width="300" height="300"></canvas>
-        <p style="font-size:7px; color:#f1c40f;" id="ball-score">Trous validés : 0/18</p>
-    </div>
-
-    <!-- 2D. BRANCARDIER (Joueur réduit à 18px) -->
-    <div id="brancardier-screen" class="screen" style="display:none;">
-        <h2>COURSIVE RACING SWIPE</h2>
-        <p>Swipe à gauche / droite (Brancard miniature 18px) !</p>
-        <canvas id="racing-canvas" width="320" height="380" style="touch-action: none;"></canvas>
-    </div>
-
-    <div id="dating-screen" class="screen" style="display:none;">
-        <h2>SPEED-DATING HÔPITAL</h2>
-        <p id="dating-question"></p>
-        <div id="dating-choices" style="display:flex; flex-direction:column; gap:6px; width:100%; margin-top:10px;"></div>
-        <p style="font-size:7px; color:#f1c40f; margin-top:10px;">Points : <span id="dating-score">0</span>/3</p>
-    </div>
-
-    <!-- 3. INTERmédiaire FÉLICITATIONS -->
-    <div id="congrats-screen" class="screen" style="display:none;">
-        <h2>FÉLICITATIONS</h2>
-        <p style="font-size: 8px; line-height: 1.6; margin: 15px 0;">Tu as réussi toutes les épreuves du centre !</p>
-        <button class="btn" onclick="showScreen('gift-screen')">SAVOIR LE SEXE</button>
-    </div>
-
-    <!-- 4. CADEAU -->
-    <div id="gift-screen" class="screen" style="display:none;">
-        <h2>OBJECTIF ATTEINT !</h2>
-        <div id="mystery-gift" onclick="showScreen('reveal-screen')">🎁</div>
-    </div>
-
-    <!-- 5. REVEAL -->
-    <div id="reveal-screen" class="screen" style="display:none; background: rgba(255, 107, 129, 0.95);">
-        <h2>C'EST UNE FILLE ! 🌸</h2>
+    <!-- REVEAL SCREEN (L'Annonce) -->
+    <div id="reveal-screen" class="screen">
+        <div id="reveal-container"></div>
     </div>
 
 </div>
 
 <script>
-    let activeLoop = null;
-    let selectedGameType = '';
+    let activeInterval = null;
+    let gameContainer = document.getElementById('game-container');
 
-    function stopAllLoops() {
-        if (activeLoop) {
-            cancelAnimationFrame(activeLoop);
-            clearInterval(activeLoop);
-            activeLoop = null;
-        }
-        window.onkeydown = null;
+    // --- UTILITAIRES ---
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+        document.getElementById(id).classList.add('active-screen');
     }
 
-    function showScreen(id) { 
-        stopAllLoops();
-        document.querySelectorAll('.screen').forEach(s => s.style.display = 'none'); 
-        document.getElementById(id).style.display = 'flex'; 
-    }
-
-    // Gestion du règlement avant chaque jeu
-    function openRules(type) {
-        selectedGameType = type;
-        const textRules = {
-            kine: "RÈGLEMENT KINÉ :\n\n1. Frotte rapidement pour masser les 3 mamies.\n2. Règle le goniomètre précisément à 30°.\n3. Gère les boxs du plateau technique en libérant les patients en moins de 1.5s dès qu'ils sont prêts !",
-            ergo: "RÈGLEMENT ERGO :\n\n1. Assemble le fauteuil en plaçant chaque pièce sur sa zone et maintiens pour visser.\n2. Traverse le labyrinthe de dextérité extrêmement sinueux sans toucher les bords.\n3. Réitère l'assemblage après le parcours.",
-            eapa: "RÈGLEMENT EAPA :\n\n1. Survie au Temple Run en swipant.\n2. Guidage de balle : Tu disposes de STRICTEMENT 0.5 seconde pour valider chaque trou consécutif. Si tu rates le timing, ton score retombe immédiatement à 0 !",
-            brancardier: "RÈGLEMENT BRANCARDIER :\n\n1. Ton brancard est ultra-réduit (18px) pour pouvoir se faufiler.\n2. Swipe latéralement pour éviter les murs des couloirs de l'hôpital.\n3. Termine le speed-dating avec brio !"
-        };
-        document.getElementById('rules-text').innerText = textRules[type];
-        showScreen('rules-screen');
-    }
-
-    function startCurrentGame() {
-        if(selectedGameType === 'kine') startKineMassage();
-        if(selectedGameType === 'ergo') startErgoRepair1();
-        if(selectedGameType === 'eapa') startEapaTempleRun();
-        if(selectedGameType === 'brancardier') startBrancardier();
-    }
-
-    // --- 1. KINÉ ---
-    let mamieIndex = 1, swipeProgress = 0, lastX = null, lastTime = 0;
-    function startKineMassage() {
-        mamieIndex = 1; swipeProgress = 0; runMamieMassage();
-    }
-    function runMamieMassage() {
-        swipeProgress = 0; document.getElementById('progress-fill').style.width = '0%';
-        document.getElementById('mamie-txt').innerText = `Mamie ${mamieIndex}/3 - Frotte VITE !`;
-        showScreen('kine-massage-screen');
-        let z = document.getElementById('massage-zone');
-        
-        z.onpointerdown = (e) => { lastX = e.clientX; lastTime = Date.now(); };
-        z.onpointermove = (e) => {
-            if(lastX !== null) {
-                let dist = Math.abs(e.clientX - lastX);
-                let dt = Date.now() - lastTime;
-                let speed = dist / (dt || 1);
-                lastX = e.clientX; lastTime = Date.now();
-
-                if(speed > 0.8) {
-                    swipeProgress += 1.5;
-                    document.getElementById('progress-fill').style.width = Math.min(100, swipeProgress) + '%';
-                    document.getElementById('swipe-count').innerText = Math.floor(swipeProgress);
-                    if(swipeProgress >= 100) {
-                        mamieIndex++;
-                        if(mamieIndex <= 3) { runMamieMassage(); }
-                        else { setTimeout(startKineGoniometer, 400); }
-                    }
-                } else {
-                    swipeProgress = Math.max(0, swipeProgress - 0.5);
-                }
-            }
-        };
-        z.onpointerup = () => lastX = null;
-    }
-
-    let gAngle = 0, draggingG = false;
-    function startKineGoniometer() {
-        showScreen('kine-gonio-screen');
-        let c = document.getElementById('gonio-canvas'), ctx = c.getContext('2d');
-        gAngle = Math.floor(Math.random() * 60) + 10;
-        let draw = () => {
-            ctx.clearRect(0,0,240,200);
-            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(120, 180, 6, 0, 2*Math.PI); ctx.fill();
-            ctx.strokeStyle = '#3498db'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(120, 180); ctx.lineTo(200, 180); ctx.stroke();
-            let rad = (-gAngle) * Math.PI / 180;
-            ctx.strokeStyle = '#e74c3c'; ctx.beginPath(); ctx.moveTo(120, 180); ctx.lineTo(120 + Math.cos(rad)*80, 180 + Math.sin(rad)*80); ctx.stroke();
-        };
-        draw();
-        c.onpointerdown = () => draggingG = true;
-        c.onpointermove = (e) => {
-            if(draggingG) {
-                let r = c.getBoundingClientRect();
-                gAngle = Math.round(Math.atan2(180 - (e.clientY - r.top), (e.clientX - r.left) - 120) * (180/Math.PI));
-                if(gAngle < 0) gAngle += 180;
-                draw();
-            }
-        };
-        c.onpointerup = () => draggingG = false;
-    }
-    function validateClassicGoniometer() {
-        if(gAngle >= 25 && gAngle <= 35) startKineCooking();
-        else alert("Angle incorrect ! Vise 30°.");
-    }
-
-    function startKineCooking() {
-        showScreen('kine-cooking-screen');
-        let canvas = document.getElementById('cooking-canvas'), ctx = canvas.getContext('2d');
-        let cookScore = 0, patientsQ = 20, cBoxes = [], gameOver = false;
-        for(let i=0; i<8; i++) cBoxes.push({id: i, p: null});
-        
-        let loop = () => {
-            if(gameOver || document.getElementById('kine-cooking-screen').style.display === 'none') return;
-            ctx.clearRect(0,0,400,340);
-            ctx.fillStyle='#fff'; ctx.font='8px monospace'; ctx.fillText(`File d'attente : ${patientsQ}`, 15, 20);
-
-            cBoxes.forEach((box, i) => {
-                let bx = (i % 4) * 95 + 15;
-                let by = Math.floor(i / 4) * 110 + 40;
-
-                ctx.fillStyle = box.p ? (box.p.ready ? (box.p.overdue ? '#e74c3c' : '#27ae60') : '#c0392b') : '#34495e';
-                ctx.fillRect(bx, by, 85, 95);
-                ctx.strokeRect(bx, by, 85, 95);
-
-                ctx.fillStyle='#fff'; ctx.fillText(`Box ${i+1}`, bx+5, by+15);
-
-                if(box.p) {
-                    if(!box.p.ready) {
-                        box.p.progress += box.p.speed;
-                        if(box.p.progress >= 100) { box.p.ready = true; box.p.overdueTime = Date.now(); }
-                        ctx.fillStyle='#f1c40f'; ctx.fillRect(bx+10, by+60, box.p.progress * 0.65, 8);
-                    } else {
-                        let elapsed = Date.now() - box.p.overdueTime;
-                        if(elapsed > 1500) {
-                            gameOver = true;
-                            stopAllLoops();
-                            ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0,0,400,340);
-                            ctx.fillStyle = '#e74c3c'; ctx.font = '12px monospace'; ctx.fillText("TROP TARD !", 120, 150);
-                            ctx.fillStyle = '#fff'; ctx.font = '8px monospace'; ctx.fillText("Clique pour recommencer", 90, 180);
-                            canvas.onclick = () => startKineCooking();
-                            return;
-                        }
-                        ctx.fillStyle='#fff'; ctx.fillText("VITE ! LIBR", bx+5, by+50);
-                    }
-                } else if(patientsQ > 0) {
-                    box.p = { progress: 0, ready: false, overdueTime: 0, speed: Math.random() * 0.6 + 0.4 };
-                    patientsQ--;
-                }
-            });
-            activeLoop = requestAnimationFrame(loop);
-        };
-        loop();
-
-        canvas.onclick = (e) => {
-            if(gameOver) return;
-            let r = canvas.getBoundingClientRect();
-            let mx = e.clientX - r.left, my = e.clientY - r.top;
-            cBoxes.forEach((box, i) => {
-                let bx = (i % 4) * 95 + 15;
-                let by = Math.floor(i / 4) * 110 + 40;
-                if(mx >= bx && mx <= bx+85 && my >= by && my <= by+95) {
-                    if(box.p && box.p.ready) {
-                        box.p = null; cookScore++;
-                        document.getElementById('cook-score').innerText = cookScore;
-                        if(cookScore >= 15) setTimeout(() => showScreen('congrats-screen'), 400);
-                    }
-                }
-            });
-        };
-    }
-
-    // --- 2. ERGO : Vissage ---
-    function startErgoRepair1() {
-        showScreen('ergo-repair1-screen');
-        setupRealisticWorkbench('workbench1', 'ergo-status1', () => startErgoMazeComplex());
-    }
-
-    // Labyrinthe Ergo complexifié et très étroit
-    let mazePlaying = false, mX = 30, mY = 50;
-    function startErgoMazeComplex() {
-        showScreen('ergo-maze-screen');
-        let c = document.getElementById('maze-canvas'), ctx = c.getContext('2d');
-        mazePlaying = true; mX = 30; mY = 50;
-
-        c.onpointermove = (e) => {
-            if(!mazePlaying) return;
-            let r = c.getBoundingClientRect();
-            let x = e.clientX - r.left, y = e.clientY - r.top;
-
-            // Chemins ultra-étroits et sinueux (Labyrinthe complexe)
-            let p1 = (x >= 20 && x <= 360 && y >= 30 && y <= 50);
-            let p2 = (x >= 340 && x <= 360 && y >= 30 && y <= 150);
-            let p3 = (x >= 50 && x <= 360 && y >= 130 && y <= 150);
-            let p4 = (x >= 50 && x <= 70 && y >= 130 && y <= 240);
-            let p5 = (x >= 50 && x <= 330 && y >= 220 && y <= 240);
-            let p6 = (x >= 310 && x <= 330 && y >= 220 && y <= 290);
-            let p7 = (x >= 80 && x <= 330 && y >= 270 && y <= 290);
-
-            if(p1 || p2 || p3 || p4 || p5 || p6 || p7) {
-                mX = x; mY = y;
-            } else {
-                mazePlaying = false;
-                stopAllLoops();
-                ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0,0,380,320);
-                ctx.fillStyle = '#e74c3c'; ctx.font = '10px monospace'; ctx.fillText("MUR TOUCHÉ !", 110, 140);
-                ctx.fillStyle = '#fff'; ctx.font = '7px monospace'; ctx.fillText("Clique pour recommencer", 95, 170);
-                c.onclick = () => startErgoMazeComplex();
-            }
-        };
-
-        let loop = () => {
-            if(!mazePlaying) return;
-            ctx.clearRect(0,0,380,320);
-
-            // Dessin des murs du labyrinthe complexe (tout est mur sauf les chemins étroits)
-            ctx.fillStyle = '#e74c3c'; ctx.fillRect(0, 0, 380, 320);
-            ctx.fillStyle = '#111';
-            ctx.fillRect(20, 30, 340, 20);
-            ctx.fillRect(340, 30, 20, 120);
-            ctx.fillRect(50, 130, 310, 20);
-            ctx.fillRect(50, 130, 20, 110);
-            ctx.fillRect(50, 220, 280, 20);
-            ctx.fillRect(310, 220, 20, 70);
-            ctx.fillRect(80, 270, 250, 20);
-
-            // Départ (Vert) et Arrivée (Bleu)
-            ctx.fillStyle = '#2ecc71'; ctx.fillRect(20, 30, 12, 20);
-            ctx.fillStyle = '#3498db'; ctx.fillRect(80, 270, 20, 20);
-            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(mX, mY, 5, 0, 2*Math.PI); ctx.fill();
-
-            if(mX >= 80 && mX <= 100 && mY >= 270 && mY <= 290) {
-                mazePlaying = false;
-                setTimeout(startErgoRepair2, 400);
-                return;
-            }
-            activeLoop = requestAnimationFrame(loop);
-        };
-        loop();
-    }
-
-    function startErgoRepair2() {
-        showScreen('ergo-repair2-screen');
-        setupRealisticWorkbench('workbench2', 'ergo-status2', () => {
-            setTimeout(() => showScreen('congrats-screen'), 400);
-        });
-    }
-
-    function setupRealisticWorkbench(wbId, statusId, onSuccess) {
-        let wb = document.getElementById(wbId);
-        let pairs = [
-            { partId: wbId.includes('2') ? 'part-base2' : 'part-base1', slotId: wbId.includes('2') ? 'slot-base2' : 'slot-base1', screwed: false },
-            { partId: wbId.includes('2') ? 'part-wheel1-2' : 'part-wheel1-1', slotId: wbId.includes('2') ? 'slot-wheel1-2' : 'slot-wheel1-1', screwed: false },
-            { partId: wbId.includes('2') ? 'part-wheel2-2' : 'part-wheel2-1', slotId: wbId.includes('2') ? 'slot-wheel2-2' : 'slot-wheel2-1', screwed: false },
-            { partId: wbId.includes('2') ? 'part-cushion2' : 'part-cushion1', slotId: wbId.includes('2') ? 'slot-cushion2' : 'slot-cushion1', screwed: false }
-        ];
-
-        let screwedCount = 0;
-        document.getElementById(statusId).innerText = `Vis serrées : 0/4`;
-
-        pairs.forEach(pair => {
-            let el = document.getElementById(pair.partId);
-            let slot = document.getElementById(pair.slotId);
-            el.style.top = '210px';
-            el.style.left = (Math.random() * 250 + 20) + 'px';
-            pair.screwed = false;
-
-            el.onpointerdown = (e) => {
-                if(pair.screwed) return;
-                let move = (ev) => {
-                    let rect = wb.getBoundingClientRect();
-                    el.style.left = (ev.clientX - rect.left - 25) + 'px';
-                    el.style.top = (ev.clientY - rect.top - 20) + 'px';
-                };
-                let up = () => {
-                    document.removeEventListener('pointermove', move);
-                    let sRect = slot.getBoundingClientRect();
-                    let eRect = el.getBoundingClientRect();
-                    let overlap = !(eRect.right < sRect.left || eRect.left > sRect.right || eRect.bottom < sRect.top || eRect.top > sRect.bottom);
-                    
-                    if(overlap && !pair.screwed) {
-                        el.style.left = slot.style.left;
-                        el.style.top = slot.style.top;
-                        
-                        el.style.background = '#e67e22';
-                        el.innerText += ' 🔧';
-                        
-                        let screwProgress = 0;
-                        let screwingInterval = setInterval(() => {
-                            screwProgress += 10;
-                            el.style.opacity = (0.5 + screwProgress/200);
-                            if(screwProgress >= 100) {
-                                clearInterval(screwingInterval);
-                                pair.screwed = true;
-                                el.style.background = '#27ae60';
-                                el.innerText = el.innerText.replace(' 🔧', ' ✔️');
-                                el.onpointerdown = null;
-                                screwedCount++;
-                                document.getElementById(statusId).innerText = `Vis serrées : ${screwedCount}/4`;
-
-                                if(screwedCount === 4) {
-                                    alert("Fauteuil assemblé et vissé avec succès !");
-                                    onSuccess();
-                                }
-                            }
-                        }, 150);
-
-                        el.onpointerup = () => clearInterval(screwingInterval);
-                    }
-                };
-                document.addEventListener('pointermove', move);
-                document.addEventListener('pointerup', up, { once: true });
-            };
-        });
-    }
-
-    // --- 3. EAPA ---
-    function startEapaTempleRun() {
-        showScreen('eapa-runner-screen');
-        let c = document.getElementById('eapa-temple-canvas'), ctx = c.getContext('2d');
-        let tLane = 1, tScore = 0, tRunning = true, eapaObstacles = [];
-        document.getElementById('eapa-temple-score').innerText = `Ballons : 0/8`;
-
-        let startX = 0;
-        c.onpointerdown = (e) => startX = e.clientX;
-        c.onpointerup = (e) => {
-            let diff = e.clientX - startX;
-            if(diff > 25) tLane = Math.min(2, tLane + 1);
-            else if(diff < -25) tLane = Math.max(0, tLane - 1);
-        };
-        window.onkeydown = (e) => {
-            if(e.code === 'ArrowLeft') tLane = Math.max(0, tLane - 1);
-            if(e.code === 'ArrowRight') tLane = Math.min(2, tLane + 1);
-        };
-
-        let loop = () => {
-            if(!tRunning) return;
-            ctx.clearRect(0,0,300,400);
-            ctx.strokeStyle = '#555'; ctx.beginPath(); ctx.moveTo(100,0); ctx.lineTo(100,400); ctx.moveTo(200,0); ctx.lineTo(200,400); ctx.stroke();
-
-            let pX = 50 + tLane * 100;
-            ctx.fillStyle = '#2ecc71'; ctx.fillRect(pX - 12, 320, 24, 24);
-
-            if(Math.random() < 0.025) eapaObstacles.push({lane: Math.floor(Math.random()*3), y: -40, type: Math.random()>0.4?'plot':'ballon'});
-            eapaObstacles.forEach((o, index) => {
-                o.y += 4;
-                let oX = 50 + o.lane * 100;
-                ctx.fillStyle = o.type === 'plot' ? '#e74c3c' : '#3498db';
-                ctx.fillRect(oX - 10, o.y, 20, 20);
-
-                if(o.y > 300 && o.y < 340 && o.lane === tLane) {
-                    if(o.type === 'plot') {
-                        tRunning = false;
-                        stopAllLoops();
-                        ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0,0,300,400);
-                        ctx.fillStyle = '#e74c3c'; ctx.font = '10px monospace'; ctx.fillText("PLOT TOUCHÉ !", 90, 180);
-                        ctx.fillStyle = '#fff'; ctx.font = '7px monospace'; ctx.fillText("Clique pour recommencer", 70, 210);
-                        c.onclick = () => startEapaTempleRun();
-                        return;
-                    } else {
-                        eapaObstacles.splice(index, 1);
-                        tScore++;
-                        document.getElementById('eapa-temple-score').innerText = `Ballons : ${tScore}/8`;
-                        if(tScore >= 8) { tRunning = false; setTimeout(startBallGameWithTimer, 400); }
-                    }
-                }
-            });
-            activeLoop = requestAnimationFrame(loop);
-        };
-        loop();
-    }
-
-    // Balle EAPA (18 trous avec Timer strict de 0.5s par trou)
-    function startBallGameWithTimer() {
-        showScreen('eapa-ball-screen');
-        let c = document.getElementById('ball-canvas'), ctx = c.getContext('2d');
-        let ballX = 150, ballY = 150;
-        let holes = Array.from({length: 18}, () => ({ x: Math.random() * 200 + 50, y: Math.random() * 200 + 50 }));
-        let currentHole = 0;
-        let holeStartTime = Date.now();
-
-        c.onpointermove = (e) => {
-            let r = c.getBoundingClientRect();
-            ballX = e.clientX - r.left; ballY = e.clientY - r.top;
-        };
-
-        let loop = () => {
-            if(document.getElementById('eapa-ball-screen').style.display === 'none') return;
-            ctx.clearRect(0,0,300,300);
-
-            // Vérification stricte du délai de 0.5s (500 ms) par trou
-            let elapsed = Date.now() - holeStartTime;
-            if(elapsed > 800) {
-                currentHole = 0; // Retour à zéro en cas de dépassement
-                holeStartTime = Date.now();
-                document.getElementById('ball-score').style.color = '#e74c3c';
-                setTimeout(() => document.getElementById('ball-score').style.color = '#f1c40f', 200);
-            }
-
-            let h = holes[currentHole];
-            ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(h.x, h.y, 22, 0, 2*Math.PI); ctx.fill();
-            ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(ballX, ballY, 8, 0, 2*Math.PI); ctx.fill();
-
-            document.getElementById('ball-score').innerText = `Trous : ${currentHole}/18 (Temps: ${((800 - elapsed)/1000).toFixed(1)}s)`;
-
-            if(Math.hypot(ballX - h.x, ballY - h.y) < 22) {
-                currentHole++;
-                holeStartTime = Date.now(); // Reset du timer pour le prochain trou
-                document.getElementById('ball-score').innerText = `Trous validés : ${currentHole}/18`;
-                if(currentHole >= 18) { setTimeout(() => finishAll(), 400); return; }
-            }
-            activeLoop = requestAnimationFrame(loop);
-        };
-        loop();
-    }
-
-    // --- 4. BRANCARDIER (Joueur miniature 18px) ---
-    let rX = 140, rY = 350, rPlaying = false;
-    function startBrancardier() {
-        showScreen('brancardier-screen');
-        let c = document.getElementById('racing-canvas'), ctx = c.getContext('2d');
-        rX = 140; rY = 350; rPlaying = true;
-        
-        let roadObs = [
-            {y: 0, gapX: 60}, {y: -130, gapX: 150}, {y: -260, gapX: 80},
-            {y: -390, gapX: 160}, {y: -520, gapX: 100}, {y: -650, gapX: 140}
-        ];
-
-        let startSwipeX = 0;
-        c.onpointerdown = (e) => { startSwipeX = e.clientX; };
-        c.onpointermove = (e) => {
-            if(!rPlaying) return;
-            let diff = e.clientX - startSwipeX;
-            if(Math.abs(diff) > 5) {
-                rX += diff * 0.7;
-                startSwipeX = e.clientX;
-                rX = Math.max(15, Math.min(285, rX));
-            }
-        };
-
-        let loop = () => {
-            if(!rPlaying) return;
-            ctx.clearRect(0,0,320,380);
-
-            roadObs.forEach(o => {
-                o.y += 1.6;
-                if(o.y > 380) o.y = -30;
-
-                ctx.fillStyle = '#e67e22';
-                ctx.fillRect(15, o.y, o.gapX - 15, 18);
-                ctx.fillRect(o.gapX + 130, o.y, 305 - (o.gapX + 130), 18);
-
-                // Collision ajustée pour la taille réduite du joueur (18px)
-                if(rY < o.y + 18 && rY + 18 > o.y) {
-                    if(rX < o.gapX || rX + 18 > o.gapX + 130) {
-                        rPlaying = false;
-                        stopAllLoops();
-                        ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0,0,320,380);
-                        ctx.fillStyle = '#e74c3c'; ctx.font = '10px monospace'; ctx.fillText("COLLISION !", 100, 170);
-                        ctx.fillStyle = '#fff'; ctx.font = '7px monospace'; ctx.fillText("Clique pour recommencer", 75, 200);
-                        c.onclick = () => startBrancardier();
-                        return;
-                    }
-                }
-            });
-
-            // Affichage du joueur miniature (18px x 18px)
-            ctx.fillStyle = '#9b59b6'; ctx.fillRect(rX, rY, 18, 18);
-            rY -= 0.16;
-
-            if(rY <= 15) { 
-                rPlaying = false; 
-                stopAllLoops();
-                startSpeedDating(); 
-                return; 
-            }
-            activeLoop = requestAnimationFrame(loop);
-        };
-        loop();
-    }
-
-    let datingStep = 0, datingScore = 0;
-    const datingStages = [
-        { q: "Tu croises la collègue dans le couloir :", choices: [{text:`"T'as une belle posture."`, pts:-1, msg:"Malaise... -1pt"}, {text:`"On pousse ensemble ?"`, pts:1, msg:"Sourire ! +1pt"}] },
-        { q: "À la cafet' :", choices: [{text:`"Un café serré."`, pts:1, msg:"Bien joué ! +1pt"}, {text:`"Je préfère rester seul."`, pts:-1, msg:"Aïe... -1pt"}] },
-        { q: "Devant le bloc :", choices: [{text:`"Tu veux sauver des vies ?"`, pts:2, msg:"Coup de foudre ! ❤️"}, {text:`"À plus."`, pts:-2, msg:"Échec critique !"}] }
+    // --- PHASE 1: DEBUG ---
+    let maze = [
+        "XXXXXXXXXXXXXXXXXXXX",
+        "X..X.XXX.XXXXX.XXX.X",
+        "X..X.X...X.....X...X",
+        "X..X.XXX.XXX...X.XXX",
+        "X..X.X.....X...X...X",
+        "X....X.XXXXX...XXXXX",
+        "XXXXXX.............X",
+        "X....XXXXXX.XXXXXX.X",
+        "X.XX.X....X.X....X.X",
+        "X.XX.X.XX.XXX.XX.X.X",
+        "X....X.XX.....XX.X.X",
+        "XXXX.X.XXXXXXXXX.X.X",
+        "X....X.............X",
+        "X.XXXX.XXXXXXXXXXXXX",
+        "XXXXXXXXXXXXXXXXXXXX"
     ];
-    function startSpeedDating() {
-        datingStep = 0; datingScore = 0;
-        showScreen('dating-screen'); loadDatingStage();
+    let mazeGrid = document.getElementById('maze-grid');
+    let cursor = document.getElementById('cursor');
+    let curX = 0, curY = 0, goalX = 1, goalY = 1;
+    let phase1Timer = null;
+
+    function startPhase1() {
+        showScreen('phase1-screen');
+        mazeGrid.innerHTML = '';
+        for(let y=0; y<maze.length; y++) {
+            for(let x=0; x<maze[y].length; x++) {
+                let cell = document.createElement('div');
+                cell.className = maze[y][x] === 'X' ? 'cell wall' : 'cell path';
+                cell.id = `cell-${x}-${y}`;
+                if(x === 1 && y === 1) { cell.innerText = 'FIX'; cell.id = 'goal'; }
+                if(x === 18 && y === 13) { cell.innerText = 'DEV'; cursor.style.left = '364px'; cursor.style.top = '264px'; curX = 364; curY = 264; }
+                mazeGrid.appendChild(cell);
+            }
+        }
+        phase1Timer = setTimeout(() => {
+            mazePlaying = false;
+            alert("TIME_OUT. Le fix n'a pas été appliqué à temps.");
+            startPhase1(); // Recommencer la phase
+        }, 10000); // 10 secondes
     }
-    function loadDatingStage() {
-        if(datingScore >= 3) { setTimeout(() => showScreen('congrats-screen'), 400); return; }
-        if(datingStep >= datingStages.length) {
-            alert("Échec de la séduction ! Recommence le speed-dating.");
-            startSpeedDating();
+
+    function moveCursor(e) {
+        if (e.target.classList.contains('wall')) return;
+        if (e.target.id === 'goal') {
+            clearTimeout(phase1Timer);
+            setTimeout(startPhase2, 500);
             return;
         }
-        let stage = datingStages[datingStep];
-        document.getElementById('dating-question').innerText = stage.q;
-        document.getElementById('dating-score').innerText = datingScore;
-        let container = document.getElementById('dating-choices'); container.innerHTML = '';
-        stage.choices.forEach(ch => {
-            let btn = document.createElement('button'); btn.className = 'btn'; btn.style.width = '100%'; btn.innerText = ch.text;
-            btn.onclick = () => {
-                datingScore += ch.pts;
-                if(datingScore < 0) datingScore = 0;
-                alert(ch.msg);
-                datingStep++;
-                loadDatingStage();
-            };
-            container.appendChild(btn);
-        });
+        let rect = mazeGrid.getBoundingClientRect();
+        cursor.style.left = (e.clientX - rect.left - 8) + 'px';
+        cursor.style.top = (e.clientY - rect.top - 8) + 'px';
     }
-</script>
-</body>
-</html>
+
+    // --- PHASE 2: COMPILE ---
+    let compileProgress = 0;
+    let compileBar = document.getElementById('compile-bar');
+    let keysPrompt = document.getElementById('keys-prompt');
+    let allowedKeys = ['a', 'z', 'e', 'r', 't'];
+    let currentKeyIndex = 0;
+    let phase2Interval = null;
+
+    function startPhase2() {
+        showScreen('phase2-screen');
+        compileProgress = 0;
+        currentKeyIndex = 0;
+        compileBar.style.width = '0%';
+        setNextKey();
+        phase2Interval = setInterval(compileTick, 50); // La barre diminue
+    }
+
+    function compileTick() {
+        compileProgress -= 0.2; // La barre descend toute seule
+        if (compileProgress < 0) compileProgress = 0;
+        updateCompileBar();
+    }
+
+    function updateCompileBar() {
+        compileBar.style.width = compileProgress + '%';
+        if (compileProgress >= 100) {
+            clearInterval(phase2Interval);
+            window.onkeydown = null;
+            setTimeout(startPhase3, 500);
+        }
+    }
+
+    function setNextKey() {
+        let k = allowedKeys[Math.floor(Math.random() * allowedKeys.length)];
+        keysPrompt.innerText = k;
+    }
+
+    window.onkeydown = function(e) {
+        if(document.getElementById('phase2-screen').classList.contains('active-screen')) {
+             if(e.key === keysPrompt.innerText) {
+                 compileProgress += 5; // Appuyer sur la bonne touche augmente la barre
+                 updateCompileBar();
+                 setNextKey();
+             } else {
+                 compileProgress -= 10; // Appuyer sur la mauvaise touche la fait baisser
+                 updateCompileBar();
+             }
+        }
+    }
+
+
+    // --- PHASE 3: DEPLOY ---
+    let commands = ['git push', 'make deploy', 'sudo ./install.sh'];
+    let currentCmdIndex = 0;
+    let typedText = "";
+    let cmdTextSpan = document.getElementById('cmd-text');
+
+    function startPhase3() {
+        showScreen('phase3-screen');
+        currentCmdIndex = 0;
+        typedText = "";
+        cmdTextSpan.innerText = "";
+        window.onkeydown = handleDeployKeys;
+        blinkCursor();
+    }
+
+    function blinkCursor() {
+        // Géré par le CSS animation: blink
+    }
+
+    function handleDeployKeys(e) {
+        if(document.getElementById('phase3-screen').classList.contains('active-screen')) {
+            if (e.key.length === 1) {
+                 typedText += e.key;
+                 cmdTextSpan.innerText = typedText;
+                 checkCommand();
+            } else if (e.key === 'Backspace') {
+                 typedText = typedText.slice(0, -1);
+                 cmdTextSpan.innerText = typedText;
+            }
+        }
+    }
+
+    function checkCommand() {
+        if (typedText === commands[currentCmdIndex]) {
+            currentCmdIndex++;
+            typedText = "";
+            cmdTextSpan.innerText = "";
+            if (currentCmdIndex >= commands.length) {
+                 window.onkeydown = null;
+                 setTimeout(startReveal, 500);
+            }
+        }
+    }
+
+    // --- REVEAL SCREEN ---
+    function startReveal() {
+        showScreen('reveal-screen');
+        let revealContainer = document.getElementById('reveal-container');
+        let finalMessage = `
+        ==============================================
+        >> DEPLOIEMENT_REUSSI : UNITE 7 <<
+        ==============================================
+        
+        Félicitations, DEV. Le système est en ligne.
+        La base de données a répondu :
+        
+        > Statut : [ <span class="pink-text">CRITICAL_INFORMATION_PENDING</span> ]
+        
+        Veuillez decrypter le message de confirmation
+        pour fermer cette session.
+        
+        >>>>>>>>>>>>> [ INIT_ANNOUNCEMENT ] >>>>>>>>>>
+        
+        ----------------------------------------------
+        SYSTEM.OUT.PRINTLN("C'EST UNE FILLE !");
+        ----------------------------------------------
+        
+        Fermeture du terminal... Au revoir.
+        `;
+        typewriterEffect(revealContainer, finalMessage);
+    }
+
+    function typewriterEffect(element, text, speed = 15) {
+        let i = 0;
+        element.style.display = 'block';
+        function type() {
+            if (i < text.length) {
+                if (text.substring(i, i + 7) === '<span') { // Gérer le HTML dans le texte
+                    let spanEnd = text.indexOf('>', i);
+                    let fullSpanEnd = text.indexOf('</span>', i);
+                    element.innerHTML += text.substring(i, fullSpanEnd + 7);
