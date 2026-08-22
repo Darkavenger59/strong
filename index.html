@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -17,7 +18,6 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
-            cursor: none;
             text-shadow: 0 0 5px #0f0;
         }
 
@@ -115,12 +115,13 @@
         /* --- REVEAL SCREEN --- */
         #reveal-container {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 10px; line-height: 10px;
-            white-space: pre;
+            font-size: 13px; line-height: 16px;
+            white-space: pre-wrap;
             color: #0f0;
             display: none;
+            text-align: left;
         }
-        .pink-text { color: #ff6b81; }
+        .pink-text { color: #ff6b81; font-weight: bold; }
 
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
     </style>
@@ -171,7 +172,6 @@
     let activeInterval = null;
     let gameContainer = document.getElementById('game-container');
 
-    // --- UTILITAIRES ---
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
         document.getElementById(id).classList.add('active-screen');
@@ -197,7 +197,7 @@
     ];
     let mazeGrid = document.getElementById('maze-grid');
     let cursor = document.getElementById('cursor');
-    let curX = 0, curY = 0, goalX = 1, goalY = 1;
+    let curX = 0, curY = 0;
     let phase1Timer = null;
 
     function startPhase1() {
@@ -209,22 +209,24 @@
                 cell.className = maze[y][x] === 'X' ? 'cell wall' : 'cell path';
                 cell.id = `cell-${x}-${y}`;
                 if(x === 1 && y === 1) { cell.innerText = 'FIX'; cell.id = 'goal'; }
-                if(x === 18 && y === 13) { cell.innerText = 'DEV'; cursor.style.left = '364px'; cursor.style.top = '264px'; curX = 364; curY = 264; }
+                if(x === 18 && y === 13) { 
+                    cursor.style.left = '364px'; 
+                    cursor.style.top = '264px'; 
+                }
                 mazeGrid.appendChild(cell);
             }
         }
         phase1Timer = setTimeout(() => {
-            mazePlaying = false;
             alert("TIME_OUT. Le fix n'a pas été appliqué à temps.");
-            startPhase1(); // Recommencer la phase
-        }, 10000); // 10 secondes
+            startPhase1();
+        }, 12000);
     }
 
     function moveCursor(e) {
         if (e.target.classList.contains('wall')) return;
         if (e.target.id === 'goal') {
             clearTimeout(phase1Timer);
-            setTimeout(startPhase2, 500);
+            setTimeout(startPhase2, 300);
             return;
         }
         let rect = mazeGrid.getBoundingClientRect();
@@ -237,20 +239,18 @@
     let compileBar = document.getElementById('compile-bar');
     let keysPrompt = document.getElementById('keys-prompt');
     let allowedKeys = ['a', 'z', 'e', 'r', 't'];
-    let currentKeyIndex = 0;
     let phase2Interval = null;
 
     function startPhase2() {
         showScreen('phase2-screen');
         compileProgress = 0;
-        currentKeyIndex = 0;
         compileBar.style.width = '0%';
         setNextKey();
-        phase2Interval = setInterval(compileTick, 50); // La barre diminue
+        phase2Interval = setInterval(compileTick, 50);
     }
 
     function compileTick() {
-        compileProgress -= 0.2; // La barre descend toute seule
+        compileProgress -= 0.3;
         if (compileProgress < 0) compileProgress = 0;
         updateCompileBar();
     }
@@ -271,17 +271,16 @@
 
     window.onkeydown = function(e) {
         if(document.getElementById('phase2-screen').classList.contains('active-screen')) {
-             if(e.key === keysPrompt.innerText) {
-                 compileProgress += 5; // Appuyer sur la bonne touche augmente la barre
+             if(e.key.toLowerCase() === keysPrompt.innerText) {
+                 compileProgress += 8;
                  updateCompileBar();
                  setNextKey();
              } else {
-                 compileProgress -= 10; // Appuyer sur la mauvaise touche la fait baisser
+                 compileProgress -= 5;
                  updateCompileBar();
              }
         }
     }
-
 
     // --- PHASE 3: DEPLOY ---
     let commands = ['git push', 'make deploy', 'sudo ./install.sh'];
@@ -295,11 +294,6 @@
         typedText = "";
         cmdTextSpan.innerText = "";
         window.onkeydown = handleDeployKeys;
-        blinkCursor();
-    }
-
-    function blinkCursor() {
-        // Géré par le CSS animation: blink
     }
 
     function handleDeployKeys(e) {
@@ -331,36 +325,47 @@
     function startReveal() {
         showScreen('reveal-screen');
         let revealContainer = document.getElementById('reveal-container');
-        let finalMessage = `
-        ==============================================
-        >> DEPLOIEMENT_REUSSI : UNITE 7 <<
-        ==============================================
-        
-        Félicitations, DEV. Le système est en ligne.
-        La base de données a répondu :
-        
-        > Statut : [ <span class="pink-text">CRITICAL_INFORMATION_PENDING</span> ]
-        
-        Veuillez decrypter le message de confirmation
-        pour fermer cette session.
-        
-        >>>>>>>>>>>>> [ INIT_ANNOUNCEMENT ] >>>>>>>>>>
-        
-        ----------------------------------------------
-        SYSTEM.OUT.PRINTLN("C'EST UNE FILLE !");
-        ----------------------------------------------
-        
-        Fermeture du terminal... Au revoir.
-        `;
-        typewriterEffect(revealContainer, finalMessage);
-    }
+        let finalMessage = `==============================================
+>> DEPLOIEMENT_REUSSI : UNITE 7 <<
+==============================================
 
-    function typewriterEffect(element, text, speed = 15) {
+Félicitations, DEV. Le système est en ligne.
+La base de données a répondu :
+
+> Statut : [ <span class="pink-text">CRITICAL_INFORMATION_PENDING</span> ]
+
+Veuillez décrypter le message de confirmation
+pour fermer cette session.
+
+>>>>>>>>>>>>> [ INIT_ANNOUNCEMENT ] >>>>>>>>>>
+
+----------------------------------------------
+SYSTEM.OUT.PRINTLN("C'EST UNE FILLE !");
+----------------------------------------------
+
+Fermeture du terminal... Au revoir.`;
+
+        revealContainer.style.display = 'block';
+        revealContainer.innerHTML = "";
         let i = 0;
-        element.style.display = 'block';
-        function type() {
-            if (i < text.length) {
-                if (text.substring(i, i + 7) === '<span') { // Gérer le HTML dans le texte
-                    let spanEnd = text.indexOf('>', i);
-                    let fullSpanEnd = text.indexOf('</span>', i);
-                    element.innerHTML += text.substring(i, fullSpanEnd + 7);
+        
+        function typeWriter() {
+            if (i < finalMessage.length) {
+                if (finalMessage.charAt(i) === '<') {
+                    let closeIdx = finalMessage.indexOf('>', i);
+                    revealContainer.innerHTML += finalMessage.substring(i, closeIdx + 1);
+                    i = closeIdx + 1;
+                } else {
+                    revealContainer.innerHTML += finalMessage.charAt(i);
+                    i++;
+                }
+                setTimeout(typeWriter, 15);
+            }
+        }
+        typeWriter();
+    }
+</script>
+</body>
+</html>
+
+```
