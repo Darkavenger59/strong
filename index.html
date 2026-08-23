@@ -2,7 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Interdiction formelle du zoom sur mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WOD : THE REVEAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -19,6 +20,7 @@
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
+            touch-action: none; /* Bloque le scroll et le zoom sur tout l'écran */
         }
 
         body::before {
@@ -97,6 +99,8 @@
             transition: 0.1s;
             width: 85%;
             max-width: 320px;
+            /* Bloque le zoom au double-clic sur le bouton */
+            touch-action: manipulation;
         }
         .btn:active { transform: translateY(6px); box-shadow: none; }
         .btn:disabled { background-color: #444; box-shadow: 0 6px 0 #222; color: #777; cursor: not-allowed; }
@@ -150,11 +154,19 @@
         }
         
         #full-reveal-screen h1 {
-            font-size: 15vw; /* S'adapte à la taille de l'écran */
+            font-size: 14vw; 
             color: white;
             text-shadow: 4px 4px 0px rgba(0,0,0,0.2);
             margin: 0;
-            line-height: 1.2;
+            line-height: 1.1;
+        }
+
+        #full-reveal-screen .name {
+            font-size: 20vw;
+            color: #fff;
+            display: block;
+            margin-top: 15px;
+            text-shadow: 6px 6px 0px rgba(0,0,0,0.2);
         }
 
         @keyframes popIn {
@@ -200,7 +212,7 @@
             <div id="lactic-warning">⚠️ ZONE ROUGE : REPOS FORCÉ ⚠️</div>
         </div>
 
-        <button class="btn" id="btn-row" onclick="pullErg()" style="background:#2196f3; box-shadow:0 6px 0 #1565c0;">TIRER (PULL)</button>
+        <button class="btn" id="btn-row" onclick="pullErg(event)" style="background:#2196f3; box-shadow:0 6px 0 #1565c0;">TIRER (PULL)</button>
     </div>
 
     <!-- PHASE 2 : SNATCH (15 REPS) -->
@@ -216,7 +228,7 @@
         </div>
         
         <div id="snatch-reps">REPS: 0 / 15</div>
-        <button class="btn" id="btn-snatch" onclick="attemptSnatch()">EXTENSION / VERROUILLER</button>
+        <button class="btn" id="btn-snatch" onclick="attemptSnatch(event)">EXTENSION / VERROUILLER</button>
     </div>
 
     <!-- PHASE 3 : MUSCLE UPS (TIME UNDER TENSION) -->
@@ -232,7 +244,7 @@
         <div class="mu-progress-container"><div id="mu-progress"></div></div>
         <p style="font-size: 12px; margin-top:5px; color:#aaa;">Jauge de validation musculaire</p>
         
-        <button class="btn" onpointerdown="tapMU()" style="margin-top:15px; width:100%; max-width:220px;">APPUI (TAP)</button>
+        <button class="btn" onpointerdown="tapMU(event)" style="margin-top:15px; width:100%; max-width:220px;">APPUI (TAP)</button>
     </div>
 
     <!-- WHITEBOARD -->
@@ -246,22 +258,27 @@
             <div class="padlock-box">
                 <p>🔒 ENTRER LE CODE D'ACCÈS :</p>
                 <input type="number" id="secret-code" placeholder="----">
-                <button class="btn" style="font-size: 18px; padding: 10px; margin-top: 10px; width: 100%; box-shadow: 0 4px 0 #9a0007;" onclick="checkCode()">DÉVERROUILLER</button>
+                <button class="btn" style="font-size: 18px; padding: 10px; margin-top: 10px; width: 100%; box-shadow: 0 4px 0 #9a0007;" onclick="checkCode(event)">DÉVERROUILLER</button>
             </div>
         </div>
     </div>
 
 </div>
 
-<!-- FULL SCREEN REVEAL (Hors du conteneur du jeu) -->
+<!-- FULL SCREEN REVEAL -->
 <div id="full-reveal-screen">
-    <h1>C'EST<br>UNE<br>FILLE !<br>🌸</h1>
+    <h1>C'EST<br>UNE<br>FILLE !<br>🌸<br><span class="name">LOUISE</span></h1>
 </div>
 
 <script>
     let activeLoop = null;
     let globalStartTime = 0;
     let playerName = "";
+
+    // Fonction utilitaire pour bloquer le comportement par défaut
+    function preventDefaultBehavior(e) {
+        if(e) e.preventDefault();
+    }
 
     function showScreen(id) {
         if(activeLoop) { cancelAnimationFrame(activeLoop); clearInterval(activeLoop); activeLoop = null; }
@@ -291,7 +308,8 @@
         }, 400); 
     }
 
-    function pullErg() {
+    function pullErg(e) {
+        preventDefaultBehavior(e);
         if(isBurnout) return;
         
         calories += 1;
@@ -360,7 +378,8 @@
         activeLoop = requestAnimationFrame(loop);
     }
 
-    function attemptSnatch() {
+    function attemptSnatch(e) {
+        preventDefaultBehavior(e);
         if(snatchPos >= 28 && snatchPos <= 72) {
             snatchReps++;
             document.getElementById('snatch-reps').innerText = `REPS: ${snatchReps} / 15`;
@@ -427,7 +446,8 @@
         }, 30); 
     }
 
-    function tapMU() {
+    function tapMU(e) {
+        preventDefaultBehavior(e);
         muVelocity -= 8;
     }
 
@@ -440,7 +460,6 @@
         let mins = Math.floor(totalSeconds / 60);
         let secs = totalSeconds % 60;
         
-        // Calcul du score (base de 10 000 points, pénalité de 20 pts par seconde écoulée)
         let finalScore = Math.max(0, 10000 - (totalSeconds * 20));
 
         document.getElementById('wb-name').innerText = playerName;
@@ -448,10 +467,10 @@
         document.getElementById('final-score').innerText = `${finalScore} PTS`;
     }
 
-    function checkCode() {
+    function checkCode(e) {
+        preventDefaultBehavior(e);
         let code = document.getElementById('secret-code').value;
         if(code === "2810") {
-            // Affichage de l'annonce en plein écran
             document.getElementById('full-reveal-screen').style.display = 'flex';
         } else {
             alert("CODE INCORRECT. Accès refusé.");
