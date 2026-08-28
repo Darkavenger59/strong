@@ -297,7 +297,7 @@
         score = 0;
         lives = 3;
         volants = [];
-        baseSpeed = 5;
+        baseSpeed = 4;
         spawnRate = 900;
         container.innerHTML = "";
         updateHUD();
@@ -387,7 +387,7 @@
             let v = volants[i];
             if (!v.active) continue;
 
-            let speedMultiplier = 1 + (score * 0.1);
+            let speedMultiplier = 1 + (score * 0.07);
             v.y += baseSpeed * speedMultiplier * delta;
             v.el.style.top = `${v.y}px`;
 
