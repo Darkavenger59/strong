@@ -130,10 +130,9 @@
         #volants-container {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* Laisse passer les clics au parent sauf sur les volants */
+            pointer-events: none;
         }
 
-        /* Zone cliquable élargie pour les doigts sur mobile */
         .volant-wrapper {
             position: absolute;
             width: 70px; height: 70px;
@@ -141,19 +140,16 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            pointer-events: auto; /* Rend le volant cliquable */
+            pointer-events: auto; 
             touch-action: manipulation;
             cursor: pointer;
             z-index: 10;
         }
 
-        /* Le visuel réel du volant */
+        /* SVG DU VOLANT DE BADMINTON */
         .volant-visual {
-            width: 26px; height: 36px;
-            background: #fff;
-            border-radius: 50% 50% 10% 10%;
-            border-bottom: 7px solid #e91e63;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            width: 35px; height: 48px;
+            filter: drop-shadow(0px 6px 4px rgba(0,0,0,0.4));
         }
 
         .danger-zone {
@@ -175,11 +171,11 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* FULL SCREEN REVEAL */
+        /* FULL SCREEN REVEAL - NOIR + QR CODE */
         #full-reveal-screen {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ff6b81;
+            background-color: #000000; /* Fond noir */
             z-index: 9999;
             display: none;
             flex-direction: column;
@@ -192,17 +188,17 @@
         #full-reveal-screen h1 {
             font-size: 14vw; 
             color: white;
-            text-shadow: 4px 4px 0px rgba(0,0,0,0.2);
             margin: 0;
-            line-height: 1.1;
+            line-height: 1.2;
+            font-family: 'Bebas Neue', cursive;
         }
 
-        #full-reveal-screen .name {
-            font-size: 20vw;
-            color: #fff;
+        #full-reveal-screen .highlight {
+            font-size: 18vw;
+            color: #4caf50; /* Vert pour rappeler le jeu */
             display: block;
-            margin-top: 15px;
-            text-shadow: 6px 6px 0px rgba(0,0,0,0.2);
+            margin-top: 20px;
+            text-shadow: 0 0 25px rgba(76, 175, 80, 0.8); /* Effet néon */
         }
 
         @keyframes popIn {
@@ -221,6 +217,7 @@
 
 <div id="app-container">
 
+    <!-- INTRO -->
     <div id="intro-screen" class="screen active-screen">
         <h1>FINALE INTERCLUBS</h1>
         <p>Les volants vont tomber de plus en plus vite.</p>
@@ -230,6 +227,7 @@
         <button class="btn" onclick="startGame()">ENTRER SUR LE TERRAIN</button>
     </div>
 
+    <!-- JEU -->
     <div id="game-screen" class="screen">
         <div class="hud">
             <span id="score-display">Score: 0 / 30</span>
@@ -243,6 +241,7 @@
         </div>
     </div>
 
+    <!-- CODE ACCÈS -->
     <div id="code-screen" class="screen">
         <h1>VICTOIRE !</h1>
         <h2>BIEN JOUÉ <span id="winner-name"></span></h2>
@@ -255,6 +254,7 @@
         </div>
     </div>
 
+    <!-- CADEAU -->
     <div id="gift-screen" class="screen">
         <h1>SURPRISE</h1>
         <p>Le vestiaire est ouvert... Un paquet t'attend.</p>
@@ -264,8 +264,9 @@
 
 </div>
 
+<!-- REVEAL FINAL (NOIR) -->
 <div id="full-reveal-screen">
-    <h1>C'EST<br>UNE<br>FILLE !<br>🌸<br><span class="name">LOUISE</span></h1>
+    <h1>TROUVE<br>ET SCANNE<br>LE<br><span class="highlight">QR CODE</span></h1>
 </div>
 
 <script>
@@ -321,18 +322,34 @@
         
         createVolant();
         
-        // Accélération progressive
         spawnRate = Math.max(400, 1000 - (score * 20));
         spawnTimeout = setTimeout(spawnVolantLoop, spawnRate);
     }
 
     function createVolant() {
-        // Apparition aléatoire sur l'axe X (entre 10% et 90% de la largeur du terrain)
         let posX = 15 + Math.random() * 70;
         
         let el = document.createElement('div');
         el.className = 'volant-wrapper';
-        el.innerHTML = '<div class="volant-visual"></div>';
+        
+        // Injection du véritable dessin vectoriel (SVG) du volant
+        el.innerHTML = `
+            <div class="volant-visual">
+                <svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+                    <!-- Jupe (Plumes) -->
+                    <polygon points="5,5 55,5 40,55 20,55" fill="#ffffff" stroke="#ddd" stroke-width="2" stroke-linejoin="round"/>
+                    <!-- Lignes des plumes -->
+                    <line x1="17" y1="5" x2="25" y2="55" stroke="#ddd" stroke-width="2"/>
+                    <line x1="30" y1="5" x2="30" y2="55" stroke="#ddd" stroke-width="2"/>
+                    <line x1="43" y1="5" x2="35" y2="55" stroke="#ddd" stroke-width="2"/>
+                    <!-- Bande de couleur (rouge/rose) -->
+                    <polygon points="12,30 48,30 45,40 15,40" fill="#e91e63"/>
+                    <!-- Bouchon (Liège) -->
+                    <path d="M 19 54 C 19 85, 41 85, 41 54 Z" fill="#f5cb90"/>
+                </svg>
+            </div>
+        `;
+        
         el.style.left = `${posX}%`;
         
         let v = {
@@ -341,18 +358,15 @@
             active: true
         };
 
-        // GESTION DU TAP DIRECTEMENT SUR LE VOLANT
         el.onpointerdown = (e) => {
             preventDefaultBehavior(e);
             if (!v.active || lives <= 0 || score >= 30) return;
 
-            // Le joueur a réussi à taper le volant !
             v.active = false;
             v.el.remove();
             score++;
             updateHUD();
 
-            // Flash vert du terrain pour valider le point
             document.getElementById('court').style.borderColor = '#4caf50';
             setTimeout(() => document.getElementById('court').style.borderColor = '#fff', 150);
 
@@ -373,18 +387,16 @@
             let v = volants[i];
             if (!v.active) continue;
 
-            let speedMultiplier = 1 + (score * 0.04); // Le jeu s'accélère
+            let speedMultiplier = 1 + (score * 0.04);
             v.y += baseSpeed * speedMultiplier * delta;
             v.el.style.top = `${v.y}px`;
 
-            // Si le volant touche la ligne rouge du bas (raté)
             if (v.y > bottomLimit) {
                 v.active = false;
                 v.el.remove();
                 lives--;
                 updateHUD();
                 
-                // Flash rouge du terrain
                 document.getElementById('court').style.borderColor = '#f44336';
                 setTimeout(() => document.getElementById('court').style.borderColor = '#fff', 200);
 
